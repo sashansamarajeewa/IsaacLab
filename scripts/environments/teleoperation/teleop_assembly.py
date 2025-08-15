@@ -1,4 +1,5 @@
 import argparse
+import math
 
 from isaaclab.app import AppLauncher
 
@@ -175,9 +176,6 @@ def main():
     env.reset()
     teleop_interface.reset()
     
-    # initialize InstructionDisplayManager
-
-
     # define Scene Widget
     class SimpleSceneWidget(ui.Widget):
         def __init__(self, text="Hello", **kwargs):
@@ -198,12 +196,13 @@ def main():
     def on_widget_constructed(widget_instance):
         print("Widget is ready!")
         widget_ref["widget"] = widget_instance
+        widget_instance.label.text = "Step 1: Pick up Drawer Box"
 
     # create WidgetComponent
     widget_component = WidgetComponent(
         SimpleSceneWidget,
-        width=5,
-        height=1.5,
+        width=4,
+        height=1.3,
         resolution_scale=10,
         unit_to_pixel_scale=20,
         update_policy=sc.Widget.UpdatePolicy.ON_DEMAND,
@@ -213,15 +212,11 @@ def main():
     # define spatial sources
     space_stack = [
         SpatialSource.new_translation_source(Gf.Vec3d(0, 1.5, 2)),
-        SpatialSource.new_look_at_camera_source()
+        SpatialSource.new_rotation_source(Gf.Vec3d(math.radians(90), math.radians(0), math.radians(0))),
     ]
 
     # create UiContainer
     ui_container = UiContainer(widget_component, space_stack=space_stack)
-
-    # display initial instruction after widget is ready
-    if "widget" in widget_ref:
-         widget_ref["widget"].label.text = "Step 1: Pick up Drawer Base Item"
 
 
     # simulate environment
