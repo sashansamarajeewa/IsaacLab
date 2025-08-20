@@ -221,15 +221,15 @@ def main():
 
     # USD stage + highlight material
     stage = omni.usd.get_context().get_stage()
-    highlight_mat_path = "/World/Looks/Highlight_Gold"
+    highlight_mat_path = "/World/Looks/Highlight"
     highlight_material = create_preview_surface_material(
         stage,
         prim_path=highlight_mat_path,
-        diffuse=(1.0, 0.9, 0.0),
-        emissive=(10.0, 8.0, 0.0),
+        diffuse=(0.6, 0.8, 0.1),
+        emissive=(0, 0, 0),
     )
 
-    # Assembly order (editable)
+    # Assembly order
     TARGET_SEQUENCE = ["DrawerBox", "DrawerBottom", "DrawerTop"]
 
     # Highlighter
@@ -341,7 +341,7 @@ def main():
                     idx = highlighter.step_index
                     total = highlighter.total_steps
                     name = highlighter.current_name or "Done"
-                    widget_ref["widget"].label.text = f"Step {min(idx+1, total)}/{total}: Pick up {name}  (C=clear, N=next)"
+                    widget_ref["widget"].label.text = f"Step {min(idx+1, total)}/{total}: Pick up {name}"
 
     env.close()
 
