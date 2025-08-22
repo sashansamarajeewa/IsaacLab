@@ -50,6 +50,39 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
         ),
     )
+    
+    # ObstacleFront
+    obstacle_front = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/ObstacleFront",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.8, 1.02]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_front/obstacle_front.usd",
+                         scale=(2, 2, 2),
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                         ),
+    )
+    
+    # ObstacleLeft
+    obstacle_left = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/ObstacleLeft",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.36, 0.65, 1.02]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
+                         scale=(2, 2, 2),
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                         ),
+    )
+    
+    # ObstacleRight
+    obstacle_right = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/ObstacleRight",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.36, 0.65, 1.02]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
+                         scale=(2, 2, 2),
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                         ),
+    )
 
     # DrawerBox
     drawer_box = RigidObjectCfg(
