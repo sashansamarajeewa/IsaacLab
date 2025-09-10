@@ -42,17 +42,83 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
 
     # Table
     packing_table = AssetBaseCfg(
-        prim_path="/World/envs/env_.*/PackingTable",
+        prim_path="{ENV_REGEX_NS}/PackingTable",
         init_state=AssetBaseCfg.InitialStateCfg(pos=[0.0, 0.55, 0.0], rot=[1.0, 0.0, 0.0, 0.0]),
         spawn=UsdFileCfg(
-            usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/PackingTable/packing_table.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/packing_table/packing_table.usd",
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
         ),
+    )
+    
+    # ObstacleFront
+    obstacle_front = AssetBaseCfg(
+        prim_path="{ENV_REGEX_NS}/ObstacleFront",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.6, 1.02]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_front/obstacle_front.usd",
+                         scale=(2, 2, 2),
+                         collision_props=sim_utils.CollisionPropertiesCfg(),
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
+                         ),
+    )
+    
+    # ObstacleLeft
+    obstacle_left = AssetBaseCfg(
+        prim_path="{ENV_REGEX_NS}/ObstacleLeft",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.36, 0.41, 1.02]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
+                         scale=(2, 2, 2),
+                         collision_props=sim_utils.CollisionPropertiesCfg(),
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
+                         ),
+    )
+    
+    # ObstacleRight
+    obstacle_right = AssetBaseCfg(
+        prim_path="{ENV_REGEX_NS}/ObstacleRight",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.36, 0.41, 1.02]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
+                         scale=(2, 2, 2),
+                         collision_props=sim_utils.CollisionPropertiesCfg(),
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
+                         ),
+    )
+    
+    # DrawerBox
+    drawer_box = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/DrawerBox",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.05, 0.4, 1.05]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box/drawer_box.usd",
+                         scale=(1.5, 1.5, 1.5),
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                         ),
+    )
+
+    # DrawerBottom
+    drawer_container_bottom = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/DrawerBottom",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.5, 1.05]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom/drawer_container_bottom.usd",
+                         scale=(1.5, 1.5, 1.5),
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                         ),
+    )
+
+    # DrawerTop
+    drawer_container_top = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/DrawerTop",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.2, 0.5, 1.05]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top/drawer_container_top.usd",
+                         scale=(1.5, 1.5, 1.5),
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                         ),
     )
 
     object = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Object",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.45, 0.45, 0.9996], rot=[1, 0, 0, 0]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.6, 0.45, 0.9996], rot=[1, 0, 0, 0]),
         spawn=UsdFileCfg(
             usd_path=f"{ISAACLAB_NUCLEUS_DIR}/Mimic/pick_place_task/pick_place_assets/steering_wheel.usd",
             scale=(0.75, 0.75, 0.75),
