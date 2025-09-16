@@ -27,7 +27,7 @@ from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sim.spawners.from_files.from_files_cfg import GroundPlaneCfg, UsdFileCfg
 from isaaclab.utils import configclass
-from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR, ISAACLAB_NUCLEUS_DIR
+from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR
 
 from . import mdp
 
@@ -53,20 +53,19 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleFront
     obstacle_front = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleFront",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.6, 1.02]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.6, 1.03]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_front/obstacle_front.usd",
-                         scale=(2, 2, 2),
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
+                         articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
                          ),
     )
     
     # ObstacleLeft
     obstacle_left = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleLeft",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.36, 0.41, 1.02]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.41, 1.03]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
-                         scale=(2, 2, 2),
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
                          ),
@@ -75,9 +74,8 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleRight
     obstacle_right = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleRight",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.36, 0.41, 1.02]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.41, 1.03]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
-                         scale=(2, 2, 2),
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
                          ),
@@ -86,9 +84,9 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # DrawerBox
     drawer_box = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DrawerBox",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.05, 0.4, 1.05]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.37, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box/drawer_box.usd",
-                         scale=(1.5, 1.5, 1.5),
+                         scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
                          ),
@@ -97,9 +95,9 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # DrawerBottom
     drawer_container_bottom = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DrawerBottom",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.5, 1.05]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.25, 0.43, 1.08]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom/drawer_container_bottom.usd",
-                         scale=(1.5, 1.5, 1.5),
+                         scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
                          ),
@@ -108,9 +106,9 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # DrawerTop
     drawer_container_top = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DrawerTop",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.2, 0.5, 1.05]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.25, 0.53, 1.08]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top/drawer_container_top.usd",
-                         scale=(1.5, 1.5, 1.5),
+                         scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
                          ),
@@ -472,10 +470,10 @@ class AssemblyGR1T2EnvCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 6
+        self.decimation = 1
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 120  # 120Hz
+        self.sim.dt = 1 / 30  # 120Hz
         self.sim.render_interval = 2
 
         # Convert USD to URDF and change revolute joints to fixed
