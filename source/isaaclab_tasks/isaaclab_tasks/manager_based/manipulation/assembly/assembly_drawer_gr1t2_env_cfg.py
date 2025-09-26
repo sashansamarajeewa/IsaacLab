@@ -396,7 +396,7 @@ class EventCfg:
 
 
 @configclass
-class AssemblyGR1T2EnvCfg(ManagerBasedRLEnvCfg):
+class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the GR1T2 environment."""
 
     # Scene settings
