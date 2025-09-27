@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Optional, Callable
+from typing import List, Optional
 import math
 from pxr import Usd, UsdShade, Sdf, Gf
 import omni.ui as ui
