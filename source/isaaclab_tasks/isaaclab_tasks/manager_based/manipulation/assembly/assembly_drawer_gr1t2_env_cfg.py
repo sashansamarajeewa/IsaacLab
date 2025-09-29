@@ -84,7 +84,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # DrawerBox
     drawer_box = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DrawerBox",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.37, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.02, 0.37, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box/drawer_box.usd",
                          scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
@@ -473,7 +473,7 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         self.decimation = 1
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 30  # 120Hz
+        self.sim.dt = 1 / 120  # 120Hz
         self.sim.render_interval = 2
 
         # Convert USD to URDF and change revolute joints to fixed

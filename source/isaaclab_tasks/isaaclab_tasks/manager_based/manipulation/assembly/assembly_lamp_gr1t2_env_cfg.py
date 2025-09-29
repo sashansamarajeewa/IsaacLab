@@ -81,33 +81,33 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
                          ),
     )
     
-    # DrawerBox
-    drawer_box = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerBox",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.37, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box/drawer_box.usd",
+    # LampBase
+    lamp_base = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/LampBase",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.065, 0.37, 1.03], rot=[0.0, 0.0, -0.7071, 0.7071]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/lamp/lamp_base/lamp_base.usd",
                          scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
                          ),
     )
 
-    # DrawerBottom
-    drawer_container_bottom = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerBottom",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.43, 1.085]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom/drawer_container_bottom.usd",
+    # LampBulb
+    lamp_bulb = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/LampBulb",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.075, 0.4, 1.05]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/lamp/lamp_bulb/lamp_bulb.usd",
                          scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
                          ),
     )
 
-    # DrawerTop
-    drawer_container_top = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerTop",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.52, 1.085]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top/drawer_container_top.usd",
+    # LampHood
+    lamp_hood = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/LampHood",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.25, 0.50, 1.086], rot=[0.0, 0.0, -0.7071, 0.7071]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/lamp/lamp_hood/lamp_hood.usd",
                          scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
@@ -473,7 +473,7 @@ class AssemblyLampGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         self.decimation = 1
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 30  # 120Hz
+        self.sim.dt = 1 / 120  # 120Hz
         self.sim.render_interval = 2
 
         # Convert USD to URDF and change revolute joints to fixed

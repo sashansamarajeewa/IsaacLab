@@ -1,7 +1,7 @@
 from .base import BaseGuide, MaterialHighlighter
 
 class LampGuide(BaseGuide):
-    SEQUENCE = ["LampBox", "LampBottom", "LampTop"]
+    SEQUENCE = ["LampBase", "LampBulb", "LampHood"]
 
     def step_label(self, highlighter: MaterialHighlighter) -> str:
         idx = highlighter.step_index
@@ -10,7 +10,7 @@ class LampGuide(BaseGuide):
         if idx == 0:
             return f"Step 1/{total}: Pick up {name}"
         elif idx == 1:
-            return f"Step 2/{total}: Move {name} into LampBox"
+            return f"Step 2/{total}: Move {name} into LampBase"
         elif idx == 2:
             return f"Step 3/{total}: Insert {name} to complete assembly"
         else:
