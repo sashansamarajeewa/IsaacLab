@@ -111,6 +111,7 @@ def main() -> None:
     # Guide + Highlighter
     guide = loader.load_guide(task_name=args_cli.task, guide_name=args_cli.guide)
     highlighter = guide.create_highlighter(stage)
+    phys_binder = guide.create_physics_binder()
     
     # HUD
     hud = base.HUDManager(base.SimpleSceneWidget)
@@ -201,7 +202,8 @@ def main() -> None:
 
     # reset environment
     env.reset()
-    highlighter.refresh_current()
+    highlighter.refresh_after_reset()
+    phys_binder.refresh_after_reset()
     hud.update(guide.step_label(highlighter))
     teleop_interface.reset()
 
@@ -230,7 +232,8 @@ def main() -> None:
                 if should_reset_recording_instance:
                     env.reset()
                     should_reset_recording_instance = False
-                    highlighter.refresh_current()
+                    highlighter.refresh_after_reset()
+                    phys_binder.refresh_after_reset()
                     hud.update(guide.step_label(highlighter))
                     print("Environment reset complete")
         except Exception as e:
