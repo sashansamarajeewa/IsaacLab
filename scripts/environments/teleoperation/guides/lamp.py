@@ -1,9 +1,9 @@
-from .base import BaseGuide, MaterialHighlighter
+from .base import BaseGuide, VisualSequenceHighlighter
 
 class LampGuide(BaseGuide):
     SEQUENCE = ["LampBase", "LampBulb", "LampHood"]
 
-    def step_label(self, highlighter: MaterialHighlighter) -> str:
+    def step_label(self, highlighter: VisualSequenceHighlighter) -> str:
         idx = highlighter.step_index
         total = highlighter.total_steps or 1
         name = highlighter.current_name or "Done"

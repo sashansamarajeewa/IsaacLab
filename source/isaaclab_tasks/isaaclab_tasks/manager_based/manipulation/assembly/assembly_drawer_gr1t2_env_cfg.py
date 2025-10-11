@@ -473,8 +473,9 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         self.decimation = 1
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 120  # 120Hz
+        self.sim.dt = 1 / 60  # 120Hz
         self.sim.render_interval = 2
+        self.sim.physx.enable_ccd = True
 
         # Convert USD to URDF and change revolute joints to fixed
         temp_urdf_output_path, temp_urdf_meshes_output_path = ControllerUtils.convert_usd_to_urdf(
