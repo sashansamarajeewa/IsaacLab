@@ -28,7 +28,7 @@ from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
 GR1T2_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
         usd_path=(
-            f"{ISAAC_NUCLEUS_DIR}/Robots/FourierIntelligence/GR-1/GR1T2_fourier_hand_6dof/GR1T2_fourier_hand_6dof.usd"
+            "/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/robot//GR1T2_fourier_hand_6dof.usd"
         ),
         activate_contact_sensors=True,
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
