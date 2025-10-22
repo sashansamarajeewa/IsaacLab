@@ -181,7 +181,7 @@ class SimpleSceneWidget(ui.Widget):
                 "border_radius": 2,
             })
             with ui.VStack(style={"margin": 5}):
-                self.label = ui.Label(text, alignment=ui.Alignment.CENTER, style={"font_size": 5})
+                self.label = ui.Label(text, alignment=ui.Alignment.CENTER, style={"font_size": 4})
 
 from omni.kit.xr.scene_view.utils.ui_container import UiContainer
 from omni.kit.xr.scene_view.utils.manipulator_components.widget_component import WidgetComponent
