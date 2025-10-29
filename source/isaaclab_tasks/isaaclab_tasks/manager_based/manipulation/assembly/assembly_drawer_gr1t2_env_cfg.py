@@ -471,6 +471,7 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         physics_material=sim_utils.RigidBodyMaterialCfg(
             static_friction=1.0,
             dynamic_friction=1.0,
+            friction_combine_mode="multiply",
         ),
         physx=sim_utils.PhysxCfg(
             max_position_iteration_count=192,
@@ -488,10 +489,10 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 1
+        self.decimation = 2
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 120  # 120Hz
+        self.sim.dt = 1 / 150  # 120Hz
         self.sim.render_interval = 2
         self.sim.physx.enable_ccd = False
 
