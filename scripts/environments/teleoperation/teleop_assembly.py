@@ -202,6 +202,7 @@ def main() -> None:
 
     # reset environment
     env.reset()
+    guide.on_reset(env)
     highlighter.refresh_after_reset()
     phys_binder.refresh_after_reset()
     hud.update(guide.step_label(highlighter))
@@ -216,9 +217,6 @@ def main() -> None:
             with torch.inference_mode():
                 # get device command
                 action = teleop_interface.advance()
-                
-                guide.maybe_auto_advance(env, highlighter)
-                hud.update(guide.step_label(highlighter))
 
                 # Only apply teleop commands when active
                 if teleoperation_active:
@@ -229,9 +227,13 @@ def main() -> None:
                 else:
                     env.sim.render()
 
+                guide.maybe_auto_advance(env, highlighter)
+                hud.update(guide.step_label(highlighter))
+                
                 if should_reset_recording_instance:
                     env.reset()
                     should_reset_recording_instance = False
+                    guide.on_reset(env)
                     highlighter.refresh_after_reset()
                     phys_binder.refresh_after_reset()
                     hud.update(guide.step_label(highlighter))
