@@ -53,7 +53,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleFront
     obstacle_front = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleFront",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.6, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.62, 1.03]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_front/obstacle_front.usd",
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
@@ -64,7 +64,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleLeft
     obstacle_left = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleLeft",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.41, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.43, 1.03]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
@@ -74,7 +74,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleRight
     obstacle_right = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleRight",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.41, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.43, 1.03]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
@@ -116,7 +116,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
 
     object = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Object",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.6, 0.45, 0.9996], rot=[1, 0, 0, 0]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.6, 0.47, 0.9996], rot=[1, 0, 0, 0]),
         spawn=UsdFileCfg(
             usd_path=f"{ISAACLAB_NUCLEUS_DIR}/Mimic/pick_place_task/pick_place_assets/steering_wheel.usd",
             scale=(0.75, 0.75, 0.75),
@@ -467,13 +467,32 @@ class AssemblyLampGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         0.0,
     ])
 
+    sim: sim_utils.SimulationCfg = sim_utils.SimulationCfg(
+        physics_material=sim_utils.RigidBodyMaterialCfg(
+            static_friction=1.0,
+            dynamic_friction=1.0,
+            friction_combine_mode="multiply",
+        ),
+        physx=sim_utils.PhysxCfg(
+            max_position_iteration_count=192,
+            max_velocity_iteration_count=1,
+            bounce_threshold_velocity=0.2,
+            friction_offset_threshold=0.01,
+            friction_correlation_distance=0.00625,
+            gpu_max_rigid_contact_count=2**23,
+            gpu_max_rigid_patch_count=2**23,
+            gpu_max_num_partitions=1, 
+
+        ),
+    )
+
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 1
+        self.decimation = 2
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 120  # 120Hz
+        self.sim.dt = 1 / 150  # 120Hz
         self.sim.render_interval = 2
 
         # Convert USD to URDF and change revolute joints to fixed
