@@ -3,17 +3,31 @@ from pxr import UsdGeom, Usd, UsdPhysics, Gf
 import math
 from typing import Optional, Tuple
 
-# Try to import PrimView from Isaac Sim Core
+# Isaac Core PrimView (live PhysX poses)
 try:
     from omni.isaac.core.prims import RigidPrimView
     _HAS_PRIM_VIEW = True
 except Exception:
     _HAS_PRIM_VIEW = False
 
+# ----------------------- math helpers -----------------------
+
 def _ang_deg(q1: Gf.Quatd, q2: Gf.Quatd) -> float:
     dq = q1 * q2.GetInverse()
     a = 2.0 * math.degrees(math.acos(max(-1.0, min(1.0, abs(dq.GetReal())))))
     return min(a, 360.0 - a)
+
+# ----------------------- USD helpers ------------------------
+
+def _first_descendant_with_rigid_body(stage: Usd.Stage, root_prim: Usd.Prim) -> Optional[Usd.Prim]:
+    if not root_prim or not root_prim.IsValid():
+        return None
+    if UsdPhysics.RigidBodyAPI(root_prim):
+        return root_prim
+    for p in Usd.PrimRange(root_prim):
+        if UsdPhysics.RigidBodyAPI(p):
+            return p
+    return None
 
 def _resolve_env_scoped_path(stage: Usd.Stage, env_root_path: str, leaf_name: str) -> Optional[str]:
     exact = stage.GetPrimAtPath(f"{env_root_path}/{leaf_name}")
@@ -27,15 +41,7 @@ def _resolve_env_scoped_path(stage: Usd.Stage, env_root_path: str, leaf_name: st
             return str(p.GetPath())
     return None
 
-def _first_descendant_with_rigid_body(stage: Usd.Stage, root_prim: Usd.Prim) -> Optional[Usd.Prim]:
-    if not root_prim or not root_prim.IsValid():
-        return None
-    if UsdPhysics.RigidBodyAPI(root_prim):
-        return root_prim
-    for p in Usd.PrimRange(root_prim):
-        if UsdPhysics.RigidBodyAPI(p):
-            return p
-    return None
+# ======================= Drawer Guide =======================
 
 class DrawerGuide(BaseGuide):
     SEQUENCE = ["DrawerBox", "DrawerBox", "DrawerBottom", "DrawerTop"]
@@ -49,45 +55,83 @@ class DrawerGuide(BaseGuide):
             self._check_top_insert,
         ]
         self._paths: dict[str, Optional[str]] = {}
-        # PrimViews for live physics poses (if available)
         self._views: dict[str, Optional["RigidPrimView"]] = {"DrawerBox": None, "DrawerBottom": None, "DrawerTop": None}
+        self._debug_once = True
 
     # ------------------- lifecycle / reset -------------------
 
     def on_reset(self, env):
         stage: Usd.Stage = env.scene.stage
-        env_ns: str = env.scene.env_ns
+        env_ns: str = getattr(env.scene, "env_ns", "/World/envs/env_0")
 
-        # Resolve static refs normally
+        # Resolve static refs (table/obstacles)
         for name in ("PackingTable", "ObstacleLeft", "ObstacleFront"):
             self._paths[name] = _resolve_env_scoped_path(stage, env_ns, name)
 
-        # Resolve moving parts to rigid body prims (for USD fallback / highlighting)
+        # Resolve moving parts to a rigid body prim path
         for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
             root_path = _resolve_env_scoped_path(stage, env_ns, name)
-            rb_path = None
-            if root_path:
-                rb_prim = _first_descendant_with_rigid_body(stage, stage.GetPrimAtPath(root_path))
-                rb_path = str(rb_prim.GetPath()) if rb_prim and rb_prim.IsValid() else root_path
-            self._paths[name] = rb_path
+            if not root_path:
+                self._paths[name] = None
+                continue
+            rb_prim = _first_descendant_with_rigid_body(stage, stage.GetPrimAtPath(root_path))
+            self._paths[name] = str(rb_prim.GetPath()) if rb_prim and rb_prim.IsValid() else root_path
 
-        # Build PrimViews if available
-        if _HAS_PRIM_VIEW:
-            # Each view targets exactly one prim path
-            for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
-                path = self._paths.get(name)
-                if not path:
-                    self._views[name] = None
-                    continue
+        # Build PrimViews robustly
+        for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
+            self._views[name] = self._make_view(env, self._paths.get(name), name)
+
+        if self._debug_once:
+            print("[Guide] PrimView support:", _HAS_PRIM_VIEW)
+            print("[Guide] Prim paths:", self._paths)
+            for n, v in self._views.items():
+                msg = "None"
+                if v is not None:
+                    try:
+                        msg = f"valid={v.is_valid()}, num_prims={getattr(v, 'count', getattr(v, 'num_prims', '??'))}"
+                    except Exception:
+                        msg = "constructed"
+                print(f"[Guide] View[{n}]: {msg}")
+            self._debug_once = False
+
+    def _make_view(self, env, path: Optional[str], name: str) -> Optional["RigidPrimView"]:
+        if not _HAS_PRIM_VIEW or not path:
+            return None
+        try:
+            # Get the physics sim view from env/scene (covers multiple Isaac versions)
+            phys_view = getattr(env.scene, "physics_sim_view", None)
+            if phys_view is None:
+                sim = getattr(env, "sim", None)
+                # Isaac Lab usually exposes .physics_sim_view on env.sim
+                phys_view = getattr(sim, "physics_sim_view", None)
+                # Some builds expose a getter
+                if phys_view is None and hasattr(sim, "get_physics_sim_view"):
+                    phys_view = sim.get_physics_sim_view()
+
+            view = RigidPrimView(prim_paths_expr=[path], name=f"{name}_view", reset_xform_properties=False)
+            # Initialize with explicit physics sim view when available
+            if phys_view is not None:
+                view.initialize(physics_sim_view=phys_view)
+            else:
+                view.initialize()
+
+            # Validate the view actually bound at least one rigid
+            num = getattr(view, "count", None)
+            if num is None:
+                num = getattr(view, "num_prims", None)
+            if num is None:
+                # Last resort: try to query poses to check binding
                 try:
-                    # RigidPrimView accepts an expression; we pass the single absolute path
-                    view = RigidPrimView(prim_paths_expr=[path], name=f"{name}_view", reset_xform_properties=False)
-                    # Isaac Lab envs keep a PhysicsSimView at env.sim (or env.scene.physics_sim_view)
-                    # RigidPrimView.initialize() will look it up automatically if not provided.
-                    view.initialize()
-                    self._views[name] = view
+                    pos, _ = view.get_world_poses(clone=True)
+                    num = pos.shape[0]
                 except Exception:
-                    self._views[name] = None
+                    num = 0
+            if num < 1:
+                return None
+            return view
+        except Exception as e:
+            print(f"[Guide] Failed to build PrimView for {name} @ {path}: {e}")
+            return None
 
     # ---------------------- HUD content ----------------------
 
@@ -107,47 +151,47 @@ class DrawerGuide(BaseGuide):
         idx = highlighter.step_index
         if idx >= len(self._checks):
             return
+        # IMPORTANT: advance sim first in your loop; then we read here.
         stage: Usd.Stage = env.scene.stage
-        cache = UsdGeom.XformCache()  # used for static refs & fallback
+        cache = UsdGeom.XformCache()  # used for static refs & USD fallback
+        # Ensure PrimViews pull latest buffers (older APIs)
+        for v in self._views.values():
+            if v is not None:
+                try:
+                    # Some versions require update(dt); others refresh internally on get_world_poses()
+                    v.update(dt=0.0)
+                except Exception:
+                    pass
         if self._checks[idx](env, stage, cache):
             highlighter.advance()
 
     # ---------------------- pose helpers ---------------------
 
     def _get_live_pose(self, name: str) -> Optional[Tuple[Gf.Vec3d, Gf.Quatd]]:
-        """
-        Live PhysX pose via PrimView if available. Returns (pos, quat) as Gf types.
-        """
         view = self._views.get(name)
         if view is None:
             return None
         try:
-            # get_world_poses returns (N, 3) positions and (N, 4) quats (xyzw) per default Isaac Sim Core
-            # BUT many builds return (N, 4) quats in (wxyz). We handle both.
             pos_np, quat_np = view.get_world_poses(clone=False)
-            if pos_np.shape[0] < 1:
+            if pos_np is None or pos_np.shape[0] < 1:
                 return None
             x, y, z = float(pos_np[0, 0]), float(pos_np[0, 1]), float(pos_np[0, 2])
-            # Try to detect ordering; prefer (w,x,y,z) if plausible
+            # Heuristic for quat order
             w_first = abs(quat_np[0, 0]) >= max(abs(quat_np[0, 1]), abs(quat_np[0, 2]), abs(quat_np[0, 3]))
             if w_first:
                 qw, qx, qy, qz = float(quat_np[0, 0]), float(quat_np[0, 1]), float(quat_np[0, 2]), float(quat_np[0, 3])
-            else:  # xyzw
+            else:
                 qx, qy, qz, qw = float(quat_np[0, 0]), float(quat_np[0, 1]), float(quat_np[0, 2]), float(quat_np[0, 3])
             return Gf.Vec3d(x, y, z), Gf.Quatd(qw, qx, qy, qz)
         except Exception:
             return None
 
     def _get_pose(self, env, stage: Usd.Stage, cache: UsdGeom.XformCache, name: str) -> Optional[Tuple[Gf.Vec3d, Gf.Quatd]]:
-        """
-        Unified getter: try live PrimView, else USD world xform (for static refs or fallback).
-        """
-        # 1) PrimView (live physics)
+        # 1) Live PhysX via PrimView
         live = self._get_live_pose(name)
         if live is not None:
             return live
-
-        # 2) USD fallback
+        # 2) USD fallback (requires updateToUsd=True to be live)
         p = self._paths.get(name)
         if not p:
             return None
@@ -157,7 +201,7 @@ class DrawerGuide(BaseGuide):
         xf = cache.GetLocalToWorldTransform(prim)
         return xf.ExtractTranslation(), xf.ExtractRotation().GetQuat()
 
-    # ---------------------- step checks ---------------------
+    # ---------------------- step checks ----------------------
 
     def _check_pickup_box(self, env, stage, cache) -> bool:
         table = self._get_pose(env, stage, cache, "PackingTable")
@@ -166,7 +210,7 @@ class DrawerGuide(BaseGuide):
             return False
         table_pos, _ = table
         box_pos, _   = box
-        return (box_pos[2] - table_pos[2]) >= 0.06
+        return (box_pos[2] - table_pos[2]) >= 1.2
 
     def _check_braced_box(self, env, stage, cache) -> bool:
         obs = self._get_pose(env, stage, cache, "ObstacleLeft")
