@@ -1,38 +1,21 @@
 from .base import BaseGuide, VisualSequenceHighlighter
 from pxr import UsdGeom, Usd, UsdPhysics, Gf
 import math
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Tuple
 
-# ----------------------- math helpers -----------------------
+# Try to import PrimView from Isaac Sim Core
+try:
+    from omni.isaac.core.prims import RigidPrimView
+    _HAS_PRIM_VIEW = True
+except Exception:
+    _HAS_PRIM_VIEW = False
 
 def _ang_deg(q1: Gf.Quatd, q2: Gf.Quatd) -> float:
-    """Smallest angle (deg) between two quaternions."""
     dq = q1 * q2.GetInverse()
     a = 2.0 * math.degrees(math.acos(max(-1.0, min(1.0, abs(dq.GetReal())))))
     return min(a, 360.0 - a)
 
-# ----------------------- USD helpers ------------------------
-
-def _first_descendant_with_rigid_body(stage: Usd.Stage, root_prim: Usd.Prim) -> Optional[Usd.Prim]:
-    """
-    Return the first descendant (including root) that has UsdPhysics.RigidBodyAPI.
-    If none found, return None.
-    """
-    if not root_prim or not root_prim.IsValid():
-        return None
-    if UsdPhysics.RigidBodyAPI(root_prim):
-        return root_prim
-    for p in Usd.PrimRange(root_prim):
-        if UsdPhysics.RigidBodyAPI(p):
-            return p
-    return None
-
 def _resolve_env_scoped_path(stage: Usd.Stage, env_root_path: str, leaf_name: str) -> Optional[str]:
-    """
-    Resolve a prim path for a given leaf_name under the given env root.
-    Tries exact path first; if missing, searches only within env root (no full-stage scan).
-    Returns the prim path string or None.
-    """
     exact = stage.GetPrimAtPath(f"{env_root_path}/{leaf_name}")
     if exact and exact.IsValid():
         return str(exact.GetPath())
@@ -44,74 +27,17 @@ def _resolve_env_scoped_path(stage: Usd.Stage, env_root_path: str, leaf_name: st
             return str(p.GetPath())
     return None
 
-# --------------------- pose conversions ---------------------
-
-def _gf_from_tensor_pos_quat(pos_tensor, quat_tensor) -> Tuple[Gf.Vec3d, Gf.Quatd]:
-    """
-    Convert Isaac Lab tensors to Gf types.
-    pos_tensor: (3,) [x,y,z]; quat_tensor: (4,) [qw,qx,qy,qz]
-    """
-    x, y, z = float(pos_tensor[0]), float(pos_tensor[1]), float(pos_tensor[2])
-    qw, qx, qy, qz = float(quat_tensor[0]), float(quat_tensor[1]), float(quat_tensor[2]), float(quat_tensor[3])
-    return Gf.Vec3d(x, y, z), Gf.Quatd(qw, qx, qy, qz)
-
-# -------------------- scene object lookup -------------------
-
-def _iter_scene_objects(env) -> Dict[str, Any]:
-    """
-    Try to expose a dict-like view of scene objects across common Isaac Lab shapes.
-    Returns a mapping {registry_key: object}.
-    """
-    # Many scene implementations expose one of these:
-    for attr in ("object_registry", "objects", "prims", "entities"):
-        reg = getattr(env.scene, attr, None)
-        if isinstance(reg, dict) and reg:
-            return reg
-    # Some expose list-like 'objects'
-    objs = getattr(env.scene, "objects", None)
-    if isinstance(objs, (list, tuple)) and objs:
-        return {getattr(o, "name", f"obj_{i}"): o for i, o in enumerate(objs)}
-    return {}
-
-def _find_scene_object_by_leaf(env, env_ns: str, leaf: str):
-    """
-    Find a scene object whose prim path ends with f\"{env_ns}/{leaf}\" or whose name equals leaf.
-    Returns the object or None.
-    """
-    # 1) Direct get_object if available
-    get_object = getattr(env.scene, "get_object", None)
-    if callable(get_object):
-        try:
-            obj = get_object(leaf)
-            if obj is not None:
-                return obj
-        except Exception:
-            pass
-
-    # 2) Search registries / lists
-    reg = _iter_scene_objects(env)
-    suffix = f"{env_ns}/{leaf}"
-    for key, obj in reg.items():
-        prim_path = getattr(obj, "prim_path", "") or getattr(obj, "root_prim_path", "")
-        name = getattr(obj, "name", "")
-        if name == leaf:
-            return obj
-        if isinstance(prim_path, str) and prim_path.endswith(suffix):
-            return obj
-
-    # 3) Nothing found
+def _first_descendant_with_rigid_body(stage: Usd.Stage, root_prim: Usd.Prim) -> Optional[Usd.Prim]:
+    if not root_prim or not root_prim.IsValid():
+        return None
+    if UsdPhysics.RigidBodyAPI(root_prim):
+        return root_prim
+    for p in Usd.PrimRange(root_prim):
+        if UsdPhysics.RigidBodyAPI(p):
+            return p
     return None
 
-# ======================= Drawer Guide =======================
-
 class DrawerGuide(BaseGuide):
-    """
-    Multi-step flow:
-      0) Pick up DrawerBox                 (highlight DrawerBox)
-      1) Brace DrawerBox on ObstacleLeft   (still highlight DrawerBox)
-      2) Insert DrawerBottom               (highlight DrawerBottom)
-      3) Insert DrawerTop                  (highlight DrawerTop)
-    """
     SEQUENCE = ["DrawerBox", "DrawerBox", "DrawerBottom", "DrawerTop"]
 
     def __init__(self):
@@ -122,65 +48,46 @@ class DrawerGuide(BaseGuide):
             self._check_bottom_insert,
             self._check_top_insert,
         ]
-        # Cached absolute prim paths for the CURRENT env (set on reset).
-        # For moving parts, these may be resolved to rigid body child prims.
         self._paths: dict[str, Optional[str]] = {}
-        # Isaac Lab object handles (preferred for live physics pose)
-        self._objs: dict[str, Optional[object]] = {}
-        # Single-env index we read from (extend if you later vectorize)
-        self._env_index: int = 0
-        # Debug toggle
-        self._debug_print_once = True
+        # PrimViews for live physics poses (if available)
+        self._views: dict[str, Optional["RigidPrimView"]] = {"DrawerBox": None, "DrawerBottom": None, "DrawerTop": None}
 
     # ------------------- lifecycle / reset -------------------
 
     def on_reset(self, env):
-        """
-        Resolve prim paths and Isaac Lab object handles once per episode.
-        Prefer Isaac Lab tensors for live pose; otherwise fall back to USD.
-        """
         stage: Usd.Stage = env.scene.stage
-        env_ns: str = env.scene.env_ns  # e.g., "/World/envs/env_0"
+        env_ns: str = env.scene.env_ns
 
-        self._paths.clear()
-        self._objs.clear()
-
-        # Try to bind Isaac Lab objects (best for live simulation poses).
-        for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
-            obj = _find_scene_object_by_leaf(env, env_ns, name)
-            # Accept only if it exposes tensor state
-            if obj is not None and hasattr(obj, "data") and hasattr(obj.data, "root_state_w"):
-                self._objs[name] = obj
-            else:
-                self._objs[name] = None
-
-        # Static references (table/obstacles): resolve normally.
-        for name in ("Table", "ObstacleLeft", "ObstacleFront"):
+        # Resolve static refs normally
+        for name in ("PackingTable", "ObstacleLeft", "ObstacleFront"):
             self._paths[name] = _resolve_env_scoped_path(stage, env_ns, name)
 
-        # Moving parts: resolve to rigid body prim (fallback path if rigid not found).
+        # Resolve moving parts to rigid body prims (for USD fallback / highlighting)
         for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
             root_path = _resolve_env_scoped_path(stage, env_ns, name)
-            if not root_path:
-                self._paths[name] = None
-                continue
-            root_prim = stage.GetPrimAtPath(root_path)
-            rb_prim = _first_descendant_with_rigid_body(stage, root_prim)
-            self._paths[name] = str(rb_prim.GetPath()) if rb_prim and rb_prim.IsValid() else root_path
+            rb_path = None
+            if root_path:
+                rb_prim = _first_descendant_with_rigid_body(stage, stage.GetPrimAtPath(root_path))
+                rb_path = str(rb_prim.GetPath()) if rb_prim and rb_prim.IsValid() else root_path
+            self._paths[name] = rb_path
 
-        # If you ever run multiple envs, set self._env_index accordingly per env instance.
-        self._env_index = 0
-
-        # Optional one-time debug
-        if self._debug_print_once:
-            try:
-                reg = _iter_scene_objects(env)
-                print("[Guide] Scene registry keys:", list(reg.keys())[:16], "...")
-                print("[Guide] Tensor-bound objects:", {k: (v is not None) for k, v in self._objs.items()})
-                print("[Guide] Resolved USD paths:", self._paths)
-            except Exception:
-                pass
-            self._debug_print_once = False
+        # Build PrimViews if available
+        if _HAS_PRIM_VIEW:
+            # Each view targets exactly one prim path
+            for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
+                path = self._paths.get(name)
+                if not path:
+                    self._views[name] = None
+                    continue
+                try:
+                    # RigidPrimView accepts an expression; we pass the single absolute path
+                    view = RigidPrimView(prim_paths_expr=[path], name=f"{name}_view", reset_xform_properties=False)
+                    # Isaac Lab envs keep a PhysicsSimView at env.sim (or env.scene.physics_sim_view)
+                    # RigidPrimView.initialize() will look it up automatically if not provided.
+                    view.initialize()
+                    self._views[name] = view
+                except Exception:
+                    self._views[name] = None
 
     # ---------------------- HUD content ----------------------
 
@@ -197,40 +104,50 @@ class DrawerGuide(BaseGuide):
     # ------------------ per-frame evaluation -----------------
 
     def maybe_auto_advance(self, env, highlighter: VisualSequenceHighlighter):
-        """
-        Called once per sim tick (AFTER env.step or sim.render).
-        Creates a fresh XformCache each call for USD fallback so we see the latest physics poses.
-        """
         idx = highlighter.step_index
         if idx >= len(self._checks):
             return
-
         stage: Usd.Stage = env.scene.stage
-        cache = UsdGeom.XformCache()  # fresh per frame (USD fallback path)
-
+        cache = UsdGeom.XformCache()  # used for static refs & fallback
         if self._checks[idx](env, stage, cache):
             highlighter.advance()
 
     # ---------------------- pose helpers ---------------------
 
+    def _get_live_pose(self, name: str) -> Optional[Tuple[Gf.Vec3d, Gf.Quatd]]:
+        """
+        Live PhysX pose via PrimView if available. Returns (pos, quat) as Gf types.
+        """
+        view = self._views.get(name)
+        if view is None:
+            return None
+        try:
+            # get_world_poses returns (N, 3) positions and (N, 4) quats (xyzw) per default Isaac Sim Core
+            # BUT many builds return (N, 4) quats in (wxyz). We handle both.
+            pos_np, quat_np = view.get_world_poses(clone=False)
+            if pos_np.shape[0] < 1:
+                return None
+            x, y, z = float(pos_np[0, 0]), float(pos_np[0, 1]), float(pos_np[0, 2])
+            # Try to detect ordering; prefer (w,x,y,z) if plausible
+            w_first = abs(quat_np[0, 0]) >= max(abs(quat_np[0, 1]), abs(quat_np[0, 2]), abs(quat_np[0, 3]))
+            if w_first:
+                qw, qx, qy, qz = float(quat_np[0, 0]), float(quat_np[0, 1]), float(quat_np[0, 2]), float(quat_np[0, 3])
+            else:  # xyzw
+                qx, qy, qz, qw = float(quat_np[0, 0]), float(quat_np[0, 1]), float(quat_np[0, 2]), float(quat_np[0, 3])
+            return Gf.Vec3d(x, y, z), Gf.Quatd(qw, qx, qy, qz)
+        except Exception:
+            return None
+
     def _get_pose(self, env, stage: Usd.Stage, cache: UsdGeom.XformCache, name: str) -> Optional[Tuple[Gf.Vec3d, Gf.Quatd]]:
         """
-        Return (pos, quat) as Gf types for the named part.
-        Prefers Isaac Lab object tensors; falls back to USD world xform.
+        Unified getter: try live PrimView, else USD world xform (for static refs or fallback).
         """
-        # 1) Isaac Lab tensor path (preferred)
-        obj = self._objs.get(name)
-        if obj is not None:
-            try:
-                rs = obj.data.root_state_w  # [num_envs, 13]
-                pos = rs[self._env_index, 0:3]
-                quat = rs[self._env_index, 3:7]  # [qw,qx,qy,qz]
-                return _gf_from_tensor_pos_quat(pos, quat)
-            except Exception:
-                # fall through to USD if tensor not available for some reason
-                pass
+        # 1) PrimView (live physics)
+        live = self._get_live_pose(name)
+        if live is not None:
+            return live
 
-        # 2) USD fallback path
+        # 2) USD fallback
         p = self._paths.get(name)
         if not p:
             return None
@@ -238,56 +155,50 @@ class DrawerGuide(BaseGuide):
         if not prim or not prim.IsValid():
             return None
         xf = cache.GetLocalToWorldTransform(prim)
-        pos = xf.ExtractTranslation()
-        quat = xf.ExtractRotation().GetQuat()
-        return pos, quat
+        return xf.ExtractTranslation(), xf.ExtractRotation().GetQuat()
 
     # ---------------------- step checks ---------------------
 
     def _check_pickup_box(self, env, stage, cache) -> bool:
-        table_pose = self._get_pose(env, stage, cache, "Table")
-        box_pose   = self._get_pose(env, stage, cache, "DrawerBox")
-        if not (table_pose and box_pose):
+        table = self._get_pose(env, stage, cache, "PackingTable")
+        box   = self._get_pose(env, stage, cache, "DrawerBox")
+        if not (table and box):
             return False
-        table_pos, _ = table_pose
-        box_pos, _   = box_pose
-        # ≥ 6 cm above table
-        return (box_pos[2] - table_pos[2]) >= 1.2
+        table_pos, _ = table
+        box_pos, _   = box
+        return (box_pos[2] - table_pos[2]) >= 0.06
 
     def _check_braced_box(self, env, stage, cache) -> bool:
-        obs_pose = self._get_pose(env, stage, cache, "ObstacleLeft")
-        box_pose = self._get_pose(env, stage, cache, "DrawerBox")
-        if not (obs_pose and box_pose):
+        obs = self._get_pose(env, stage, cache, "ObstacleLeft")
+        box = self._get_pose(env, stage, cache, "DrawerBox")
+        if not (obs and box):
             return False
-        obs_pos, obs_quat = obs_pose
-        box_pos, box_quat = box_pose
+        obs_pos, obs_quat = obs
+        box_pos, box_quat = box
         d = (obs_pos - box_pos).GetLength()
         ang = _ang_deg(obs_quat, box_quat)
-        # ≤ 3 cm and ≤ 15° relative orientation
         return (d <= 0.03) and (ang <= 15.0)
 
     def _check_bottom_insert(self, env, stage, cache) -> bool:
-        box_pose = self._get_pose(env, stage, cache, "DrawerBox")
-        bot_pose = self._get_pose(env, stage, cache, "DrawerBottom")
-        if not (box_pose and bot_pose):
+        box = self._get_pose(env, stage, cache, "DrawerBox")
+        bot = self._get_pose(env, stage, cache, "DrawerBottom")
+        if not (box and bot):
             return False
-        box_pos, box_quat = box_pose
-        bot_pos, bot_quat = bot_pose
+        box_pos, box_quat = box
+        bot_pos, bot_quat = bot
         d = (box_pos - bot_pos).GetLength()
         ang = _ang_deg(box_quat, bot_quat)
         dz = bot_pos[2] - box_pos[2]
-        # Near + roughly aligned + slightly below box reference (i.e., "inside")
         return (d <= 0.02) and (ang <= 12.0) and (dz <= -0.005)
 
     def _check_top_insert(self, env, stage, cache) -> bool:
-        box_pose = self._get_pose(env, stage, cache, "DrawerBox")
-        top_pose = self._get_pose(env, stage, cache, "DrawerTop")
-        if not (box_pose and top_pose):
+        box = self._get_pose(env, stage, cache, "DrawerBox")
+        top = self._get_pose(env, stage, cache, "DrawerTop")
+        if not (box and top):
             return False
-        box_pos, box_quat = box_pose
-        top_pos, top_quat = top_pose
+        box_pos, box_quat = box
+        top_pos, top_quat = top
         d = (box_pos - top_pos).GetLength()
         ang = _ang_deg(box_quat, top_quat)
         dz = top_pos[2] - box_pos[2]
-        # Near + roughly aligned + slightly above box reference (i.e., "on top")
         return (d <= 0.02) and (ang <= 12.0) and (dz >= 0.005)
