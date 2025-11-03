@@ -1,7 +1,7 @@
 from .base import BaseGuide, VisualSequenceHighlighter
 from pxr import UsdGeom, Usd, UsdPhysics, Gf
 import math
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict, Any
 
 # ----------------------- math helpers -----------------------
 
@@ -55,6 +55,53 @@ def _gf_from_tensor_pos_quat(pos_tensor, quat_tensor) -> Tuple[Gf.Vec3d, Gf.Quat
     qw, qx, qy, qz = float(quat_tensor[0]), float(quat_tensor[1]), float(quat_tensor[2]), float(quat_tensor[3])
     return Gf.Vec3d(x, y, z), Gf.Quatd(qw, qx, qy, qz)
 
+# -------------------- scene object lookup -------------------
+
+def _iter_scene_objects(env) -> Dict[str, Any]:
+    """
+    Try to expose a dict-like view of scene objects across common Isaac Lab shapes.
+    Returns a mapping {registry_key: object}.
+    """
+    # Many scene implementations expose one of these:
+    for attr in ("object_registry", "objects", "prims", "entities"):
+        reg = getattr(env.scene, attr, None)
+        if isinstance(reg, dict) and reg:
+            return reg
+    # Some expose list-like 'objects'
+    objs = getattr(env.scene, "objects", None)
+    if isinstance(objs, (list, tuple)) and objs:
+        return {getattr(o, "name", f"obj_{i}"): o for i, o in enumerate(objs)}
+    return {}
+
+def _find_scene_object_by_leaf(env, env_ns: str, leaf: str):
+    """
+    Find a scene object whose prim path ends with f\"{env_ns}/{leaf}\" or whose name equals leaf.
+    Returns the object or None.
+    """
+    # 1) Direct get_object if available
+    get_object = getattr(env.scene, "get_object", None)
+    if callable(get_object):
+        try:
+            obj = get_object(leaf)
+            if obj is not None:
+                return obj
+        except Exception:
+            pass
+
+    # 2) Search registries / lists
+    reg = _iter_scene_objects(env)
+    suffix = f"{env_ns}/{leaf}"
+    for key, obj in reg.items():
+        prim_path = getattr(obj, "prim_path", "") or getattr(obj, "root_prim_path", "")
+        name = getattr(obj, "name", "")
+        if name == leaf:
+            return obj
+        if isinstance(prim_path, str) and prim_path.endswith(suffix):
+            return obj
+
+    # 3) Nothing found
+    return None
+
 # ======================= Drawer Guide =======================
 
 class DrawerGuide(BaseGuide):
@@ -79,9 +126,11 @@ class DrawerGuide(BaseGuide):
         # For moving parts, these may be resolved to rigid body child prims.
         self._paths: dict[str, Optional[str]] = {}
         # Isaac Lab object handles (preferred for live physics pose)
-        self._objs: dict[str, object] = {}
+        self._objs: dict[str, Optional[object]] = {}
         # Single-env index we read from (extend if you later vectorize)
         self._env_index: int = 0
+        # Debug toggle
+        self._debug_print_once = True
 
     # ------------------- lifecycle / reset -------------------
 
@@ -98,16 +147,15 @@ class DrawerGuide(BaseGuide):
 
         # Try to bind Isaac Lab objects (best for live simulation poses).
         for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
-            try:
-                obj = env.scene.get_object(name)
-                # Verify it exposes root_state_w
-                _ = obj.data.root_state_w  # will raise if not present
+            obj = _find_scene_object_by_leaf(env, env_ns, name)
+            # Accept only if it exposes tensor state
+            if obj is not None and hasattr(obj, "data") and hasattr(obj.data, "root_state_w"):
                 self._objs[name] = obj
-            except Exception:
-                self._objs[name] = None  # will fall back to USD
+            else:
+                self._objs[name] = None
 
         # Static references (table/obstacles): resolve normally.
-        for name in ("PackingTable", "ObstacleLeft", "ObstacleFront"):
+        for name in ("Table", "ObstacleLeft", "ObstacleFront"):
             self._paths[name] = _resolve_env_scoped_path(stage, env_ns, name)
 
         # Moving parts: resolve to rigid body prim (fallback path if rigid not found).
@@ -122,6 +170,17 @@ class DrawerGuide(BaseGuide):
 
         # If you ever run multiple envs, set self._env_index accordingly per env instance.
         self._env_index = 0
+
+        # Optional one-time debug
+        if self._debug_print_once:
+            try:
+                reg = _iter_scene_objects(env)
+                print("[Guide] Scene registry keys:", list(reg.keys())[:16], "...")
+                print("[Guide] Tensor-bound objects:", {k: (v is not None) for k, v in self._objs.items()})
+                print("[Guide] Resolved USD paths:", self._paths)
+            except Exception:
+                pass
+            self._debug_print_once = False
 
     # ---------------------- HUD content ----------------------
 
@@ -163,8 +222,7 @@ class DrawerGuide(BaseGuide):
         obj = self._objs.get(name)
         if obj is not None:
             try:
-                # root_state_w: [num_envs, 13] => (x,y,z, qw,qx,qy,qz, vx,vy,vz, wx,wy,wz)
-                rs = obj.data.root_state_w
+                rs = obj.data.root_state_w  # [num_envs, 13]
                 pos = rs[self._env_index, 0:3]
                 quat = rs[self._env_index, 3:7]  # [qw,qx,qy,qz]
                 return _gf_from_tensor_pos_quat(pos, quat)
@@ -187,14 +245,14 @@ class DrawerGuide(BaseGuide):
     # ---------------------- step checks ---------------------
 
     def _check_pickup_box(self, env, stage, cache) -> bool:
-        table_pose = self._get_pose(env, stage, cache, "PackingTable")
+        table_pose = self._get_pose(env, stage, cache, "Table")
         box_pose   = self._get_pose(env, stage, cache, "DrawerBox")
         if not (table_pose and box_pose):
             return False
         table_pos, _ = table_pose
         box_pos, _   = box_pose
         # ≥ 6 cm above table
-        return (box_pos[2] - table_pos[2]) >= 0.06
+        return (box_pos[2] - table_pos[2]) >= 1.2
 
     def _check_braced_box(self, env, stage, cache) -> bool:
         obs_pose = self._get_pose(env, stage, cache, "ObstacleLeft")
