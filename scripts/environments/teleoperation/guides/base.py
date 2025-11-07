@@ -226,7 +226,7 @@ class HUDManager:
 
     def get_widget_dimensions(self, text: str, font_size: float, max_width: float, min_width: float):
         #Estimate average character width.
-        char_width = 0.6 * font_size
+        char_width = 0.03 * font_size
         max_chars_per_line = int(max_width / char_width)
         lines = textwrap.wrap(text, width=max_chars_per_line)
         if not lines:
