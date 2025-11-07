@@ -1,5 +1,6 @@
 # base.py
 from __future__ import annotations
+import textwrap
 from typing import List, Optional
 
 from pxr import Usd, Gf
@@ -9,7 +10,6 @@ from isaaclab.sim.spawners.materials.physics_materials_cfg import RigidBodyMater
 from isaaclab.sim.spawners.materials.visual_materials_cfg import PreviewSurfaceCfg
 
 from pxr import UsdShade
-import omni.usd
 
 # ---------------------------------------------------------------------------
 # Material registry: define & spawn once, then bind everywhere
@@ -224,9 +224,23 @@ class HUDManager:
         ]
         self._ui_container = UiContainer(self._widget_component, space_stack=space_stack)
 
+    def get_widget_dimensions(self, text: str, font_size: float, max_width: float, min_width: float):
+        #Estimate average character width.
+        char_width = 0.6 * font_size
+        max_chars_per_line = int(max_width / char_width)
+        lines = textwrap.wrap(text, width=max_chars_per_line)
+        if not lines:
+            lines = [text]
+        # computed_width = max(len(line) for line in lines) * char_width
+        # actual_width = max(min(computed_width, max_width), min_width)
+        # line_height = 1.2 * font_size
+        # actual_height = len(lines) * line_height
+        wrapped_text = "\n".join(lines)
+        return wrapped_text
+    
     def update(self, text: str):
         if self._label:
-            self._label.text = text
+            self._label.text = self.get_widget_dimensions(text, 4.0, 4.0, 4.0)
 
     def show(self):  self._widget_component.visible = True
     def hide(self):  self._widget_component.visible = False
