@@ -211,7 +211,7 @@ class HUDManager:
             height=height,
             resolution_scale=resolution_scale,
             unit_to_pixel_scale=unit_to_pixel_scale,
-            update_policy=sc.Widget.UpdatePolicy.ON_DEMAND,
+            update_policy=sc.Widget.UpdatePolicy.ALWAYS,
             construct_callback=on_constructed,
         )
         space_stack = [
@@ -248,11 +248,11 @@ class BaseGuide:
     def create_physics_binder(self) -> PhysicsSequenceBinder:
         return PhysicsSequenceBinder(self.SEQUENCE, MaterialRegistry.physics_path)
 
-    def step_label(self, highlighter: VisualSequenceHighlighter) -> str:
-        idx = highlighter.step_index
-        total = highlighter.total_steps or 1
-        name = highlighter.current_name or "Done"
-        return f"Step {min(idx+1, total)}/{total}: Pick up {name}"
+    # def step_label(self, highlighter: VisualSequenceHighlighter) -> str:
+    #     idx = highlighter.step_index
+    #     total = highlighter.total_steps or 1
+    #     name = highlighter.current_name or "Done"
+    #     return f"Step {min(idx+1, total)}/{total}: Pick up {name}"
 
     def maybe_auto_advance(self, env, highlighter: VisualSequenceHighlighter):
         return

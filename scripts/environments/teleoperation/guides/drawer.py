@@ -2,10 +2,7 @@ from .base import BaseGuide, VisualSequenceHighlighter
 from pxr import UsdGeom, Usd, UsdPhysics, Gf
 import math
 from typing import Optional
-
-# PhysX runtime API (continuous rigid body transform during simulation)
-# Docs: omni.physx.bindings._physx.PhysX.get_rigidbody_transformation(stage, prim_path)
-from omni.physx.bindings._physx import PhysX as _PhysX
+from omni.physx import get_physx_interface
 
 
 # ----------------------- small helpers -----------------------
@@ -51,9 +48,17 @@ def _physx_get_pose(stage: Usd.Stage, prim_path: str) -> Optional[tuple[Gf.Vec3d
     if not prim_path:
         return None
     try:
-        x, y, z, qx, qy, qz, qw = _PhysX.get_rigidbody_transformation(stage, prim_path)
-        return Gf.Vec3d(float(x), float(y), float(z)), Gf.Quatd(float(qw), float(qx), float(qy), float(qz))
+        transform = get_physx_interface().get_rigidbody_transformation(prim_path)
+        ret = transform['ret_val']
+        pos = transform['position']
+        rot = transform['rotation']
+        if not ret or pos is None or rot is None:
+            return None
+        x, y, z = float(pos.x), float(pos.y), float(pos.z)
+        qx, qy, qz, qw = float(rot.x), float(rot.y), float(rot.z), float(rot.w)
+        return Gf.Vec3d(x, y, z), Gf.Quatd(qw, qx, qy, qz)
     except Exception:
+        print("returning Exception")
         return None
 
 
@@ -88,8 +93,7 @@ class DrawerGuide(BaseGuide):
         self._paths.clear()
 
         # Table can be named "PackingTable" or "Table" — normalize to key "Table"
-        table_path = _resolve_env_scoped_path(stage, env_ns, "PackingTable") \
-            or _resolve_env_scoped_path(stage, env_ns, "Table")
+        table_path = _resolve_env_scoped_path(stage, env_ns, "PackingTable")
         self._paths["Table"] = table_path
 
         # Obstacles (static)
@@ -178,7 +182,7 @@ class DrawerGuide(BaseGuide):
             return False
         box_pos, _ = box_pose
         # ≥ 6 cm above table
-        return (box_pos[2] - table_pos[2]) >= 1.1
+        return (box_pos[2] - table_pos[2]) >= 1.081
 
     def _check_braced_box(self, env, stage, cache) -> bool:
         obs_pose = self._get_obstacle_pose("ObstacleLeft", stage, cache)
