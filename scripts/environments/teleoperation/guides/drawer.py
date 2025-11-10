@@ -62,7 +62,7 @@ def _physx_get_pose(stage: Usd.Stage, prim_path: str) -> Optional[tuple[Gf.Vec3d
         return None
 
 
-# ======================= Drawer Guide =======================
+# ------------------- Drawer Guide -------------------
 
 class DrawerGuide(BaseGuide):
     """
@@ -92,7 +92,7 @@ class DrawerGuide(BaseGuide):
         env_ns: str = env.scene.env_ns  # e.g., "/World/envs/env_0"
         self._paths.clear()
 
-        # Table can be named "PackingTable" or "Table" — normalize to key "Table"
+        # Table (static)
         table_path = _resolve_env_scoped_path(stage, env_ns, "PackingTable")
         self._paths["Table"] = table_path
 
@@ -135,7 +135,7 @@ class DrawerGuide(BaseGuide):
             return
 
         stage: Usd.Stage = env.scene.stage
-        # Fresh cache for static USD reads (table/obstacles)
+        # Fresh cache for static USD reads
         cache = UsdGeom.XformCache()
 
         if self._checks[idx](env, stage, cache):
@@ -205,7 +205,7 @@ class DrawerGuide(BaseGuide):
         d = (box_pos - bot_pos).GetLength()
         ang = _ang_deg(box_quat, bot_quat)
         dz = bot_pos[2] - box_pos[2]
-        # Near + roughly aligned + slightly below box reference (i.e., "inside")
+        # Near + roughly aligned + slightly below box reference
         return (d <= 0.02) and (ang <= 12.0) and (dz <= -0.005)
 
     def _check_top_insert(self, env, stage, cache) -> bool:
@@ -218,5 +218,5 @@ class DrawerGuide(BaseGuide):
         d = (box_pos - top_pos).GetLength()
         ang = _ang_deg(box_quat, top_quat)
         dz = top_pos[2] - box_pos[2]
-        # Near + roughly aligned + slightly above box reference (i.e., "on top")
+        # Near + roughly aligned + slightly above box reference
         return (d <= 0.02) and (ang <= 12.0) and (dz >= 0.005)

@@ -53,7 +53,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleFront
     obstacle_front = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleFront",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.62, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.67, 1.03]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_front/obstacle_front.usd",
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
@@ -64,7 +64,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleLeft
     obstacle_left = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleLeft",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.43, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.48, 1.03]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
@@ -74,7 +74,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleRight
     obstacle_right = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleRight",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.43, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.48, 1.03]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
@@ -84,33 +84,36 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # DrawerBox
     drawer_box = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DrawerBox",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.02, 0.39, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box/drawer_box.usd",
                          scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=10),
                          ),
     )
 
     # DrawerBottom
     drawer_container_bottom = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DrawerBottom",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.45, 1.085]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.5, 1.085]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom/drawer_container_bottom.usd",
                          scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
                          ),
     )
 
     # DrawerTop
     drawer_container_top = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DrawerTop",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.54, 1.085]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.59, 1.085]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top/drawer_container_top.usd",
                          scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
                          ),
     )
 
