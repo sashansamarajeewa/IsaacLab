@@ -476,17 +476,17 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
             dynamic_friction=1.0,
             friction_combine_mode="multiply",
         ),
-        physx=sim_utils.PhysxCfg(
-            max_position_iteration_count=192,
-            max_velocity_iteration_count=1,
-            bounce_threshold_velocity=0.2,
-            friction_offset_threshold=0.01,
-            friction_correlation_distance=0.00625,
-            gpu_max_rigid_contact_count=2**23,
-            gpu_max_rigid_patch_count=2**23,
-            gpu_max_num_partitions=1, 
+        # physx=sim_utils.PhysxCfg(
+        #     max_position_iteration_count=192,
+        #     max_velocity_iteration_count=1,
+        #     bounce_threshold_velocity=0.2,
+        #     friction_offset_threshold=0.01,
+        #     friction_correlation_distance=0.00625,
+        #     gpu_max_rigid_contact_count=2**23,
+        #     gpu_max_rigid_patch_count=2**23,
+        #     gpu_max_num_partitions=1, 
 
-        ),
+        # ),
     )
 
     def __post_init__(self):
