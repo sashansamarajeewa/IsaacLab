@@ -114,6 +114,7 @@ class VisualSequenceHighlighter:
             self._bind_name(self.current_name)
 
     def refresh_after_reset(self):
+        self._step = 0
         self._bind_name(self.current_name)
 
     @property
