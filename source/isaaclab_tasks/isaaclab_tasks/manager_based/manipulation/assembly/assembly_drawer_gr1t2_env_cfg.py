@@ -57,7 +57,6 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_front/obstacle_front.usd",
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
-                         articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
                          ),
     )
     
