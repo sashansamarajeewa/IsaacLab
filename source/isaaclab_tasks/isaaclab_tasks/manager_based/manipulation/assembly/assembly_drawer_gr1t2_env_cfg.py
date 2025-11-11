@@ -90,6 +90,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
                          mass_props=sim_utils.MassPropertiesCfg(mass=10),
+                         collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.005, rest_offset=0.0),
                          ),
     )
 
@@ -492,12 +493,12 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 2
+        self.decimation = 2 #6
         self.episode_length_s = 20.0
         # simulation settings
         self.sim.dt = 1 / 150  # 120Hz
-        self.sim.render_interval = 2
-        self.sim.physx.enable_ccd = False
+        self.sim.render_interval = 2 #6
+        self.sim.physx.enable_ccd = False #True
 
         # Convert USD to URDF and change revolute joints to fixed
         temp_urdf_output_path, temp_urdf_meshes_output_path = ControllerUtils.convert_usd_to_urdf(
