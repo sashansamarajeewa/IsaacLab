@@ -55,6 +55,27 @@ def _find_asset_roots_by_leaf_name(leaf_name: str) -> list[str]:
     pattern = f"/World/envs/env_.*/{leaf_name}$"
     return sim_utils.find_matching_prim_paths(pattern)
 
+def _find_visuals_path(stage: Usd.Stage, asset_root_path: str) -> Optional[str]:
+    """
+    Prefer a direct child named 'visuals' under the asset root.
+    Fallback: any descendant named 'visuals'. Returns the prim path or None.
+    """
+    root = stage.GetPrimAtPath(asset_root_path)
+    if not root or not root.IsValid():
+        return None
+
+    # 1) direct child named 'visuals'
+    for child in root.GetChildren():
+        if child.GetName().lower() == "visuals" and child.IsValid():
+            return str(child.GetPath())
+
+    # 2) fallback: any descendant named 'visuals'
+    for p in Usd.PrimRange(root):
+        if p != root and p.GetName().lower() == "visuals":
+            return str(p.GetPath())
+
+    return None
+
 # ---------------------------------------------------------------------------
 # Unbinds visual materials
 # ---------------------------------------------------------------------------
@@ -91,12 +112,27 @@ class VisualSequenceHighlighter:
         self._unbind_all()
         if not leaf_name:
             return
-        # Bind once at each asset root (covers all descendants via binding strength)
-        targets = _find_asset_roots_by_leaf_name(leaf_name)
+
+        # resolve all asset roots for this leaf across envs
+        asset_roots = _find_asset_roots_by_leaf_name(leaf_name)
+
+        # map each root to its 'visuals' path; if missing, fall back to root (last resort)
+        targets = []
+        for root_path in asset_roots:
+            vpath = _find_visuals_path(self._stage, root_path)
+            targets.append(vpath if vpath else root_path)
+
+        # de-dupe while preserving order
+        seen, uniq = set(), []
         for p in targets:
-            sim_utils.make_uninstanceable(p)  # allow authoring if instanced
+            if p not in seen:
+                uniq.append(p); seen.add(p)
+
+        # bind only on visuals (or root if we had to fall back)
+        for p in uniq:
             sim_utils.bind_visual_material(p, self._mat_path, stronger_than_descendants=True)
-        self._active_paths = targets
+
+        self._active_visuals_paths = uniq
 
     def set_sequence(self, names: List[str], start_index: int = 0):
         self._seq = names[:]
