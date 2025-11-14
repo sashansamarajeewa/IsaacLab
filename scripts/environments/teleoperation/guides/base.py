@@ -31,8 +31,8 @@ class MaterialRegistry:
 
     # Physics (friction) material
     physics_cfg = RigidBodyMaterialCfg(
-        static_friction=2.0,
-        dynamic_friction=2.0,
+        static_friction=1.0,
+        dynamic_friction=1.0,
         friction_combine_mode="multiply",
     )
 

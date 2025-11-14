@@ -87,9 +87,8 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box/drawer_box.usd",
                          scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                        #  articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
                          mass_props=sim_utils.MassPropertiesCfg(mass=10),
-                         collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.005, rest_offset=0.0),
                          ),
     )
 
@@ -100,7 +99,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom/drawer_container_bottom.usd",
                          scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                        #  articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
                          mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
                          ),
     )
@@ -112,7 +111,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top/drawer_container_top.usd",
                          scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                        #  articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
                          mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
                          ),
     )

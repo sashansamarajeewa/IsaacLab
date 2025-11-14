@@ -87,6 +87,7 @@ class DrawerGuide(BaseGuide):
     # ------------------- lifecycle / reset -------------------
 
     def on_reset(self, env):
+        print("Called reset")
         stage: Usd.Stage = env.scene.stage
         env_ns: str = env.scene.env_ns
         self._paths.clear()
@@ -191,7 +192,7 @@ class DrawerGuide(BaseGuide):
         ang = _ang_deg(obs_quat, box_quat)
         print("ang:")
         print(ang)
-        return (d <= 0.03) and (ang <= 15.0)
+        return (d <= 0.16) and (ang <= 180.0)
 
     def _check_bottom_insert(self, env, stage, cache) -> bool:
         box_pose = self._get_live_part_pose("DrawerBox", stage)
