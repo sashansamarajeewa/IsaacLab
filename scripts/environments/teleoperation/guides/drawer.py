@@ -1,20 +1,17 @@
 from .base import BaseGuide, VisualSequenceHighlighter
 from pxr import UsdGeom, Usd, UsdPhysics, Gf
+from typing import Optional, Tuple
 import math
-from typing import Optional
 from omni.physx import get_physx_interface
 
-
-# ----------------------- small helpers -----------------------
+# ----------------------- helpers -----------------------
 
 def _ang_deg(q1: Gf.Quatd, q2: Gf.Quatd) -> float:
-    """Smallest angle (deg) between two quaternions."""
     dq = q1 * q2.GetInverse()
     a = 2.0 * math.degrees(math.acos(max(-1.0, min(1.0, abs(dq.GetReal())))))
     return min(a, 360.0 - a)
 
 def _first_descendant_with_rigid_body(stage: Usd.Stage, root_prim: Usd.Prim) -> Optional[Usd.Prim]:
-    """Return the first descendant (including root) that has UsdPhysics.RigidBodyAPI."""
     if not root_prim or not root_prim.IsValid():
         return None
     if UsdPhysics.RigidBodyAPI(root_prim):
@@ -25,7 +22,6 @@ def _first_descendant_with_rigid_body(stage: Usd.Stage, root_prim: Usd.Prim) -> 
     return None
 
 def _resolve_env_scoped_path(stage: Usd.Stage, env_root_path: str, leaf_name: str) -> Optional[str]:
-    """Resolve prim path for leaf_name under env root. Bounded search (no full-stage scan)."""
     exact = stage.GetPrimAtPath(f"{env_root_path}/{leaf_name}")
     if exact and exact.IsValid():
         return str(exact.GetPath())
@@ -37,36 +33,33 @@ def _resolve_env_scoped_path(stage: Usd.Stage, env_root_path: str, leaf_name: st
             return str(p.GetPath())
     return None
 
-def _physx_get_pose(stage: Usd.Stage, prim_path: str) -> Optional[tuple[Gf.Vec3d, Gf.Quatd]]:
+def _physx_get_pose(prim_path: str) -> Optional[Tuple[Gf.Vec3d, Gf.Quatd]]:
     """
-    Live PhysX pose for a rigid body prim using PhysX.get_rigidbody_transformation.
+    Live PhysX pose for a rigid body prim using
+    get_physx_interface().get_rigidbody_transformation(prim_path).
 
-    Expected return layout from PhysX:
-        (x, y, z, qx, qy, qz, qw)  # per NVIDIA docs & forum examples
-    If your build returns (x, y, z, qw, qx, qy, qz), swap accordingly.
+    Returns (Gf.Vec3d position, Gf.Quatd rotation) or None.
     """
     if not prim_path:
         return None
     try:
-        transform = get_physx_interface().get_rigidbody_transformation(prim_path)
-        ret = transform['ret_val']
-        pos = transform['position']
-        rot = transform['rotation']
+        result = get_physx_interface().get_rigidbody_transformation(prim_path)
+        ret = result["ret_val"]
+        pos = result["position"]
+        rot = result["rotation"]
         if not ret or pos is None or rot is None:
             return None
-        x, y, z = float(pos.x), float(pos.y), float(pos.z)
+        px, py, pz = float(pos.x), float(pos.y), float(pos.z)
         qx, qy, qz, qw = float(rot.x), float(rot.y), float(rot.z), float(rot.w)
-        return Gf.Vec3d(x, y, z), Gf.Quatd(qw, qx, qy, qz)
+        return Gf.Vec3d(px, py, pz), Gf.Quatd(qw, qx, qy, qz)
     except Exception:
-        print("returning Exception")
         return None
 
-
-# ------------------- Drawer Guide -------------------
+# ======================= Drawer Guide =======================
 
 class DrawerGuide(BaseGuide):
     """
-    Multi-step flow (keeps DrawerBox highlighted across first 2 steps):
+    Sequence:
       0) Pick up DrawerBox
       1) Brace DrawerBox on ObstacleLeft
       2) Insert DrawerBottom
@@ -82,17 +75,25 @@ class DrawerGuide(BaseGuide):
             self._check_bottom_insert,
             self._check_top_insert,
         ]
-        # Cached prim paths (resolved on reset). Moving parts point to rigid body prims.
+        # Resolved prim paths (set in on_reset). Moving parts -> rigid body prim if available.
         self._paths: dict[str, Optional[str]] = {}
+        # Cached static world poses for this episode
+        self._static_table_pos: Optional[Gf.Vec3d] = None
+        self._static_obstacles: dict[str, Optional[Tuple[Gf.Vec3d, Gf.Quatd]]] = {
+            "ObstacleLeft": None,
+            "ObstacleFront": None,
+        }
 
     # ------------------- lifecycle / reset -------------------
 
     def on_reset(self, env):
         stage: Usd.Stage = env.scene.stage
-        env_ns: str = env.scene.env_ns  # e.g., "/World/envs/env_0"
+        env_ns: str = env.scene.env_ns
         self._paths.clear()
+        self._static_table_pos = None
+        self._static_obstacles = {"ObstacleLeft": None, "ObstacleFront": None}
 
-        # Table (static)
+        # Table (static) — accept PackingTable or Table
         table_path = _resolve_env_scoped_path(stage, env_ns, "PackingTable")
         self._paths["Table"] = table_path
 
@@ -100,7 +101,7 @@ class DrawerGuide(BaseGuide):
         for name in ("ObstacleLeft", "ObstacleFront"):
             self._paths[name] = _resolve_env_scoped_path(stage, env_ns, name)
 
-        # Moving parts → resolve to rigid body prim (child) if present; else keep root
+        # Moving parts → rigid body prim if present, else root
         for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
             root_path = _resolve_env_scoped_path(stage, env_ns, name)
             if not root_path:
@@ -109,90 +110,87 @@ class DrawerGuide(BaseGuide):
             rb_prim = _first_descendant_with_rigid_body(stage, stage.GetPrimAtPath(root_path))
             self._paths[name] = str(rb_prim.GetPath()) if rb_prim and rb_prim.IsValid() else root_path
 
+        # Cache static world poses once
+        cache = UsdGeom.XformCache()
+        if self._paths.get("Table"):
+            prim = stage.GetPrimAtPath(self._paths["Table"])
+            if prim and prim.IsValid():
+                self._static_table_pos = cache.GetLocalToWorldTransform(prim).ExtractTranslation()
+
+        for name in ("ObstacleLeft", "ObstacleFront"):
+            p = self._paths.get(name)
+            if not p:
+                continue
+            prim = stage.GetPrimAtPath(p)
+            if prim and prim.IsValid():
+                xf = cache.GetLocalToWorldTransform(prim)
+                self._static_obstacles[name] = (xf.ExtractTranslation(), xf.ExtractRotation().GetQuat())
+
         print("[Guide] Resolved prim paths:", self._paths)
 
     # ---------------------- HUD content ----------------------
 
     def step_label(self, highlighter: VisualSequenceHighlighter) -> str:
         idx, total = highlighter.step_index, (highlighter.total_steps or 1)
-        return (
-            f"Step 1/{total}: Pick up DrawerBox" if idx == 0 else
-            f"Step 2/{total}: Brace DrawerBox against left obstacle" if idx == 1 else
-            f"Step 3/{total}: Insert DrawerBottom into DrawerBox" if idx == 2 else
-            f"Step 4/{total}: Insert DrawerTop into DrawerBox" if idx == 3 else
-            "Assembly complete!"
-        )
+        if idx == 0:
+            return f"Step 1/{total}: Pick up DrawerBox (lift above table)."
+        elif idx == 1:
+            return f"Step 2/{total}: Brace DrawerBox against the left corner obstacle."
+        elif idx == 2:
+            return f"Step 3/{total}: Insert DrawerBottom into DrawerBox."
+        elif idx == 3:
+            return f"Step 4/{total}: Insert DrawerTop to finish."
+        return "Assembly complete!"
 
     # ------------------ per-frame evaluation -----------------
 
     def maybe_auto_advance(self, env, highlighter: VisualSequenceHighlighter):
         """
         Call once per sim tick *after* env.step() or sim.render().
-        For moving parts, reads live PhysX poses; for static refs, reads USD xform.
+        Uses PhysX for moving parts, cached USD for statics.
         """
         idx = highlighter.step_index
         if idx >= len(self._checks):
             return
-
         stage: Usd.Stage = env.scene.stage
-        # Fresh cache for static USD reads
+        # cache is not used by moving parts, but keep the signature for checks
         cache = UsdGeom.XformCache()
-
         if self._checks[idx](env, stage, cache):
             highlighter.advance()
 
-    # ---------------------- pose getters ---------------------
+    # ---------------------- live pose getters ----------------------
 
-    def _get_table_pos(self, stage: Usd.Stage, cache: UsdGeom.XformCache) -> Optional[Gf.Vec3d]:
-        p = self._paths.get("Table")
-        if not p:
-            return None
-        prim = stage.GetPrimAtPath(p)
-        if not prim or not prim.IsValid():
-            return None
-        xf = cache.GetLocalToWorldTransform(prim)
-        return xf.ExtractTranslation()
-
-    def _get_obstacle_pose(self, name: str, stage: Usd.Stage, cache: UsdGeom.XformCache) -> Optional[tuple[Gf.Vec3d, Gf.Quatd]]:
+    def _get_live_part_pose(self, name: str, stage: Usd.Stage) -> Optional[Tuple[Gf.Vec3d, Gf.Quatd]]:
         p = self._paths.get(name)
         if not p:
             return None
-        prim = stage.GetPrimAtPath(p)
-        if not prim or not prim.IsValid():
-            return None
-        xf = cache.GetLocalToWorldTransform(prim)
-        return xf.ExtractTranslation(), xf.ExtractRotation().GetQuat()
+        return _physx_get_pose(p)
 
-    def _get_live_part_pose(self, name: str, stage: Usd.Stage) -> Optional[tuple[Gf.Vec3d, Gf.Quatd]]:
-        """
-        Live pose for moving parts: DrawerBox / DrawerBottom / DrawerTop.
-        Uses PhysX.get_rigidbody_transformation on the resolved rigid body prim.
-        """
-        p = self._paths.get(name)
-        if not p:
-            return None
-        return _physx_get_pose(stage, p)
-
-    # ---------------------- step checks ----------------------
+    # ---------------------- checks ----------------------
 
     def _check_pickup_box(self, env, stage, cache) -> bool:
-        table_pos = self._get_table_pos(stage, cache)
-        box_pose  = self._get_live_part_pose("DrawerBox", stage)
-        if not (table_pos and box_pose):
+        if self._static_table_pos is None:
+            return False
+        box_pose = self._get_live_part_pose("DrawerBox", stage)
+        if not box_pose:
             return False
         box_pos, _ = box_pose
-        # ≥ 6 cm above table
-        return (box_pos[2] - table_pos[2]) >= 1.081
+        # 1.081 meters above table
+        return (box_pos[2] - self._static_table_pos[2]) >= 1.081
 
     def _check_braced_box(self, env, stage, cache) -> bool:
-        obs_pose = self._get_obstacle_pose("ObstacleLeft", stage, cache)
+        obs_pose = self._static_obstacles.get("ObstacleLeft")
         box_pose = self._get_live_part_pose("DrawerBox", stage)
         if not (obs_pose and box_pose):
             return False
         obs_pos, obs_quat = obs_pose
         box_pos, box_quat = box_pose
         d = (obs_pos - box_pos).GetLength()
+        print("d:")
+        print(d)
         ang = _ang_deg(obs_quat, box_quat)
+        print("ang:")
+        print(ang)
         return (d <= 0.03) and (ang <= 15.0)
 
     def _check_bottom_insert(self, env, stage, cache) -> bool:
@@ -205,7 +203,6 @@ class DrawerGuide(BaseGuide):
         d = (box_pos - bot_pos).GetLength()
         ang = _ang_deg(box_quat, bot_quat)
         dz = bot_pos[2] - box_pos[2]
-        # Near + roughly aligned + slightly below box reference
         return (d <= 0.02) and (ang <= 12.0) and (dz <= -0.005)
 
     def _check_top_insert(self, env, stage, cache) -> bool:
@@ -218,5 +215,4 @@ class DrawerGuide(BaseGuide):
         d = (box_pos - top_pos).GetLength()
         ang = _ang_deg(box_quat, top_quat)
         dz = top_pos[2] - box_pos[2]
-        # Near + roughly aligned + slightly above box reference
         return (d <= 0.02) and (ang <= 12.0) and (dz >= 0.005)
