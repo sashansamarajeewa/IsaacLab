@@ -80,11 +80,11 @@ def _find_visuals_path(stage: Usd.Stage, asset_root_path: str) -> Optional[str]:
 # Unbinds visual materials
 # ---------------------------------------------------------------------------
 
-def _unbind_visual_material(stage: Usd.Stage, prim_path: str):
-    prim = stage.GetPrimAtPath(prim_path)
-    if not prim or not prim.IsValid():
-        return
-    UsdShade.MaterialBindingAPI(prim).UnbindDirectBinding()
+# def _unbind_visual_material(stage: Usd.Stage, prim_path: str):
+#     prim = stage.GetPrimAtPath(prim_path)
+#     if not prim or not prim.IsValid():
+#         return
+#     UsdShade.MaterialBindingAPI(prim).UnbindDirectBinding()
 
 # ---------------------------------------------------------------------------
 # Visual highlighter using bind_visual_material at the asset root
@@ -104,9 +104,10 @@ class VisualSequenceHighlighter:
         self._active_paths: list[str] = []
     
     def _unbind_all(self):
-        for p in self._active_paths:
-            _unbind_visual_material(self._stage, p)
-        self._active_paths = []
+        for p in self._active_visuals_paths:
+            # safe: only unbind where we bound before
+            UsdShade.MaterialBindingAPI(self._stage.GetPrimAtPath(p)).UnbindDirectBinding()
+        self._active_visuals_paths = []
 
     def _bind_name(self, leaf_name: Optional[str]):
         self._unbind_all()
