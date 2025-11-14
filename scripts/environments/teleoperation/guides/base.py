@@ -101,7 +101,7 @@ class VisualSequenceHighlighter:
         self._seq = sequence[:] if sequence else []
         self._mat_path = visual_mat_path
         self._step = 0
-        self._active_paths: list[str] = []
+        self._active_visuals_paths: list[str] = []
     
     def _unbind_all(self):
         for p in self._active_visuals_paths:
