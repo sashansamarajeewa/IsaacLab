@@ -192,7 +192,7 @@ class DrawerGuide(BaseGuide):
         ang = _ang_deg(obs_quat, box_quat)
         print("ang:")
         print(ang)
-        return (d <= 0.16) and (ang <= 180.0)
+        return (0.15 <= d <= 0.16) and (179.0 <= ang <= 180.0)
 
     def _check_bottom_insert(self, env, stage, cache) -> bool:
         box_pose = self._get_live_part_pose("DrawerBox", stage)
