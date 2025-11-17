@@ -66,6 +66,11 @@ class DrawerGuide(BaseGuide):
       3) Insert DrawerTop
     """
     SEQUENCE = ["DrawerBox", "DrawerBox", "DrawerBottom", "DrawerTop"]
+    
+    tol_x_dbox_lo   = 0.03   # ≤ 3 cm to left face along X
+    tol_y_dbox_fo   = 0.03   # ≤ 3 cm to front face along Y
+    tol_z_dbox_t   = 1.081   # 1.081 above table origin
+    tol_ang_dbox_fo = 12.0   # ≤ 12° to target orientation
 
     def __init__(self):
         super().__init__()
@@ -134,13 +139,13 @@ class DrawerGuide(BaseGuide):
     def step_label(self, highlighter: VisualSequenceHighlighter) -> str:
         idx, total = highlighter.step_index, (highlighter.total_steps or 1)
         if idx == 0:
-            return f"Step 1/{total}: Pick up DrawerBox (lift above table)."
+            return f"Step 1/{total}: Pick up Drawer Box (lift above table)."
         elif idx == 1:
-            return f"Step 2/{total}: Brace DrawerBox against the left corner obstacle."
+            return f"Step 2/{total}: Brace Drawer Box against the front and left corner obstacles."
         elif idx == 2:
-            return f"Step 3/{total}: Insert DrawerBottom into DrawerBox."
+            return f"Step 3/{total}: Insert Drawer Bottom into Drawer Box."
         elif idx == 3:
-            return f"Step 4/{total}: Insert DrawerTop to finish."
+            return f"Step 4/{total}: Insert Drawer Top to finish."
         return "Assembly complete!"
 
     # ------------------ per-frame evaluation -----------------
@@ -154,9 +159,7 @@ class DrawerGuide(BaseGuide):
         if idx >= len(self._checks):
             return
         stage: Usd.Stage = env.scene.stage
-        # cache is not used by moving parts, but keep the signature for checks
-        cache = UsdGeom.XformCache()
-        if self._checks[idx](env, stage, cache):
+        if self._checks[idx](stage):
             highlighter.advance()
 
     # ---------------------- live pose getters ----------------------
@@ -169,51 +172,66 @@ class DrawerGuide(BaseGuide):
 
     # ---------------------- checks ----------------------
 
-    def _check_pickup_box(self, env, stage, cache) -> bool:
+    def _check_pickup_box(self, stage) -> bool:
         if self._static_table_pos is None:
             return False
         box_pose = self._get_live_part_pose("DrawerBox", stage)
         if not box_pose:
             return False
         box_pos, _ = box_pose
-        # 1.081 meters above table
-        return (box_pos[2] - self._static_table_pos[2]) >= 1.081
+        # 1.083 meters above table
+        return (box_pos[2] - self._static_table_pos[2]) >= 1.083
 
-    def _check_braced_box(self, env, stage, cache) -> bool:
-        obs_pose = self._static_obstacles.get("ObstacleLeft")
-        box_pose = self._get_live_part_pose("DrawerBox", stage)
-        if not (obs_pose and box_pose):
+    def _check_braced_box(self, stage) -> bool:
+        left_pos, left_quat = self._static_obstacles["ObstacleLeft"]
+        front_pos, front_quat = self._static_obstacles["ObstacleFront"]
+        box_pos, box_quat = self._get_live_part_pose("DrawerBox", stage)
+        if not (left_pos and front_pos and box_pos):
             return False
-        obs_pos, obs_quat = obs_pose
-        box_pos, box_quat = box_pose
-        d = (obs_pos - box_pos).GetLength()
-        print("d:")
-        print(d)
-        ang = _ang_deg(obs_quat, box_quat)
-        print("ang:")
-        print(ang)
-        return (0.15 <= d <= 0.16) and (179.0 <= ang <= 180.0)
 
-    def _check_bottom_insert(self, env, stage, cache) -> bool:
-        box_pose = self._get_live_part_pose("DrawerBox", stage)
-        bot_pose = self._get_live_part_pose("DrawerBottom", stage)
-        if not (box_pose and bot_pose):
+        dx = box_pos[0] - left_pos[0]
+        print("dx:_check_braced_box")
+        print(dx)
+        dy = box_pos[1] - front_pos[1]
+        print("dy:_check_braced_box")
+        print(dy)
+        z_ok = (self._static_table_pos is None) or (box_pos[2] - self._static_table_pos[2]) <= self.tol_z_dbox_t
+        ang_ok = _ang_deg(box_quat, front_quat) <= self.tol_ang_dbox_fo
+        # return (0.15 <= d <= 0.16) and (179.0 <= ang <= 180.0)
+        return (0 < dx <= self.tol_x_dbox_lo) and (0 < dy <= self.tol_y_dbox_fo) and z_ok and ang_ok
+
+    def _check_bottom_insert(self, stage) -> bool:
+        box_pos, box_quat = self._get_live_part_pose("DrawerBox", stage)
+        bot_pos, bot_quat = self._get_live_part_pose("DrawerBottom", stage)
+        if not (box_pos and bot_pos):
             return False
-        box_pos, box_quat = box_pose
-        bot_pos, bot_quat = bot_pose
-        d = (box_pos - bot_pos).GetLength()
+
+        dx = box_pos[0] - bot_pos[0]
+        print("dx:")
+        print(dx)
+        dy = box_pos[1] - bot_pos[1]
+        print("dy:")
+        print(dy)
+        dz = box_pos[2] - bot_pos[2]
+        print("dz:")
+        print(dz)
         ang = _ang_deg(box_quat, bot_quat)
-        dz = bot_pos[2] - box_pos[2]
-        return (d <= 0.02) and (ang <= 12.0) and (dz <= -0.005)
+        return (0 < dx <= 0.02) and (0 < dy <= 0.02) and (0 < dz <= 0.02) and (0 < ang <= 1.0)
 
-    def _check_top_insert(self, env, stage, cache) -> bool:
-        box_pose = self._get_live_part_pose("DrawerBox", stage)
-        top_pose = self._get_live_part_pose("DrawerTop", stage)
-        if not (box_pose and top_pose):
+    def _check_top_insert(self, stage) -> bool:
+        box_pos, box_quat = self._get_live_part_pose("DrawerBox", stage)
+        top_pos, top_quat = self._get_live_part_pose("DrawerTop", stage)
+        if not (box_pos and top_pos):
             return False
-        box_pos, box_quat = box_pose
-        top_pos, top_quat = top_pose
-        d = (box_pos - top_pos).GetLength()
-        ang = _ang_deg(box_quat, top_quat)
+
+        dx = top_pos[0] - box_pos[0]
+        print("dx:")
+        print(dx)
+        dy = top_pos[1] - box_pos[1]
+        print("dy:")
+        print(dy)
         dz = top_pos[2] - box_pos[2]
-        return (d <= 0.02) and (ang <= 12.0) and (dz >= 0.005)
+        print("dz:")
+        print(dz)
+        ang = _ang_deg(box_quat, top_quat)
+        return (0 < dx <= 0.02) and (0 < dy <= 0.02) and (0 < dz <= 0.02) and (0 < ang <= 1.0)
