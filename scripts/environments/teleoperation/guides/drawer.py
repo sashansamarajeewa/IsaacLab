@@ -228,15 +228,7 @@ class DrawerGuide(BaseGuide):
             return False
 
         dx = top_pos[0] - box_pos[0]
-        print("dx:")
-        print(dx)
         dy = box_pos[1] - top_pos[1]
-        print("dy:")
-        print(dy)
         dz = top_pos[2] - box_pos[2]
-        print("dz:")
-        print(dz)
         ang = _ang_deg(box_quat, top_quat)
-        print("ang:")
-        print(ang)
         return (0 < abs(dx) <= self.tol_x_dbox_dtop) and (0 < dy <= self.tol_y_dbox_dtop) and (0 < dz <= self.tol_z_dbox_dtop) and (0 < ang <= self.tol_ang_dbox_dtop)

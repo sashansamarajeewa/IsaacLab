@@ -53,7 +53,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleFront
     obstacle_front = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleFront",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.67, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.67, 1.02]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_front/obstacle_front.usd",
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
@@ -63,7 +63,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleLeft
     obstacle_left = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleLeft",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.48, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.48, 1.02]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
@@ -73,7 +73,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleRight
     obstacle_right = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleRight",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.48, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.48, 1.02]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
