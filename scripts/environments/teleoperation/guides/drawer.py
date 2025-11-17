@@ -3,6 +3,7 @@ from pxr import UsdGeom, Usd, UsdPhysics, Gf
 from typing import Optional, Tuple
 import math
 from omni.physx import get_physx_interface
+import omni.audioplayer as audioplayer
 
 # ----------------------- helpers -----------------------
 
@@ -96,11 +97,13 @@ class DrawerGuide(BaseGuide):
             "ObstacleLeft": None,
             "ObstacleFront": None,
         }
+        
+        self.player = audioplayer.create_audio_player()
+        self.player.load_sound("/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/sound/ding.mp3")
 
     # ------------------- lifecycle / reset -------------------
 
     def on_reset(self, env):
-        print("Called reset")
         stage: Usd.Stage = env.scene.stage
         env_ns: str = env.scene.env_ns
         self._paths.clear()
@@ -140,20 +143,18 @@ class DrawerGuide(BaseGuide):
                 xf = cache.GetLocalToWorldTransform(prim)
                 self._static_obstacles[name] = (xf.ExtractTranslation(), xf.ExtractRotation().GetQuat())
 
-        print("[Guide] Resolved prim paths:", self._paths)
-
     # ---------------------- HUD content ----------------------
 
     def step_label(self, highlighter: VisualSequenceHighlighter) -> str:
         idx, total = highlighter.step_index, (highlighter.total_steps or 1)
         if idx == 0:
-            return f"Step 1/{total}: Pick up Drawer Box (lift above table)."
+            return f"Step 1/{total}: Pick up Drawer Box"
         elif idx == 1:
-            return f"Step 2/{total}: Brace Drawer Box against the front and left corner obstacles."
+            return f"Step 2/{total}: Brace Drawer Box against the front and left corner obstacles"
         elif idx == 2:
-            return f"Step 3/{total}: Insert Drawer Bottom into Drawer Box."
+            return f"Step 3/{total}: Insert Drawer Bottom into Drawer Box"
         elif idx == 3:
-            return f"Step 4/{total}: Insert Drawer Top to finish."
+            return f"Step 4/{total}: Insert Drawer Top to finish"
         return "Assembly complete!"
 
     # ------------------ per-frame evaluation -----------------
@@ -169,6 +170,11 @@ class DrawerGuide(BaseGuide):
         stage: Usd.Stage = env.scene.stage
         if self._checks[idx](stage):
             highlighter.advance()
+            try:
+                self.player.play_sound("/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/sound/ding.mp3")
+            except Exception as e:
+                print(f"[Audio] play failed: {e}")
+
 
     # ---------------------- live pose getters ----------------------
 
