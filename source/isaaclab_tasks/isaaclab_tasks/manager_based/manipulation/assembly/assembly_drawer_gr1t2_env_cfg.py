@@ -88,7 +88,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
                          scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                         #  articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
-                         mass_props=sim_utils.MassPropertiesCfg(mass=10),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=8),
                          ),
     )
 
@@ -434,8 +434,8 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
 
     sim: sim_utils.SimulationCfg = sim_utils.SimulationCfg(
         physics_material=sim_utils.RigidBodyMaterialCfg(
-            static_friction=1.0,
-            dynamic_friction=1.0,
+            static_friction=0.8,
+            dynamic_friction=0.7,
             friction_combine_mode="multiply",
         ),
         # physx=sim_utils.PhysxCfg(
