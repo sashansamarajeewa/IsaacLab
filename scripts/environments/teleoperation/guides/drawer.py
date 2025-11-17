@@ -67,10 +67,18 @@ class DrawerGuide(BaseGuide):
     """
     SEQUENCE = ["DrawerBox", "DrawerBox", "DrawerBottom", "DrawerTop"]
     
-    tol_x_dbox_lo   = 0.03   # ≤ 3 cm to left face along X
-    tol_y_dbox_fo   = 0.03   # ≤ 3 cm to front face along Y
-    tol_z_dbox_t   = 1.081   # 1.081 above table origin
-    tol_ang_dbox_fo = 12.0   # ≤ 12° to target orientation
+    tol_x_dbox_lo = 0.133 # distance between drawer box and left obstacle origin along X
+    tol_y_dbox_fo = 0.119 # distance between drawer box and front obstacle origin along Y
+    tol_z_dbox_t = 1.081 # distance between drawer box and table origin along Z
+    tol_ang_dbox_fo = 180 # angle between drawer box and front obstacle origin
+    tol_x_dbox_dbottom = 0.0019 # distance between drawer box and drawer bottom origin along X
+    tol_y_dbox_dbottom = 0.0228 # distance between drawer box and drawer bottom origin along Y
+    tol_z_dbox_dbottom = 0.0218 # distance between drawer box and drawer bottom origin along Z
+    tol_ang_dbox_dbottom = 0.5 # angle between drawer box and drawer bottom origin
+    tol_x_dbox_dtop = 0.0009 # distance between drawer box and drawer top origin along X
+    tol_y_dbox_dtop = 0.0162 # distance between drawer box and drawer top origin along Y
+    tol_z_dbox_dtop = 0.0689 # distance between drawer box and drawer top origin along Z
+    tol_ang_dbox_dtop = 0.5 # angle between drawer box and drawer top origin
 
     def __init__(self):
         super().__init__()
@@ -180,7 +188,7 @@ class DrawerGuide(BaseGuide):
             return False
         box_pos, _ = box_pose
         # 1.083 meters above table
-        return (box_pos[2] - self._static_table_pos[2]) >= 1.083
+        return (box_pos[2] - self._static_table_pos[2]) >= 1.084
 
     def _check_braced_box(self, stage) -> bool:
         left_pos, left_quat = self._static_obstacles["ObstacleLeft"]
@@ -190,14 +198,9 @@ class DrawerGuide(BaseGuide):
             return False
 
         dx = box_pos[0] - left_pos[0]
-        print("dx:_check_braced_box")
-        print(dx)
-        dy = box_pos[1] - front_pos[1]
-        print("dy:_check_braced_box")
-        print(dy)
+        dy = front_pos[1] - box_pos[1]
         z_ok = (self._static_table_pos is None) or (box_pos[2] - self._static_table_pos[2]) <= self.tol_z_dbox_t
         ang_ok = _ang_deg(box_quat, front_quat) <= self.tol_ang_dbox_fo
-        # return (0.15 <= d <= 0.16) and (179.0 <= ang <= 180.0)
         return (0 < dx <= self.tol_x_dbox_lo) and (0 < dy <= self.tol_y_dbox_fo) and z_ok and ang_ok
 
     def _check_bottom_insert(self, stage) -> bool:
@@ -207,16 +210,10 @@ class DrawerGuide(BaseGuide):
             return False
 
         dx = box_pos[0] - bot_pos[0]
-        print("dx:")
-        print(dx)
         dy = box_pos[1] - bot_pos[1]
-        print("dy:")
-        print(dy)
         dz = box_pos[2] - bot_pos[2]
-        print("dz:")
-        print(dz)
         ang = _ang_deg(box_quat, bot_quat)
-        return (0 < dx <= 0.02) and (0 < dy <= 0.02) and (0 < dz <= 0.02) and (0 < ang <= 1.0)
+        return (0 < abs(dx) <= self.tol_x_dbox_dbottom) and (0 < dy <= self.tol_y_dbox_dbottom) and (0 < dz <= self.tol_z_dbox_dbottom) and (0 < ang <= self.tol_ang_dbox_dbottom)
 
     def _check_top_insert(self, stage) -> bool:
         box_pos, box_quat = self._get_live_part_pose("DrawerBox", stage)
@@ -227,11 +224,13 @@ class DrawerGuide(BaseGuide):
         dx = top_pos[0] - box_pos[0]
         print("dx:")
         print(dx)
-        dy = top_pos[1] - box_pos[1]
+        dy = box_pos[1] - top_pos[1]
         print("dy:")
         print(dy)
         dz = top_pos[2] - box_pos[2]
         print("dz:")
         print(dz)
         ang = _ang_deg(box_quat, top_quat)
-        return (0 < dx <= 0.02) and (0 < dy <= 0.02) and (0 < dz <= 0.02) and (0 < ang <= 1.0)
+        print("ang:")
+        print(ang)
+        return (0 < abs(dx) <= self.tol_x_dbox_dtop) and (0 < dy <= self.tol_y_dbox_dtop) and (0 < dz <= self.tol_z_dbox_dtop) and (0 < ang <= self.tol_ang_dbox_dtop)
