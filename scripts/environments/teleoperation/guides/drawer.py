@@ -1,71 +1,11 @@
-from .base import BaseGuide, VisualSequenceHighlighter
+from .base import BaseGuide, VisualSequenceHighlighter, ang_deg, first_descendant_with_rigid_body, physx_get_pose, resolve_env_scoped_path
 from pxr import UsdGeom, Usd, UsdPhysics, Gf
 from typing import Optional, Tuple
-import math
-from omni.physx import get_physx_interface
-import omni.audioplayer as audioplayer
-
-# ----------------------- helpers -----------------------
-
-def _ang_deg(q1: Gf.Quatd, q2: Gf.Quatd) -> float:
-    dq = q1 * q2.GetInverse()
-    a = 2.0 * math.degrees(math.acos(max(-1.0, min(1.0, abs(dq.GetReal())))))
-    return min(a, 360.0 - a)
-
-def _first_descendant_with_rigid_body(stage: Usd.Stage, root_prim: Usd.Prim) -> Optional[Usd.Prim]:
-    if not root_prim or not root_prim.IsValid():
-        return None
-    if UsdPhysics.RigidBodyAPI(root_prim):
-        return root_prim
-    for p in Usd.PrimRange(root_prim):
-        if UsdPhysics.RigidBodyAPI(p):
-            return p
-    return None
-
-def _resolve_env_scoped_path(stage: Usd.Stage, env_root_path: str, leaf_name: str) -> Optional[str]:
-    exact = stage.GetPrimAtPath(f"{env_root_path}/{leaf_name}")
-    if exact and exact.IsValid():
-        return str(exact.GetPath())
-    env_root = stage.GetPrimAtPath(env_root_path)
-    if not env_root or not env_root.IsValid():
-        return None
-    for p in Usd.PrimRange(env_root):
-        if p.GetName() == leaf_name:
-            return str(p.GetPath())
-    return None
-
-def _physx_get_pose(prim_path: str) -> Optional[Tuple[Gf.Vec3d, Gf.Quatd]]:
-    """
-    Live PhysX pose for a rigid body prim using
-    get_physx_interface().get_rigidbody_transformation(prim_path).
-
-    Returns (Gf.Vec3d position, Gf.Quatd rotation) or None.
-    """
-    if not prim_path:
-        return None
-    try:
-        result = get_physx_interface().get_rigidbody_transformation(prim_path)
-        ret = result["ret_val"]
-        pos = result["position"]
-        rot = result["rotation"]
-        if not ret or pos is None or rot is None:
-            return None
-        px, py, pz = float(pos.x), float(pos.y), float(pos.z)
-        qx, qy, qz, qw = float(rot.x), float(rot.y), float(rot.z), float(rot.w)
-        return Gf.Vec3d(px, py, pz), Gf.Quatd(qw, qx, qy, qz)
-    except Exception:
-        return None
 
 # ======================= Drawer Guide =======================
 
 class DrawerGuide(BaseGuide):
-    """
-    Sequence:
-      0) Pick up DrawerBox
-      1) Brace DrawerBox on ObstacleLeft
-      2) Insert DrawerBottom
-      3) Insert DrawerTop
-    """
+
     SEQUENCE = ["DrawerBox", "DrawerBox", "DrawerBottom", "DrawerTop"]
     
     tol_x_dbox_lo = 0.133 # distance between drawer box and left obstacle origin along X
@@ -97,9 +37,6 @@ class DrawerGuide(BaseGuide):
             "ObstacleLeft": None,
             "ObstacleFront": None,
         }
-        
-        self.player = audioplayer.create_audio_player()
-        self.player.load_sound("/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/sound/ding.mp3")
 
     # ------------------- lifecycle / reset -------------------
 
@@ -111,20 +48,20 @@ class DrawerGuide(BaseGuide):
         self._static_obstacles = {"ObstacleLeft": None, "ObstacleFront": None}
 
         # Table (static) — accept PackingTable or Table
-        table_path = _resolve_env_scoped_path(stage, env_ns, "PackingTable")
+        table_path = resolve_env_scoped_path(stage, env_ns, "PackingTable")
         self._paths["Table"] = table_path
 
         # Obstacles (static)
         for name in ("ObstacleLeft", "ObstacleFront"):
-            self._paths[name] = _resolve_env_scoped_path(stage, env_ns, name)
+            self._paths[name] = resolve_env_scoped_path(stage, env_ns, name)
 
         # Moving parts → rigid body prim if present, else root
         for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
-            root_path = _resolve_env_scoped_path(stage, env_ns, name)
+            root_path = resolve_env_scoped_path(stage, env_ns, name)
             if not root_path:
                 self._paths[name] = None
                 continue
-            rb_prim = _first_descendant_with_rigid_body(stage, stage.GetPrimAtPath(root_path))
+            rb_prim = first_descendant_with_rigid_body(stage, stage.GetPrimAtPath(root_path))
             self._paths[name] = str(rb_prim.GetPath()) if rb_prim and rb_prim.IsValid() else root_path
 
         # Cache static world poses once
@@ -157,33 +94,6 @@ class DrawerGuide(BaseGuide):
             return f"Step 4/{total}: Insert Drawer Top to finish"
         return "Assembly complete!"
 
-    # ------------------ per-frame evaluation -----------------
-
-    def maybe_auto_advance(self, env, highlighter: VisualSequenceHighlighter):
-        """
-        Call once per sim tick *after* env.step() or sim.render().
-        Uses PhysX for moving parts, cached USD for statics.
-        """
-        idx = highlighter.step_index
-        if idx >= len(self._checks):
-            return
-        stage: Usd.Stage = env.scene.stage
-        if self._checks[idx](stage):
-            highlighter.advance()
-            try:
-                self.player.play_sound("/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/sound/ding.mp3")
-            except Exception as e:
-                print(f"[Audio] play failed: {e}")
-
-
-    # ---------------------- live pose getters ----------------------
-
-    def _get_live_part_pose(self, name: str, stage: Usd.Stage) -> Optional[Tuple[Gf.Vec3d, Gf.Quatd]]:
-        p = self._paths.get(name)
-        if not p:
-            return None
-        return _physx_get_pose(p)
-
     # ---------------------- checks ----------------------
 
     def _check_pickup_box(self, stage) -> bool:
@@ -206,7 +116,7 @@ class DrawerGuide(BaseGuide):
         dx = box_pos[0] - left_pos[0]
         dy = front_pos[1] - box_pos[1]
         z_ok = (self._static_table_pos is None) or (box_pos[2] - self._static_table_pos[2]) <= self.tol_z_dbox_t
-        ang_ok = _ang_deg(box_quat, front_quat) <= self.tol_ang_dbox_fo
+        ang_ok = ang_deg(box_quat, front_quat) <= self.tol_ang_dbox_fo
         return (0 < dx <= self.tol_x_dbox_lo) and (0 < dy <= self.tol_y_dbox_fo) and z_ok and ang_ok
 
     def _check_bottom_insert(self, stage) -> bool:
@@ -218,7 +128,7 @@ class DrawerGuide(BaseGuide):
         dx = box_pos[0] - bot_pos[0]
         dy = box_pos[1] - bot_pos[1]
         dz = box_pos[2] - bot_pos[2]
-        ang = _ang_deg(box_quat, bot_quat)
+        ang = ang_deg(box_quat, bot_quat)
         return (0 < abs(dx) <= self.tol_x_dbox_dbottom) and (0 < dy <= self.tol_y_dbox_dbottom) and (0 < dz <= self.tol_z_dbox_dbottom) and (0 < ang <= self.tol_ang_dbox_dbottom)
 
     def _check_top_insert(self, stage) -> bool:
@@ -230,5 +140,5 @@ class DrawerGuide(BaseGuide):
         dx = top_pos[0] - box_pos[0]
         dy = box_pos[1] - top_pos[1]
         dz = top_pos[2] - box_pos[2]
-        ang = _ang_deg(box_quat, top_quat)
+        ang = ang_deg(box_quat, top_quat)
         return (0 < abs(dx) <= self.tol_x_dbox_dtop) and (0 < dy <= self.tol_y_dbox_dtop) and (0 < dz <= self.tol_z_dbox_dtop) and (0 < ang <= self.tol_ang_dbox_dtop)
