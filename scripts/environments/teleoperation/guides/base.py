@@ -73,7 +73,7 @@ class VisualSequenceHighlighter:
         # resolve all asset roots for this leaf across envs
         asset_roots = _find_asset_roots_by_leaf_name(leaf_name)
 
-        # map each root to its 'visuals' path; if missing, fall back to root (last resort)
+        # map each root to its 'visuals' path; if missing, fall back to root
         targets = []
         for root_path in asset_roots:
             vpath = _find_visuals_path(self._stage, root_path)
@@ -85,7 +85,7 @@ class VisualSequenceHighlighter:
             if p not in seen:
                 uniq.append(p); seen.add(p)
 
-        # bind only on visuals (or root if we had to fall back)
+        # bind only on visuals
         for p in uniq:
             sim_utils.bind_visual_material(p, self._mat_path, stronger_than_descendants=True)
 
@@ -237,7 +237,7 @@ def physx_get_pose(prim_path: str) -> Optional[Tuple[Gf.Vec3d, Gf.Quatd]]:
         return None
 
 # ---------------------------------------------------------------------------
-# Minimal HUD (unchanged)
+# Minimal HUD
 # ---------------------------------------------------------------------------
 
 import omni.ui as ui
@@ -260,7 +260,6 @@ class SimpleSceneWidget(ui.Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._root = None
-        self._labels: list[ui.Label] = []
 
         with ui.ZStack():
             ui.Rectangle(style={
@@ -270,46 +269,33 @@ class SimpleSceneWidget(ui.Widget):
                 "border_radius": 2,
             })
             # vertical list of steps
-            with ui.VStack(style={"margin": 6, "spacing": 2}) as root:
+            with ui.VStack(style={"margin": 1, "spacing": 0}) as root:
                 self._root = root
 
-    def set_steps(self, steps: list[str], active_index: int, completed: list[bool]):
+    def set_steps(self, wrapped_steps: list[str], active_index: int):
         """
-        Rebuild the list of steps.
-        - steps: list of strings
-        - active_index: index of current step
-        - completed: same length as steps, True if that step is completed
+        wrapped_steps: list of strings that may already contain '\\n' for wrapping.
+        active_index: index of current step.
         """
         if self._root is None:
             return
 
         self._root.clear()
-        self._labels.clear()
 
         with self._root:
-            for i, text in enumerate(steps):
+            for i, text in enumerate(wrapped_steps):
                 is_active = (i == active_index)
-                is_done = completed[i] if i < len(completed) else False
 
-                with ui.HStack(spacing=4):
-                    # Tick or bullet
-                    ui.Label("✓" if is_done else "•", style={
-                        "font_size": 4,
-                        "color": ui.color(0.7 if is_done else 0.5),
-                    })
+                style = {
+                    "font_size": 1,
+                    "color": ui.color("#83ff6d") if is_active else ui.color("#f5f5f5"),
+                    "margin": 1,
+                    "padding": 1,
+                }
+                if is_active:
+                    style["border_radius"] = 2
 
-                    # Step text
-                    style = {
-                        "font_size": 4,
-                        "color": ui.color("#f5f5f5") if is_active else ui.color(0.8),
-                    }
-                    if is_active:
-                        # Subtle highlight for active step
-                        style["background_color"] = ui.color(0.25)
-                        style["border_radius"] = 2
-
-                    lbl = ui.Label(text, style=style)
-                    self._labels.append(lbl)
+                ui.Label(text, style=style)
 
 from omni.kit.xr.scene_view.utils.ui_container import UiContainer
 from omni.kit.xr.scene_view.utils.manipulator_components.widget_component import WidgetComponent
@@ -374,14 +360,16 @@ class HUDManager:
     def __init__(
         self,
         widget_cls,
-        width: float = 1.2,   # narrower
-        height: float = 2.0,  # taller
-        resolution_scale: int = 10,
-        unit_to_pixel_scale: int = 20,
-        translation: Gf.Vec3d = Gf.Vec3d(0.3, 1.2, 0.8),
+        width: float = 0.9,   # narrower
+        height: float = 1.5,  # taller
+        resolution_scale: int = 20,
+        unit_to_pixel_scale: int = 30,
+        translation: Gf.Vec3d = Gf.Vec3d(0, 0.9, 1.6),
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
     ):
         self._widget = None
+        self._width = width
+        self._font_size = 1.0  
 
         def on_constructed(widget_instance):
             self._widget = widget_instance
@@ -405,8 +393,13 @@ class HUDManager:
         ]
         self._ui_container = UiContainer(self._widget_component, space_stack=space_stack)
 
-    # you can delete get_widget_dimensions if you don't need it
-
+    def wrap_text(self, text: str) -> str:
+        char_width = 0.012 * self._font_size
+        usable_width = self._width * 0.85
+        max_chars_per_line = max(10, int(usable_width / char_width))
+        lines = textwrap.wrap(text, width=max_chars_per_line)
+        return "\n".join(lines) if lines else text
+    
     def update(self, guide: "BaseGuide", highlighter: VisualSequenceHighlighter):
         if not self._widget or not hasattr(guide, "get_all_instructions"):
             return
@@ -414,13 +407,36 @@ class HUDManager:
         steps = guide.get_all_instructions()
         if not steps:
             return
+        
+        total_real = len(guide.SEQUENCE)          # 4
+        idx = highlighter.step_index   
 
-        active_idx = max(0, min(highlighter.step_index, len(steps) - 1))
-        completed = [i < active_idx for i in range(len(steps))]
+        wrapped_lines: list[str] = []
 
-        # our SimpleSceneWidget exposes set_steps
+        if idx >= total_real:
+            # Completed: mark all real steps as done, final line active
+            for i, s in enumerate(steps):
+                if i < total_real:
+                    full = f"[x]  {s}"
+                else:
+                    full = s  # "Assembly complete!"
+                wrapped_lines.append(self.wrap_text(full))
+            active_idx = len(steps) - 1  # highlight "Assembly complete!"
+        else:
+            # In progress
+            for i, s in enumerate(steps):
+                if i < total_real:
+                    done = i < idx
+                    marker = "[x] " if done else "[ ] "
+                    full = f"{marker} {s}"
+                else:
+                    # final line shown but not done yet
+                    full = s
+                wrapped_lines.append(self.wrap_text(full))
+            active_idx = idx  # highlight current real step
+
         if hasattr(self._widget, "set_steps"):
-            self._widget.set_steps(steps, active_idx, completed)
+            self._widget.set_steps(wrapped_lines, active_idx)
 
     def show(self):  self._widget_component.visible = True
     def hide(self):  self._widget_component.visible = False
