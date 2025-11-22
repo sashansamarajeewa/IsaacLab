@@ -1,4 +1,4 @@
-from .base import BaseGuide, VisualSequenceHighlighter, ang_deg, first_descendant_with_rigid_body, physx_get_pose, resolve_env_scoped_path
+from .base import BaseGuide, VisualSequenceHighlighter, ang_deg, first_descendant_with_rigid_body, resolve_env_scoped_path
 from pxr import UsdGeom, Usd, UsdPhysics, Gf
 from typing import Optional, Tuple
 
@@ -29,7 +29,7 @@ class DrawerGuide(BaseGuide):
             self._check_bottom_insert,
             self._check_top_insert,
         ]
-        # Resolved prim paths (set in on_reset). Moving parts -> rigid body prim if available.
+        # Resolved prim paths. Moving parts - rigid body prim if available
         self._paths: dict[str, Optional[str]] = {}
         # Cached static world poses for this episode
         self._static_table_pos: Optional[Gf.Vec3d] = None
@@ -38,7 +38,7 @@ class DrawerGuide(BaseGuide):
             "ObstacleFront": None,
         }
 
-    # ------------------- lifecycle / reset -------------------
+    # ------------------- reset -------------------
 
     def on_reset(self, env):
         stage: Usd.Stage = env.scene.stage
@@ -47,7 +47,7 @@ class DrawerGuide(BaseGuide):
         self._static_table_pos = None
         self._static_obstacles = {"ObstacleLeft": None, "ObstacleFront": None}
 
-        # Table (static) — accept PackingTable or Table
+        # Table (static)
         table_path = resolve_env_scoped_path(stage, env_ns, "PackingTable")
         self._paths["Table"] = table_path
 
@@ -55,7 +55,7 @@ class DrawerGuide(BaseGuide):
         for name in ("ObstacleLeft", "ObstacleFront"):
             self._paths[name] = resolve_env_scoped_path(stage, env_ns, name)
 
-        # Moving parts → rigid body prim if present, else root
+        # Moving parts - rigid body prim if present else root
         for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
             root_path = resolve_env_scoped_path(stage, env_ns, name)
             if not root_path:
@@ -103,7 +103,7 @@ class DrawerGuide(BaseGuide):
         if not box_pose:
             return False
         box_pos, _ = box_pose
-        # 1.083 meters above table
+        # 1.084 meters above table
         return (box_pos[2] - self._static_table_pos[2]) >= 1.084
 
     def _check_braced_box(self, stage) -> bool:
