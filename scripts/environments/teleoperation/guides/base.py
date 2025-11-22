@@ -243,9 +243,25 @@ def physx_get_pose(prim_path: str) -> Optional[Tuple[Gf.Vec3d, Gf.Quatd]]:
 import omni.ui as ui
 import omni.ui.scene as sc
 
+# class SimpleSceneWidget(ui.Widget):
+#     def __init__(self, text="Hello", **kwargs):
+#         super().__init__(**kwargs)
+#         with ui.ZStack():
+#             ui.Rectangle(style={
+#                 "background_color": ui.color("#292929"),
+#                 "border_color": ui.color(0.7),
+#                 "border_width": 1,
+#                 "border_radius": 2,
+#             })
+#             with ui.VStack(style={"margin": 5}):
+#                 self.label = ui.Label(text, alignment=ui.Alignment.CENTER, style={"font_size": 4})
+                
 class SimpleSceneWidget(ui.Widget):
-    def __init__(self, text="Hello", **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self._root = None
+        self._labels: list[ui.Label] = []
+
         with ui.ZStack():
             ui.Rectangle(style={
                 "background_color": ui.color("#292929"),
@@ -253,30 +269,122 @@ class SimpleSceneWidget(ui.Widget):
                 "border_width": 1,
                 "border_radius": 2,
             })
-            with ui.VStack(style={"margin": 5}):
-                self.label = ui.Label(text, alignment=ui.Alignment.CENTER, style={"font_size": 4})
+            # vertical list of steps
+            with ui.VStack(style={"margin": 6, "spacing": 2}) as root:
+                self._root = root
+
+    def set_steps(self, steps: list[str], active_index: int, completed: list[bool]):
+        """
+        Rebuild the list of steps.
+        - steps: list of strings
+        - active_index: index of current step
+        - completed: same length as steps, True if that step is completed
+        """
+        if self._root is None:
+            return
+
+        self._root.clear()
+        self._labels.clear()
+
+        with self._root:
+            for i, text in enumerate(steps):
+                is_active = (i == active_index)
+                is_done = completed[i] if i < len(completed) else False
+
+                with ui.HStack(spacing=4):
+                    # Tick or bullet
+                    ui.Label("✓" if is_done else "•", style={
+                        "font_size": 4,
+                        "color": ui.color(0.7 if is_done else 0.5),
+                    })
+
+                    # Step text
+                    style = {
+                        "font_size": 4,
+                        "color": ui.color("#f5f5f5") if is_active else ui.color(0.8),
+                    }
+                    if is_active:
+                        # Subtle highlight for active step
+                        style["background_color"] = ui.color(0.25)
+                        style["border_radius"] = 2
+
+                    lbl = ui.Label(text, style=style)
+                    self._labels.append(lbl)
 
 from omni.kit.xr.scene_view.utils.ui_container import UiContainer
 from omni.kit.xr.scene_view.utils.manipulator_components.widget_component import WidgetComponent
 from omni.kit.xr.scene_view.utils.spatial_source import SpatialSource
 
+# class HUDManager:
+#     def __init__(
+#         self,
+#         widget_cls,
+#         width: float = 4.0,
+#         height: float = 1.3,
+#         resolution_scale: int = 10,
+#         unit_to_pixel_scale: int = 20,
+#         translation: Gf.Vec3d = Gf.Vec3d(0, 1.5, 2),
+#         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
+#     ):
+#         self._widget = None
+#         self._label = None
+
+#         def on_constructed(widget_instance):
+#             self._widget = widget_instance
+#             self._label = getattr(widget_instance, "label", None)
+
+#         self._widget_component = WidgetComponent(
+#             widget_cls,
+#             width=width,
+#             height=height,
+#             resolution_scale=resolution_scale,
+#             unit_to_pixel_scale=unit_to_pixel_scale,
+#             update_policy=sc.Widget.UpdatePolicy.ALWAYS,
+#             construct_callback=on_constructed,
+#         )
+#         space_stack = [
+#             SpatialSource.new_translation_source(translation),
+#             SpatialSource.new_rotation_source(Gf.Vec3d(
+#                 math.radians(rotation_deg_xyz[0]),
+#                 math.radians(rotation_deg_xyz[1]),
+#                 math.radians(rotation_deg_xyz[2]),
+#             )),
+#         ]
+#         self._ui_container = UiContainer(self._widget_component, space_stack=space_stack)
+
+#     def get_widget_dimensions(self, text: str, font_size: float, max_width: float, min_width: float):
+#         # Estimate average character width.
+#         char_width = 0.03 * font_size
+#         max_chars_per_line = int(max_width / char_width)
+#         lines = textwrap.wrap(text, width=max_chars_per_line)
+#         if not lines:
+#             lines = [text]
+#         wrapped_text = "\n".join(lines)
+#         return wrapped_text
+    
+#     def update(self, text: str):
+#         if self._label:
+#             self._label.text = self.get_widget_dimensions(text, 4.0, 4.0, 4.0)
+
+#     def show(self):  self._widget_component.visible = True
+#     def hide(self):  self._widget_component.visible = False
+#     def destroy(self): pass
+
 class HUDManager:
     def __init__(
         self,
         widget_cls,
-        width: float = 4.0,
-        height: float = 1.3,
+        width: float = 1.2,   # narrower
+        height: float = 2.0,  # taller
         resolution_scale: int = 10,
         unit_to_pixel_scale: int = 20,
-        translation: Gf.Vec3d = Gf.Vec3d(0, 1.5, 2),
+        translation: Gf.Vec3d = Gf.Vec3d(0.3, 1.2, 0.8),
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
     ):
         self._widget = None
-        self._label = None
 
         def on_constructed(widget_instance):
             self._widget = widget_instance
-            self._label = getattr(widget_instance, "label", None)
 
         self._widget_component = WidgetComponent(
             widget_cls,
@@ -297,19 +405,22 @@ class HUDManager:
         ]
         self._ui_container = UiContainer(self._widget_component, space_stack=space_stack)
 
-    def get_widget_dimensions(self, text: str, font_size: float, max_width: float, min_width: float):
-        # Estimate average character width.
-        char_width = 0.03 * font_size
-        max_chars_per_line = int(max_width / char_width)
-        lines = textwrap.wrap(text, width=max_chars_per_line)
-        if not lines:
-            lines = [text]
-        wrapped_text = "\n".join(lines)
-        return wrapped_text
-    
-    def update(self, text: str):
-        if self._label:
-            self._label.text = self.get_widget_dimensions(text, 4.0, 4.0, 4.0)
+    # you can delete get_widget_dimensions if you don't need it
+
+    def update(self, guide: "BaseGuide", highlighter: VisualSequenceHighlighter):
+        if not self._widget or not hasattr(guide, "get_all_instructions"):
+            return
+
+        steps = guide.get_all_instructions()
+        if not steps:
+            return
+
+        active_idx = max(0, min(highlighter.step_index, len(steps) - 1))
+        completed = [i < active_idx for i in range(len(steps))]
+
+        # our SimpleSceneWidget exposes set_steps
+        if hasattr(self._widget, "set_steps"):
+            self._widget.set_steps(steps, active_idx, completed)
 
     def show(self):  self._widget_component.visible = True
     def hide(self):  self._widget_component.visible = False
@@ -321,6 +432,27 @@ class HUDManager:
 
 class BaseGuide:
     SEQUENCE: List[str] = []  # override in subclasses
+    
+    def get_all_instructions(self) -> List[str]:
+        """
+        Default instruction list derived from SEQUENCE.
+        Subclasses can override to provide nicer text.
+        """
+        total = len(self.SEQUENCE) or 1
+        return [
+            f"Step {i+1}/{total}: {name}"
+            for i, name in enumerate(self.SEQUENCE)
+        ]
+
+    def step_label(self, highlighter: VisualSequenceHighlighter) -> str:
+        """
+        Backwards-compatible single-line label using the instruction list.
+        """
+        labels = self.get_all_instructions()
+        idx = highlighter.step_index
+        if 0 <= idx < len(labels):
+            return labels[idx]
+        return "Assembly complete!"
     
     def _get_live_part_pose(self, name: str, stage: Usd.Stage):
         p = getattr(self, "_paths", {}).get(name)

@@ -80,6 +80,15 @@ class DrawerGuide(BaseGuide):
                 xf = cache.GetLocalToWorldTransform(prim)
                 self._static_obstacles[name] = (xf.ExtractTranslation(), xf.ExtractRotation().GetQuat())
 
+    def get_all_instructions(self) -> list[str]:
+        total = len(self.SEQUENCE)
+        return [
+            f"Step 1/{total}: Pick up Drawer Box",
+            f"Step 2/{total}: Brace Drawer Box against the front and left corner obstacles",
+            f"Step 3/{total}: Insert Drawer Bottom into Drawer Box",
+            f"Step 4/{total}: Insert Drawer Top to finish",
+        ]
+    
     # ---------------------- HUD content ----------------------
 
     def step_label(self, highlighter: VisualSequenceHighlighter) -> str:

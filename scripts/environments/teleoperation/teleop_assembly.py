@@ -116,7 +116,8 @@ def main() -> None:
     # HUD
     hud = base.HUDManager(base.SimpleSceneWidget)
     hud.show()
-    hud.update(guide.step_label(highlighter))
+    # hud.update(guide.step_label(highlighter))
+    hud.update(guide, highlighter)
 
     # Callback handlers
     def reset_recording_instance() -> None:
@@ -205,7 +206,8 @@ def main() -> None:
     guide.on_reset(env)
     highlighter.refresh_after_reset()
     phys_binder.refresh_after_reset()
-    hud.update(guide.step_label(highlighter))
+    # hud.update(guide.step_label(highlighter))
+    hud.update(guide, highlighter)
     teleop_interface.reset()
 
     print("Teleoperation started. Press 'R' to reset the environment.")
@@ -228,7 +230,8 @@ def main() -> None:
                     env.sim.render()
 
                 guide.maybe_auto_advance(env, highlighter)
-                hud.update(guide.step_label(highlighter))
+                # hud.update(guide.step_label(highlighter))
+                hud.update(guide, highlighter)
                 
                 if should_reset_recording_instance:
                     env.reset()
@@ -236,7 +239,8 @@ def main() -> None:
                     guide.on_reset(env)
                     highlighter.refresh_after_reset()
                     phys_binder.refresh_after_reset()
-                    hud.update(guide.step_label(highlighter))
+                    # hud.update(guide.step_label(highlighter))
+                    hud.update(guide, highlighter)
                     print("Environment reset complete")
         except Exception as e:
             omni.log.error(f"Error during simulation step: {e}")
