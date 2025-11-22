@@ -16,7 +16,7 @@ class DrawerGuide(BaseGuide):
     tol_y_dbox_dbottom = 0.0228 # distance between drawer box and drawer bottom origin along Y
     tol_z_dbox_dbottom = 0.0218 # distance between drawer box and drawer bottom origin along Z
     tol_ang_dbox_dbottom = 0.5 # angle between drawer box and drawer bottom origin
-    tol_x_dbox_dtop = 0.0009 # distance between drawer box and drawer top origin along X
+    tol_x_dbox_dtop = 0.0010 # distance between drawer box and drawer top origin along X
     tol_y_dbox_dtop = 0.0162 # distance between drawer box and drawer top origin along Y
     tol_z_dbox_dtop = 0.0689 # distance between drawer box and drawer top origin along Z
     tol_ang_dbox_dtop = 0.5 # angle between drawer box and drawer top origin
@@ -82,12 +82,14 @@ class DrawerGuide(BaseGuide):
 
     def get_all_instructions(self) -> list[str]:
         total = len(self.SEQUENCE)
-        return [
-            f"Step 1/{total}: Pick up Drawer Box",
-            f"Step 2/{total}: Brace Drawer Box against the front and left corner obstacles",
-            f"Step 3/{total}: Insert Drawer Bottom into Drawer Box",
-            f"Step 4/{total}: Insert Drawer Top to finish",
+        base_steps = [
+        f"Step 1/{total}: Pick up Drawer Box",
+        f"Step 2/{total}: Brace Drawer Box against the front and left corner obstacles",
+        f"Step 3/{total}: Insert Drawer Bottom into Drawer Box",
+        f"Step 4/{total}: Insert Drawer Top to finish",
         ]
+        base_steps.append("Assembly complete!")
+        return base_steps
     
     # ---------------------- HUD content ----------------------
 
