@@ -451,6 +451,9 @@ class HUDManager:
 class BaseGuide:
     SEQUENCE: List[str] = []  # override in subclasses
     
+    def on_reset(self, env):
+        pass
+    
     def get_all_instructions(self) -> List[str]:
         """
         Default instruction list derived from SEQUENCE.
@@ -487,7 +490,7 @@ class BaseGuide:
     def create_physics_binder(self) -> PhysicsSequenceBinder:
         return PhysicsSequenceBinder(self.SEQUENCE, MaterialRegistry.physics_path)
 
-    def maybe_auto_advance(self, env, highlighter: VisualSequenceHighlighter):
+    def maybe_auto_advance(self, highlighter: VisualSequenceHighlighter):
         """
         Call once per sim tick *after* env.step() or sim.render().
         Uses PhysX for moving parts, cached USD for statics.
