@@ -229,7 +229,7 @@ def main() -> None:
                 else:
                     env.sim.render()
 
-                guide.maybe_auto_advance(env, highlighter)
+                guide.maybe_auto_advance(highlighter)
                 # hud.update(guide.step_label(highlighter))
                 hud.update(guide, highlighter)
                 
