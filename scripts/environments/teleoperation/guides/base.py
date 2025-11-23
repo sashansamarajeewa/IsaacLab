@@ -493,12 +493,12 @@ class BaseGuide:
         Uses PhysX for moving parts, cached USD for statics.
         """
         idx = highlighter.step_index
-        checks: Sequence[Callable[[Usd.Stage], bool]] | None = getattr(self, "_checks", None)
+        checks: Sequence[Callable[[], bool]] | None = getattr(self, "_checks", None)
         if not checks:
             return
 
         if idx >= len(checks):
             return
         
-        if checks[idx](self):
+        if checks[idx]():
             highlighter.advance()
