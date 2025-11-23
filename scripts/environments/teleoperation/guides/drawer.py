@@ -93,24 +93,24 @@ class DrawerGuide(BaseGuide):
     
     # ---------------------- HUD content ----------------------
 
-    def step_label(self, highlighter: VisualSequenceHighlighter) -> str:
-        idx, total = highlighter.step_index, (highlighter.total_steps or 1)
-        if idx == 0:
-            return f"Step 1/{total}: Pick up Drawer Box"
-        elif idx == 1:
-            return f"Step 2/{total}: Brace Drawer Box against the front and left corner obstacles"
-        elif idx == 2:
-            return f"Step 3/{total}: Insert Drawer Bottom into Drawer Box"
-        elif idx == 3:
-            return f"Step 4/{total}: Insert Drawer Top to finish"
-        return "Assembly complete!"
+    # def step_label(self, highlighter: VisualSequenceHighlighter) -> str:
+    #     idx, total = highlighter.step_index, (highlighter.total_steps or 1)
+    #     if idx == 0:
+    #         return f"Step 1/{total}: Pick up Drawer Box"
+    #     elif idx == 1:
+    #         return f"Step 2/{total}: Brace Drawer Box against the front and left corner obstacles"
+    #     elif idx == 2:
+    #         return f"Step 3/{total}: Insert Drawer Bottom into Drawer Box"
+    #     elif idx == 3:
+    #         return f"Step 4/{total}: Insert Drawer Top to finish"
+    #     return "Assembly complete!"
 
     # ---------------------- checks ----------------------
 
-    def _check_pickup_box(self, stage) -> bool:
+    def _check_pickup_box(self) -> bool:
         if self._static_table_pos is None:
             return False
-        box_pose = self._get_live_part_pose("DrawerBox", stage)
+        box_pose = self.get_live_part_pose("DrawerBox")
         if not box_pose:
             return False
         box_pos, _ = box_pose
@@ -120,7 +120,7 @@ class DrawerGuide(BaseGuide):
     def _check_braced_box(self, stage) -> bool:
         left_pos, left_quat = self._static_obstacles["ObstacleLeft"]
         front_pos, front_quat = self._static_obstacles["ObstacleFront"]
-        box_pos, box_quat = self._get_live_part_pose("DrawerBox", stage)
+        box_pos, box_quat = self.get_live_part_pose("DrawerBox")
         if not (left_pos and front_pos and box_pos):
             return False
 
@@ -131,8 +131,8 @@ class DrawerGuide(BaseGuide):
         return (0 < dx <= self.tol_x_dbox_lo) and (0 < dy <= self.tol_y_dbox_fo) and z_ok and ang_ok
 
     def _check_bottom_insert(self, stage) -> bool:
-        box_pos, box_quat = self._get_live_part_pose("DrawerBox", stage)
-        bot_pos, bot_quat = self._get_live_part_pose("DrawerBottom", stage)
+        box_pos, box_quat = self.get_live_part_pose("DrawerBox")
+        bot_pos, bot_quat = self.get_live_part_pose("DrawerBottom")
         if not (box_pos and bot_pos):
             return False
 
@@ -143,8 +143,8 @@ class DrawerGuide(BaseGuide):
         return (0 < abs(dx) <= self.tol_x_dbox_dbottom) and (0 < dy <= self.tol_y_dbox_dbottom) and (0 < dz <= self.tol_z_dbox_dbottom) and (0 < ang <= self.tol_ang_dbox_dbottom)
 
     def _check_top_insert(self, stage) -> bool:
-        box_pos, box_quat = self._get_live_part_pose("DrawerBox", stage)
-        top_pos, top_quat = self._get_live_part_pose("DrawerTop", stage)
+        box_pos, box_quat = self.get_live_part_pose("DrawerBox")
+        top_pos, top_quat = self.get_live_part_pose("DrawerTop")
         if not (box_pos and top_pos):
             return False
 
