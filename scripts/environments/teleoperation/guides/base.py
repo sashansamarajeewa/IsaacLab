@@ -265,7 +265,7 @@ class SimpleSceneWidget(ui.Widget):
             ui.Rectangle(style={
                 "background_color": ui.color("#292929"),
                 "border_color": ui.color(0.7),
-                "border_width": 1,
+                "border_width": 0.5,
                 "border_radius": 2,
             })
             # vertical list of steps
@@ -362,7 +362,7 @@ class HUDManager:
     def __init__(
         self,
         widget_cls,
-        width: float = 0.9,   # narrower
+        width: float = 0.6,   # narrower
         height: float = 0.6,  # taller
         resolution_scale: int = 20,
         unit_to_pixel_scale: int = 30,
@@ -396,8 +396,8 @@ class HUDManager:
         self._ui_container = UiContainer(self._widget_component, space_stack=space_stack)
 
     def wrap_text(self, text: str) -> str:
-        char_width = 0.012 * self._font_size
-        usable_width = self._width * 0.85
+        char_width = 0.009 * self._font_size
+        usable_width = self._width * 0.9
         max_chars_per_line = max(10, int(usable_width / char_width))
         lines = textwrap.wrap(text, width=max_chars_per_line)
         return "\n".join(lines) if lines else text
@@ -462,17 +462,17 @@ class BaseGuide:
             for i, name in enumerate(self.SEQUENCE)
         ]
 
-    def step_label(self, highlighter: VisualSequenceHighlighter) -> str:
-        """
-        Backwards-compatible single-line label using the instruction list.
-        """
-        labels = self.get_all_instructions()
-        idx = highlighter.step_index
-        if 0 <= idx < len(labels):
-            return labels[idx]
-        return "Assembly complete!"
+    # def step_label(self, highlighter: VisualSequenceHighlighter) -> str:
+    #     """
+    #     Backwards-compatible single-line label using the instruction list.
+    #     """
+    #     labels = self.get_all_instructions()
+    #     idx = highlighter.step_index
+    #     if 0 <= idx < len(labels):
+    #         return labels[idx]
+    #     return "Assembly complete!"
     
-    def _get_live_part_pose(self, name: str, stage: Usd.Stage):
+    def get_live_part_pose(self, name: str):
         p = getattr(self, "_paths", {}).get(name)
         if not p:
             return None
@@ -500,6 +500,5 @@ class BaseGuide:
         if idx >= len(checks):
             return
         
-        stage: Usd.Stage = env.scene.stage
-        if checks[idx](stage):
+        if checks[idx](self):
             highlighter.advance()
