@@ -269,7 +269,7 @@ class SimpleSceneWidget(ui.Widget):
                 "border_radius": 2,
             })
             # vertical list of steps
-            with ui.VStack(style={"margin": 1, "spacing": 0}) as root:
+            with ui.VStack(height=1, style={"margin": 1, "spacing": 1}) as root:
                 self._root = root
 
     def set_steps(self, wrapped_steps: list[str], active_index: int):
@@ -290,12 +290,14 @@ class SimpleSceneWidget(ui.Widget):
                     "font_size": 1,
                     "color": ui.color("#83ff6d") if is_active else ui.color("#f5f5f5"),
                     "margin": 1,
+                    "margin_height": 0,
+                    "margin_width": 0,
                     "padding": 1,
                 }
                 if is_active:
                     style["border_radius"] = 2
 
-                ui.Label(text, style=style)
+                ui.Label(text, height=3, style=style)
 
 from omni.kit.xr.scene_view.utils.ui_container import UiContainer
 from omni.kit.xr.scene_view.utils.manipulator_components.widget_component import WidgetComponent
@@ -361,7 +363,7 @@ class HUDManager:
         self,
         widget_cls,
         width: float = 0.9,   # narrower
-        height: float = 1.5,  # taller
+        height: float = 0.6,  # taller
         resolution_scale: int = 20,
         unit_to_pixel_scale: int = 30,
         translation: Gf.Vec3d = Gf.Vec3d(0, 0.9, 1.6),
@@ -369,7 +371,7 @@ class HUDManager:
     ):
         self._widget = None
         self._width = width
-        self._font_size = 1.0  
+        self._font_size = 1.5 
 
         def on_constructed(widget_instance):
             self._widget = widget_instance
