@@ -1,61 +1,25 @@
-from .base import BaseGuide, VisualSequenceHighlighter
+from .base import BaseGuide, VisualSequenceHighlighter, ang_deg, first_descendant_with_rigid_body, resolve_env_scoped_path
 from pxr import UsdGeom, Usd, UsdPhysics, Gf
-import math
-
-# ----------------------- math helpers -----------------------
-
-def _ang_deg(q1: Gf.Quatd, q2: Gf.Quatd) -> float:
-    """Smallest angle (deg) between two quaternions."""
-    dq = q1 * q2.GetInverse()
-    a = 2.0 * math.degrees(math.acos(max(-1.0, min(1.0, abs(dq.GetReal())))))
-    return min(a, 360.0 - a)
-
-# ----------------------- USD helpers ------------------------
-
-def _first_descendant_with_rigid_body(stage: Usd.Stage, root_prim: Usd.Prim) -> Usd.Prim | None:
-    """
-    Return the first descendant (including root) that has UsdPhysics.RigidBodyAPI.
-    If none found, return None.
-    """
-    if not root_prim or not root_prim.IsValid():
-        return None
-    # If the root itself is a rigid body, prefer it.
-    if UsdPhysics.RigidBodyAPI(root_prim):
-        return root_prim
-    # Otherwise search children under this asset root only (bounded search).
-    for p in Usd.PrimRange(root_prim):
-        if UsdPhysics.RigidBodyAPI(p):
-            return p
-    return None
-
-def _resolve_env_scoped_path(stage: Usd.Stage, env_root_path: str, leaf_name: str) -> str | None:
-    """
-    Resolve a prim path for a given leaf_name under the given env root.
-    Tries exact path first; if missing, searches only within env root (no full-stage scan).
-    Returns the prim path string or None.
-    """
-    exact = stage.GetPrimAtPath(f"{env_root_path}/{leaf_name}")
-    if exact and exact.IsValid():
-        return str(exact.GetPath())
-    env_root = stage.GetPrimAtPath(env_root_path)
-    if not env_root or not env_root.IsValid():
-        return None
-    for p in Usd.PrimRange(env_root):
-        if p.GetName() == leaf_name:
-            return str(p.GetPath())
-    return None
+from typing import Optional, Tuple
 
 # ======================= Drawer Guide =======================
 
 class LampGuide(BaseGuide):
-    """
-    Multi-step flow:
-      0) Pick up DrawerBox                 (highlight DrawerBox)
-      1) Brace DrawerBox on ObstacleLeft   (still highlight DrawerBox)
-      2) Insert DrawerBottom               (highlight DrawerBottom)
-      3) Insert DrawerTop                  (highlight DrawerTop)
-    """
-    SEQUENCE = ["LampBase", "LampBulb", "LampHood"]
+
+    SEQUENCE = ["LampBase", "LampBase", "LampBulb", "LampHood"]
+    
+    tol_x_dbox_lo = 0.133 # distance between drawer box and left obstacle origin along X
+    tol_y_dbox_fo = 0.119 # distance between drawer box and front obstacle origin along Y
+    tol_z_dbox_t = 1.081 # distance between drawer box and table origin along Z
+    tol_ang_dbox_fo = 180 # angle between drawer box and front obstacle origin
+    tol_x_dbox_dbottom = 0.0019 # distance between drawer box and drawer bottom origin along X
+    tol_y_dbox_dbottom = 0.0228 # distance between drawer box and drawer bottom origin along Y
+    tol_z_dbox_dbottom = 0.0218 # distance between drawer box and drawer bottom origin along Z
+    tol_ang_dbox_dbottom = 0.5 # angle between drawer box and drawer bottom origin
+    tol_x_dbox_dtop = 0.0010 # distance between drawer box and drawer top origin along X
+    tol_y_dbox_dtop = 0.0162 # distance between drawer box and drawer top origin along Y
+    tol_z_dbox_dtop = 0.0689 # distance between drawer box and drawer top origin along Z
+    tol_ang_dbox_dtop = 0.5 # angle between drawer box and drawer top origin
 
     def __init__(self):
         super().__init__()
@@ -65,124 +29,127 @@ class LampGuide(BaseGuide):
             self._check_bottom_insert,
             self._check_top_insert,
         ]
-        # Cached absolute prim paths for the CURRENT env (set on reset).
-        # For moving parts, these are resolved to the *rigid body* child prims.
-        self._paths: dict[str, str | None] = {}
+        # Resolved prim paths. Moving parts - rigid body prim if available
+        self._paths: dict[str, Optional[str]] = {}
+        # Cached static world poses for this episode
+        self._static_table_pos: Optional[Gf.Vec3d] = None
+        self._static_obstacles: dict[str, Optional[Tuple[Gf.Vec3d, Gf.Quatd]]] = {
+            "ObstacleLeft": None,
+            "ObstacleFront": None,
+        }
 
-    # ------------------- lifecycle / reset -------------------
+    # ------------------- reset -------------------
 
     def on_reset(self, env):
-        """
-        Resolve prim paths once per episode.
-        For moving parts, store the rigid body child prim path so we read live physics poses.
-        """
         stage: Usd.Stage = env.scene.stage
-        env_ns: str = env.scene.env_ns  # e.g., "/World/envs/env_0"
-
+        env_ns: str = env.scene.env_ns
         self._paths.clear()
+        self._static_table_pos = None
+        self._static_obstacles = {"ObstacleLeft": None, "ObstacleFront": None}
 
-        # Static references: resolve normally (table and obstacles typically aren't rigid bodies).
-        for name in ("PackingTable", "ObstacleLeft", "ObstacleFront"):
-            self._paths[name] = _resolve_env_scoped_path(stage, env_ns, name)
+        # Table (static)
+        table_path = resolve_env_scoped_path(stage, env_ns, "PackingTable")
+        self._paths["Table"] = table_path
 
-        # Moving parts: resolve the asset root, then find its rigid body descendant.
+        # Obstacles (static)
+        for name in ("ObstacleLeft", "ObstacleFront"):
+            self._paths[name] = resolve_env_scoped_path(stage, env_ns, name)
+
+        # Moving parts - rigid body prim if present else root
         for name in ("LampBase", "LampBulb", "LampHood"):
-            root_path = _resolve_env_scoped_path(stage, env_ns, name)
+            root_path = resolve_env_scoped_path(stage, env_ns, name)
             if not root_path:
                 self._paths[name] = None
                 continue
-            root_prim = stage.GetPrimAtPath(root_path)
-            rb_prim = _first_descendant_with_rigid_body(stage, root_prim)
-            print(rb_prim)
+            rb_prim = first_descendant_with_rigid_body(stage, stage.GetPrimAtPath(root_path))
             self._paths[name] = str(rb_prim.GetPath()) if rb_prim and rb_prim.IsValid() else root_path
 
+        # Cache static world poses once
+        cache = UsdGeom.XformCache()
+        if self._paths.get("Table"):
+            prim = stage.GetPrimAtPath(self._paths["Table"])
+            if prim and prim.IsValid():
+                self._static_table_pos = cache.GetLocalToWorldTransform(prim).ExtractTranslation()
+
+        for name in ("ObstacleLeft", "ObstacleFront"):
+            p = self._paths.get(name)
+            if not p:
+                continue
+            prim = stage.GetPrimAtPath(p)
+            if prim and prim.IsValid():
+                xf = cache.GetLocalToWorldTransform(prim)
+                self._static_obstacles[name] = (xf.ExtractTranslation(), xf.ExtractRotation().GetQuat())
+
+    def get_all_instructions(self) -> list[str]:
+        total = len(self.SEQUENCE)
+        base_steps = [
+        f"Step 1/{total}: Pick up Drawer Box",
+        f"Step 2/{total}: Brace Drawer Box against the front and left corner obstacles",
+        f"Step 3/{total}: Insert Drawer Bottom into Drawer Box",
+        f"Step 4/{total}: Insert Drawer Top to finish",
+        ]
+        base_steps.append("Assembly complete! Press 'Stop' button")
+        return base_steps
+    
     # ---------------------- HUD content ----------------------
 
-    def step_label(self, highlighter: VisualSequenceHighlighter) -> str:
-        idx, total = highlighter.step_index, (highlighter.total_steps or 1)
-        return (
-            f"Step 1/{total}: Pick up LampBase" if idx == 0 else
-            f"Step 2/{total}: Brace LampBase against left obstacle" if idx == 1 else
-            f"Step 3/{total}: Insert LampBulb into LampBase" if idx == 2 else
-            f"Step 4/{total}: Insert LampHood onto LampBase" if idx == 3 else
-            "Assembly complete!"
-        )
+    # def step_label(self, highlighter: VisualSequenceHighlighter) -> str:
+    #     idx, total = highlighter.step_index, (highlighter.total_steps or 1)
+    #     if idx == 0:
+    #         return f"Step 1/{total}: Pick up Drawer Box"
+    #     elif idx == 1:
+    #         return f"Step 2/{total}: Brace Drawer Box against the front and left corner obstacles"
+    #     elif idx == 2:
+    #         return f"Step 3/{total}: Insert Drawer Bottom into Drawer Box"
+    #     elif idx == 3:
+    #         return f"Step 4/{total}: Insert Drawer Top to finish"
+    #     return "Assembly complete!"
 
-    # ------------------ per-frame evaluation -----------------
+    # ---------------------- checks ----------------------
 
-    def maybe_auto_advance(self, env, highlighter: VisualSequenceHighlighter):
-        """
-        Called once per sim tick (AFTER env.step or sim.render).
-        Creates a fresh XformCache each call so we see the latest physics poses.
-        """
-        idx = highlighter.step_index
-        if idx >= len(self._checks):
-            return
-
-        stage: Usd.Stage = env.scene.stage
-        cache = UsdGeom.XformCache()  # fresh per frame -> up-to-date world xforms
-
-        if self._checks[idx](env, stage, cache):
-            highlighter.advance()
-
-    # ---------------------- pose helpers ---------------------
-
-    def _get_tf(self, stage: Usd.Stage, cache: UsdGeom.XformCache, name: str):
-        """Get world transform for the resolved prim name (rigid body child when applicable)."""
-        p = self._paths.get(name)
-        if not p:
-            return None
-        prim = stage.GetPrimAtPath(p)
-        if not prim or not prim.IsValid():
-            return None
-        return cache.GetLocalToWorldTransform(prim)
-
-    @staticmethod
-    def _pos(xf): return xf.ExtractTranslation()
-
-    @staticmethod
-    def _rot(xf): return xf.ExtractRotation().GetQuat()
-
-    # ---------------------- step checks ----------------------
-
-    def _check_pickup_box(self, env, stage, cache) -> bool:
-        table_xf = self._get_tf(stage, cache, "PackingTable")
-        box_xf   = self._get_tf(stage, cache, "DrawerBox")
-        if not (table_xf and box_xf):
+    def _check_pickup_box(self) -> bool:
+        if self._static_table_pos is None:
             return False
-        # ≥ 6 cm above table
-        # print(self._pos(box_xf)[2])
-        # print(self._pos(table_xf)[2])
-        return (self._pos(box_xf)[2] - self._pos(table_xf)[2]) >= 1.1
-
-    def _check_braced_box(self, env, stage, cache) -> bool:
-        obs_xf = self._get_tf(stage, cache, "ObstacleLeft")
-        box_xf = self._get_tf(stage, cache, "DrawerBox")
-        if not (obs_xf and box_xf):
+        box_pose = self.get_live_part_pose("LampBase")
+        if not box_pose:
             return False
-        d = (self._pos(obs_xf) - self._pos(box_xf)).GetLength()
-        ang = _ang_deg(self._rot(obs_xf), self._rot(box_xf))
-        # ≤ 3 cm and ≤ 15° relative yaw/roll/pitch (quat distance)
-        return (d <= 0.03) and (ang <= 15.0)
+        box_pos, _ = box_pose
+        # 1.084 meters above table
+        return (box_pos[2] - self._static_table_pos[2]) >= 1.084
 
-    def _check_bottom_insert(self, env, stage, cache) -> bool:
-        box_xf = self._get_tf(stage, cache, "DrawerBox")
-        bot_xf = self._get_tf(stage, cache, "DrawerBottom")
-        if not (box_xf and bot_xf):
+    def _check_braced_box(self) -> bool:
+        left_pos, left_quat = self._static_obstacles["ObstacleLeft"]
+        front_pos, front_quat = self._static_obstacles["ObstacleFront"]
+        box_pos, box_quat = self.get_live_part_pose("LampBase")
+        if not (left_pos and front_pos and box_pos):
             return False
-        d = (self._pos(box_xf) - self._pos(bot_xf)).GetLength()
-        ang = _ang_deg(self._rot(box_xf), self._rot(bot_xf))
-        dz = self._pos(bot_xf)[2] - self._pos(box_xf)[2]
-        # Near + roughly aligned + slightly below box reference (i.e., "inside")
-        return (d <= 0.02) and (ang <= 12.0) and (dz <= -0.005)
 
-    def _check_top_insert(self, env, stage, cache) -> bool:
-        box_xf = self._get_tf(stage, cache, "DrawerBox")
-        top_xf = self._get_tf(stage, cache, "DrawerTop")
-        if not (box_xf and top_xf):
+        dx = box_pos[0] - left_pos[0]
+        dy = front_pos[1] - box_pos[1]
+        z_ok = (self._static_table_pos is None) or (box_pos[2] - self._static_table_pos[2]) <= self.tol_z_dbox_t
+        ang_ok = ang_deg(box_quat, front_quat) <= self.tol_ang_dbox_fo
+        return (0 < dx <= self.tol_x_dbox_lo) and (0 < dy <= self.tol_y_dbox_fo) and z_ok and ang_ok
+
+    def _check_bottom_insert(self) -> bool:
+        box_pos, box_quat = self.get_live_part_pose("LampBase")
+        bot_pos, bot_quat = self.get_live_part_pose("LampBulb")
+        if not (box_pos and bot_pos):
             return False
-        d = (self._pos(box_xf) - self._pos(top_xf)).GetLength()
-        ang = _ang_deg(self._rot(box_xf), self._rot(top_xf))
-        dz = self._pos(top_xf)[2] - self._pos(box_xf)[2]
-        # Near + roughly aligned + slightly above box reference (i.e., "on top")
-        return (d <= 0.02) and (ang <= 12.0) and (dz >= 0.005)
+
+        dx = box_pos[0] - bot_pos[0]
+        dy = box_pos[1] - bot_pos[1]
+        dz = box_pos[2] - bot_pos[2]
+        ang = ang_deg(box_quat, bot_quat)
+        return (0 < abs(dx) <= self.tol_x_dbox_dbottom) and (0 < dy <= self.tol_y_dbox_dbottom) and (0 < dz <= self.tol_z_dbox_dbottom) and (0 < ang <= self.tol_ang_dbox_dbottom)
+
+    def _check_top_insert(self) -> bool:
+        box_pos, box_quat = self.get_live_part_pose("LampBase")
+        top_pos, top_quat = self.get_live_part_pose("LampHood")
+        if not (box_pos and top_pos):
+            return False
+
+        dx = top_pos[0] - box_pos[0]
+        dy = box_pos[1] - top_pos[1]
+        dz = top_pos[2] - box_pos[2]
+        ang = ang_deg(box_quat, top_quat)
+        return (0 < abs(dx) <= self.tol_x_dbox_dtop) and (0 < dy <= self.tol_y_dbox_dtop) and (0 < dz <= self.tol_z_dbox_dtop) and (0 < ang <= self.tol_ang_dbox_dtop)

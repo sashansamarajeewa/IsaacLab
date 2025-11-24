@@ -53,7 +53,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleFront
     obstacle_front = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleFront",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.67, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.67, 1.02]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_front/obstacle_front.usd",
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
@@ -63,7 +63,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleLeft
     obstacle_left = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleLeft",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.48, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.48, 1.02]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
@@ -73,7 +73,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleRight
     obstacle_right = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleRight",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.48, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.48, 1.02]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
                          collision_props=sim_utils.CollisionPropertiesCfg(),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
@@ -87,20 +87,22 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/lamp/lamp_base/lamp_base.usd",
                          scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                        #  articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                        mass_props=sim_utils.MassPropertiesCfg(mass=5),
                          ),
     )
 
-    # LampBulb
-    lamp_bulb = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/LampBulb",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.075, 0.4, 1.05]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/lamp/lamp_bulb/lamp_bulb.usd",
-                         scale=(2.0, 2.0, 2.0),
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
-                         ),
-    )
+    # # LampBulb
+    # lamp_bulb = RigidObjectCfg(
+    #     prim_path="{ENV_REGEX_NS}/LampBulb",
+    #     init_state=RigidObjectCfg.InitialStateCfg(pos=[0.075, 0.4, 1.05]),
+    #     spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/lamp/lamp_bulb/lamp_bulb.usd",
+    #                      scale=(2.0, 2.0, 2.0),
+    #                      rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+    #                     #  articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+    #                     mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
+    #                      ),
+    # )
 
     # LampHood
     lamp_hood = RigidObjectCfg(
@@ -109,7 +111,8 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/lamp/lamp_hood/lamp_hood.usd",
                          scale=(2.0, 2.0, 2.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                        #  articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
+                        mass_props=sim_utils.MassPropertiesCfg(mass=1),
                          ),
     )
 
@@ -269,9 +272,9 @@ class ActionsCfg:
                         "right_shoulder_roll_joint",
                         "right_shoulder_yaw_joint",
                         "right_elbow_pitch_joint",
-                        "waist_yaw_joint",
-                        "waist_pitch_joint",
-                        "waist_roll_joint",
+                        # "waist_yaw_joint",
+                        # "waist_pitch_joint",
+                        # "waist_roll_joint",
                     ],
                 ),
             ],
@@ -431,8 +434,8 @@ class AssemblyLampGR1T2EnvCfg(ManagerBasedRLEnvCfg):
 
     sim: sim_utils.SimulationCfg = sim_utils.SimulationCfg(
         physics_material=sim_utils.RigidBodyMaterialCfg(
-            static_friction=1.0,
-            dynamic_friction=1.0,
+            static_friction=.8,
+            dynamic_friction=0.7,
             friction_combine_mode="multiply",
         ),
         # physx=sim_utils.PhysxCfg(
@@ -454,7 +457,7 @@ class AssemblyLampGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         self.decimation = 2 #6
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 150  # 120Hz
+        self.sim.dt = 1 / 160  # 120Hz
         self.sim.render_interval = 2 #6
         self.sim.physx.enable_ccd = False #True
 
