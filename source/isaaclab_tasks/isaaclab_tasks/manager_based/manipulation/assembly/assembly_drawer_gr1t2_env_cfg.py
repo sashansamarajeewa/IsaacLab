@@ -271,10 +271,10 @@ class ActionsCfg:
                         "right_shoulder_pitch_joint",
                         "right_shoulder_roll_joint",
                         "right_shoulder_yaw_joint",
-                        "right_elbow_pitch_joint",
-                        "waist_yaw_joint",
-                        "waist_pitch_joint",
-                        "waist_roll_joint",
+                        # "right_elbow_pitch_joint",
+                        # "waist_yaw_joint",
+                        # "waist_pitch_joint",
+                        # "waist_roll_joint",
                     ],
                 ),
             ],
@@ -457,7 +457,7 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         self.decimation = 2 #6
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 150  # 120Hz
+        self.sim.dt = 1 / 160  # 120Hz
         self.sim.render_interval = 2 #6
         self.sim.physx.enable_ccd = False #True
 
