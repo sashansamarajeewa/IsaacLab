@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 
 # ======================= Drawer Guide =======================
 
-class DrawerGuide(BaseGuide):
+class BlocksGuide(BaseGuide):
 
     SEQUENCE = ["DrawerBox", "DrawerBox", "DrawerBottom", "DrawerTop"]
     
