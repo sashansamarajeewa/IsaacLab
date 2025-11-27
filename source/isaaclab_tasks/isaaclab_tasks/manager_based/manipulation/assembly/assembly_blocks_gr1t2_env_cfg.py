@@ -85,7 +85,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/Part0",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part0.usd",
-                         scale=(2.0, 2.0, 2.0),
+                         scale=(3.0, 3.0, 3.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
     )
@@ -95,7 +95,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/Part1",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part1.usd",
-                         scale=(2.0, 2.0, 2.0),
+                         scale=(3.0, 3.0, 3.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
     )
@@ -105,7 +105,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/Part2",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part2.usd",
-                         scale=(2.0, 2.0, 2.0),
+                         scale=(3.0, 3.0, 3.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
     )
@@ -115,7 +115,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/Part3",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part3.usd",
-                         scale=(2.0, 2.0, 2.0),
+                         scale=(3.0, 3.0, 3.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
     )
@@ -125,7 +125,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/Part4",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part4.usd",
-                         scale=(2.0, 2.0, 2.0),
+                         scale=(3.0, 3.0, 3.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
     )
@@ -135,7 +135,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/Part5",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part5.usd",
-                         scale=(2.0, 2.0, 2.0),
+                         scale=(3.0, 3.0, 3.0),
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
     )
