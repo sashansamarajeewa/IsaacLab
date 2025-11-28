@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 
 class BlocksGuide(BaseGuide):
 
-    SEQUENCE = ["DrawerBox", "DrawerBox", "DrawerBottom", "DrawerTop"]
+    SEQUENCE = ["Part0", "Part1", "Part2", "Part3"]
     
     tol_x_dbox_lo = 0.133 # distance between drawer box and left obstacle origin along X
     tol_y_dbox_fo = 0.119 # distance between drawer box and front obstacle origin along Y
@@ -56,7 +56,7 @@ class BlocksGuide(BaseGuide):
             self._paths[name] = resolve_env_scoped_path(stage, env_ns, name)
 
         # Moving parts - rigid body prim if present else root
-        for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
+        for name in ("Part0", "Part1", "Part2"):
             root_path = resolve_env_scoped_path(stage, env_ns, name)
             if not root_path:
                 self._paths[name] = None
