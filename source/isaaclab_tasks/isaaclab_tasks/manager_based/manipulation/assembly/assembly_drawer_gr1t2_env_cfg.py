@@ -271,7 +271,7 @@ class ActionsCfg:
                         "right_shoulder_pitch_joint",
                         "right_shoulder_roll_joint",
                         "right_shoulder_yaw_joint",
-                        # "right_elbow_pitch_joint",
+                        "right_elbow_pitch_joint",
                         # "waist_yaw_joint",
                         # "waist_pitch_joint",
                         # "waist_roll_joint",
