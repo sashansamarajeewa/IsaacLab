@@ -1,4 +1,4 @@
-from .base import BaseGuide, VisualSequenceHighlighter, ang_deg, first_descendant_with_rigid_body, resolve_env_scoped_path
+from .base import BaseGuide, VisualSequenceHighlighter, ang_deg, first_descendant_with_rigid_body, resolve_env_scoped_path, spawn_ghost_preview, MaterialRegistry
 from pxr import UsdGeom, Usd, UsdPhysics, Gf
 from typing import Optional, Tuple
 
@@ -31,33 +31,59 @@ class DrawerGuide(BaseGuide):
         ]
         # Resolved prim paths. Moving parts - rigid body prim if available
         self._paths: dict[str, Optional[str]] = {}
+        # Asset root paths for ghosts
+        self._asset_roots: dict[str, Optional[str]] = {
+            "DrawerBox": None,
+            "DrawerBottom": None,
+            "DrawerTop": None,
+        }
         # Cached static world poses for this episode
         self._static_table_pos: Optional[Gf.Vec3d] = None
         self._static_obstacles: dict[str, Optional[Tuple[Gf.Vec3d, Gf.Quatd]]] = {
             "ObstacleLeft": None,
             "ObstacleFront": None,
+            "ObstacleRight": None,
         }
+        
+        # Target poses for ghost previews
+        self._target_poses: dict[str, Optional[Tuple[Gf.Vec3d, Gf.Quatd]]] = {
+            "DrawerBox": None,
+            "DrawerBottom": None,
+            "DrawerTop": None,
+        }
+        
+        # Ghost prim paths by logical name
+        self._ghost_paths_by_name: dict[str, str] = {}
 
     # ------------------- reset -------------------
 
     def on_reset(self, env):
+        super().on_reset(env)
         stage: Usd.Stage = env.scene.stage
         env_ns: str = env.scene.env_ns
         self._paths.clear()
+        self._asset_roots = {"DrawerBox": None, "DrawerBottom": None, "DrawerTop": None}
+        self._target_poses = {"DrawerBox": None, "DrawerBottom": None, "DrawerTop": None}
+        self._ghost_paths_by_name.clear()
         self._static_table_pos = None
-        self._static_obstacles = {"ObstacleLeft": None, "ObstacleFront": None}
+        self._static_obstacles = {"ObstacleLeft": None, "ObstacleFront": None, "ObstacleRight": None}
+        
+        
+        # make sure materials exist
+        MaterialRegistry.ensure_all(stage)
 
         # Table (static)
         table_path = resolve_env_scoped_path(stage, env_ns, "PackingTable")
         self._paths["Table"] = table_path
 
         # Obstacles (static)
-        for name in ("ObstacleLeft", "ObstacleFront"):
+        for name in ("ObstacleLeft", "ObstacleFront", "ObstacleRight"):
             self._paths[name] = resolve_env_scoped_path(stage, env_ns, name)
 
         # Moving parts - rigid body prim if present else root
         for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
             root_path = resolve_env_scoped_path(stage, env_ns, name)
+            self._asset_roots[name] = root_path
             if not root_path:
                 self._paths[name] = None
                 continue
@@ -71,7 +97,7 @@ class DrawerGuide(BaseGuide):
             if prim and prim.IsValid():
                 self._static_table_pos = cache.GetLocalToWorldTransform(prim).ExtractTranslation()
 
-        for name in ("ObstacleLeft", "ObstacleFront"):
+        for name in ("ObstacleLeft", "ObstacleFront", "ObstacleRight"):
             p = self._paths.get(name)
             if not p:
                 continue
@@ -80,6 +106,67 @@ class DrawerGuide(BaseGuide):
                 xf = cache.GetLocalToWorldTransform(prim)
                 self._static_obstacles[name] = (xf.ExtractTranslation(), xf.ExtractRotation().GetQuat())
 
+        # --------- Compute simple target poses for previews ---------
+        # NOTE: these are approximate, based on your tolerances.
+        if (
+            self._static_table_pos is not None
+            and self._static_obstacles["ObstacleLeft"] is not None
+            and self._static_obstacles["ObstacleFront"] is not None
+        ):
+            left_pos, left_quat = self._static_obstacles["ObstacleLeft"]
+            front_pos, front_quat = self._static_obstacles["ObstacleFront"]
+            table_z = self._static_table_pos[2]
+
+            # target DrawerBox braced in corner (roughly within tolerance bounds)
+            box_pos = Gf.Vec3d(
+                left_pos[0] + 0.9 * self.tol_x_dbox_lo,
+                front_pos[1] - 0.9 * self.tol_y_dbox_fo,
+                table_z + 0.9 * self.tol_z_dbox_t,
+            )
+            box_quat = front_quat
+            self._target_poses["DrawerBox"] = (box_pos, box_quat)
+
+            # DrawerBottom: relative to box target
+            bot_pos = Gf.Vec3d(
+                box_pos[0],
+                box_pos[1] - self.tol_y_dbox_dbottom,
+                box_pos[2] - self.tol_z_dbox_dbottom,
+            )
+            bot_quat = box_quat
+            self._target_poses["DrawerBottom"] = (bot_pos, bot_quat)
+
+            # DrawerTop: relative to box target
+            top_pos = Gf.Vec3d(
+                box_pos[0],
+                box_pos[1] - self.tol_y_dbox_dtop,
+                box_pos[2] + self.tol_z_dbox_dtop,
+            )
+            top_quat = box_quat
+            self._target_poses["DrawerTop"] = (top_pos, top_quat)
+
+        # --------- Spawn/update ghosts at target poses ---------
+        stage = self._stage  # cached from super().on_reset
+        if stage is not None:
+            for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
+                root = self._asset_roots.get(name)
+                tgt = self._target_poses.get(name)
+                if not root or not tgt:
+                    continue
+                tgt_pos, tgt_quat = tgt
+                ghost_root_path = f"{env_ns}/Ghosts/{name}_Ghost"
+                ghost_path = spawn_ghost_preview(
+                    stage=stage,
+                    source_root_path=root,
+                    target_pos=tgt_pos,
+                    target_rot=tgt_quat,
+                    ghost_root_path=ghost_root_path,
+                    ghost_mat_path=MaterialRegistry.ghost_path,
+                )
+                self._ghost_paths_by_name[name] = ghost_path
+
+        # Initialize ghost visibility to step 0
+        self._update_ghost_visibility_for_step(0)
+    
     def get_all_instructions(self) -> list[str]:
         total = len(self.SEQUENCE)
         base_steps = [
