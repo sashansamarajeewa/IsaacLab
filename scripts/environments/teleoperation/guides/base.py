@@ -245,6 +245,21 @@ def physx_get_pose(prim_path: str) -> Optional[Tuple[Gf.Vec3d, Gf.Quatd]]:
     except Exception:
         return None
 
+def get_xform_scale(stage: Usd.Stage, prim_path: str) -> Gf.Vec3d:
+    """
+    Read a local scale op from the prim if present, otherwise return (1,1,1).
+    Assumes uniform scaling via UsdGeom.XformOp(TypeScale).
+    """
+    prim = stage.GetPrimAtPath(prim_path)
+    if not prim or not prim.IsValid():
+        return Gf.Vec3d(1.0, 1.0, 1.0)
+    xformable = UsdGeom.Xformable(prim)
+    for op in xformable.GetOrderedXformOps():
+        if op.GetOpType() == UsdGeom.XformOp.TypeScale:
+            s = op.Get()
+            return Gf.Vec3d(float(s[0]), float(s[1]), float(s[2]))
+    return Gf.Vec3d(1.0, 1.0, 1.0)
+
 def spawn_ghost_preview(
     stage: Usd.Stage,
     source_root_path: str,
@@ -271,14 +286,24 @@ def spawn_ghost_preview(
         stage.GetRootLayer().identifier,
         visuals_path,
     )
+    
+    # Build transform with scale -> rot -> translate
+    source_scale = get_xform_scale(stage, source_root_path)
+    scale = source_scale if source_scale is not None else Gf.Vec3d(1.0, 1.0, 1.0)
 
     # Set world transform
     xformable = UsdGeom.Xformable(ghost_prim)
     xformable.ClearXformOpOrder()
     op = xformable.AddTransformOp()
     m = Gf.Matrix4d(1.0)
-    m.SetRotate(target_rot)
+    m.SetScale(scale)
+    # Apply rotation
+    rotM = Gf.Matrix4d(1.0)
+    rotM.SetRotate(target_rot)
+    m = rotM * m
+    # Translation
     m.SetTranslate(target_pos)
+
     op.Set(m)
 
     # Bind ghost material
