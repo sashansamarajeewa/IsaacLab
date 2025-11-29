@@ -67,10 +67,6 @@ class DrawerGuide(BaseGuide):
         self._ghost_paths_by_name.clear()
         self._static_table_pos = None
         self._static_obstacles = {"ObstacleLeft": None, "ObstacleFront": None, "ObstacleRight": None}
-        
-        
-        # make sure materials exist
-        MaterialRegistry.ensure_all(stage)
 
         # Table (static)
         table_path = resolve_env_scoped_path(stage, env_ns, "PackingTable")
