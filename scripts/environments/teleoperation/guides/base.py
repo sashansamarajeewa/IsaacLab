@@ -295,9 +295,9 @@ def spawn_ghost_preview(
     xformable = UsdGeom.Xformable(ghost_prim)
     xformable.ClearXformOpOrder()
 
-    scale_op = xformable.AddScaleOp()
-    orient_op = xformable.AddOrientOp()
-    trans_op = xformable.AddTranslateOp()
+    scale_op = xformable.AddScaleOp(UsdGeom.XformOp.PrecisionDouble)
+    orient_op = xformable.AddOrientOp(UsdGeom.XformOp.PrecisionDouble)
+    trans_op = xformable.AddTranslateOp(UsdGeom.XformOp.PrecisionDouble)
 
     scale_op.Set(scale)
     orient_op.Set(target_rot)
