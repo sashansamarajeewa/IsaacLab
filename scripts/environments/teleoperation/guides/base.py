@@ -1,7 +1,7 @@
 from __future__ import annotations
 import textwrap
 from typing import Callable, List, Optional, Sequence, Tuple
-from pxr import Usd, Gf, UsdPhysics
+from pxr import Usd, Gf, UsdPhysics, UsdGeom
 from isaaclab.sim import utils as sim_utils
 from isaaclab.sim.spawners.materials import spawn_preview_surface, spawn_rigid_body_material
 from isaaclab.sim.spawners.materials.physics_materials_cfg import RigidBodyMaterialCfg
@@ -21,6 +21,7 @@ class MaterialRegistry:
     """
     visual_path = "/World/Materials/Highlight"
     physics_path = "/World/Materials/Grasp"
+    ghost_path   = "/World/Materials/GhostPreview"
 
     # Visual highlighter material (preview surface)
     visual_cfg = PreviewSurfaceCfg(
@@ -34,6 +35,12 @@ class MaterialRegistry:
         dynamic_friction=0.7,
         friction_combine_mode="multiply",
     )
+    
+    # Ghost preview material
+    ghost_cfg = PreviewSurfaceCfg(
+        diffuse_color=(0.4, 0.8, 1.0),
+        emissive_color=(0.0, 0.0, 0.0),
+    )
 
     @classmethod
     def ensure_all(cls, stage: Usd.Stage) -> None:
@@ -41,6 +48,8 @@ class MaterialRegistry:
         spawn_preview_surface(prim_path=cls.visual_path, cfg=cls.visual_cfg)
         # Create/update physics material
         spawn_rigid_body_material(prim_path=cls.physics_path, cfg=cls.physics_cfg)
+        # Create/update host preview material
+        spawn_preview_surface(prim_path=cls.ghost_path,   cfg=cls.ghost_cfg)
 
 # ---------------------------------------------------------------------------
 # Visual highlighter using bind_visual_material at the asset root
@@ -235,6 +244,46 @@ def physx_get_pose(prim_path: str) -> Optional[Tuple[Gf.Vec3d, Gf.Quatd]]:
         return Gf.Vec3d(px, py, pz), Gf.Quatd(qw, qx, qy, qz)
     except Exception:
         return None
+
+def spawn_ghost_preview(
+    stage: Usd.Stage,
+    source_root_path: str,
+    target_pos: Gf.Vec3d,
+    target_rot: Gf.Quatd,
+    ghost_root_path: str,
+    ghost_mat_path: str,
+) -> str:
+    """
+    Create/update a visual-only ghost of `source_root_path` at `target_pos,target_rot`.
+
+    - It references the source's 'visuals' child (if any), otherwise the source root.
+    - It binds a ghost material at the ghost root.
+    - Returns the ghost root prim path.
+    """
+    # Ensure ghost root exists as an Xform
+    ghost_xf = UsdGeom.Xform.Define(stage, ghost_root_path)
+    ghost_prim = ghost_xf.GetPrim()
+
+    # Reference only visuals subtree if possible
+    visuals_path = _find_visuals_path(stage, source_root_path) or source_root_path
+    ghost_prim.GetReferences().ClearReferences()
+    ghost_prim.GetReferences().AddReference(
+        stage.GetRootLayer().identifier,
+        visuals_path,
+    )
+
+    # Set world transform
+    xformable = UsdGeom.Xformable(ghost_prim)
+    xformable.ClearXformOpOrder()
+    op = xformable.AddTransformOp()
+    m = Gf.Matrix4d(1.0)
+    m.SetRotate(target_rot)
+    m.SetTranslate(target_pos)
+    op.Set(m)
+
+    # Bind ghost material
+    sim_utils.bind_visual_material(ghost_root_path, ghost_mat_path, stronger_than_descendants=True)
+    return ghost_root_path
 
 # ---------------------------------------------------------------------------
 # Minimal HUD
@@ -451,8 +500,14 @@ class HUDManager:
 class BaseGuide:
     SEQUENCE: List[str] = []  # override in subclasses
     
+    def __init__(self):
+        self._stage: Optional[Usd.Stage] = None
+        # Guides can fill this after on_reset:
+        # logical_name (e.g. "DrawerBottom") -> ghost prim path
+        self._ghost_paths_by_name: dict[str, str] = {}
+    
     def on_reset(self, env):
-        pass
+        self._stage = env.scene.stage
     
     def get_all_instructions(self) -> List[str]:
         """
@@ -505,3 +560,40 @@ class BaseGuide:
         
         if checks[idx]():
             highlighter.advance()
+            
+    def _ghost_name_for_step(self, step_index: int) -> Optional[str]:
+        """
+        Default mapping from step index to the logical name whose ghost should be visible.
+        Subclasses can override if they want different behaviour.
+        """
+        if 0 <= step_index < len(self.SEQUENCE):
+            return self.SEQUENCE[step_index]
+        return None
+    
+    def _update_ghost_visibility_for_step(self, step_index: int) -> None:
+        """
+        Show only the ghost corresponding to this step; hide others.
+        Uses self._ghost_paths_by_name which subclasses should fill in on_reset.
+        """
+        if self._stage is None:
+            return
+
+        current_name = self._ghost_name_for_step(step_index)
+
+        for name, ghost_path in self._ghost_paths_by_name.items():
+            prim = self._stage.GetPrimAtPath(ghost_path)
+            if not prim or not prim.IsValid():
+                continue
+            img = UsdGeom.Imageable(prim)
+            if name == current_name:
+                img.MakeVisible()
+            else:
+                img.MakeInvisible()
+
+    def update_previews_for_step(self, highlighter: VisualSequenceHighlighter) -> None:
+        """
+        Called from the teleop loop; updates which ghost is visible.
+        Subclasses normally just populate self._ghost_paths_by_name.
+        """
+        self._update_ghost_visibility_for_step(highlighter.step_index)
+

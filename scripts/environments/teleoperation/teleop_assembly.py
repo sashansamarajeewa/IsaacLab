@@ -206,7 +206,7 @@ def main() -> None:
     guide.on_reset(env)
     highlighter.refresh_after_reset()
     phys_binder.refresh_after_reset()
-    # hud.update(guide.step_label(highlighter))
+    guide.update_previews_for_step(highlighter)
     hud.update(guide, highlighter)
     teleop_interface.reset()
 
@@ -230,7 +230,7 @@ def main() -> None:
                     env.sim.render()
 
                 guide.maybe_auto_advance(highlighter)
-                # hud.update(guide.step_label(highlighter))
+                guide.update_previews_for_step(highlighter)
                 hud.update(guide, highlighter)
                 
                 if should_reset_recording_instance:
@@ -239,7 +239,7 @@ def main() -> None:
                     guide.on_reset(env)
                     highlighter.refresh_after_reset()
                     phys_binder.refresh_after_reset()
-                    # hud.update(guide.step_label(highlighter))
+                    guide.update_previews_for_step(highlighter)
                     hud.update(guide, highlighter)
                     print("Environment reset complete")
         except Exception as e:
