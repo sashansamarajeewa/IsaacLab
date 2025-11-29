@@ -33,14 +33,13 @@ from . import mdp
 
 from isaaclab_assets.robots.fourier import GR1T2_HIGH_PD_CFG  # isort: skip
 
+ASSET_SCALE = (2.0, 2.0, 2.0)
 
 ##
 # Scene definition
 ##
 @configclass
 class ObjectTableSceneCfg(InteractiveSceneCfg):
-    
-    assetScale=(2.0, 2.0, 2.0)
 
     # Table
     packing_table = AssetBaseCfg(
@@ -87,7 +86,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/DrawerBox",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box/drawer_box.usd",
-                         scale=assetScale,
+                         scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                         #  articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
                          mass_props=sim_utils.MassPropertiesCfg(mass=8),
@@ -99,7 +98,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/DrawerBottom",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.5, 1.085]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom/drawer_container_bottom.usd",
-                         scale=assetScale,
+                         scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                         #  articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
                          mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
@@ -111,7 +110,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/DrawerTop",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.59, 1.085]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top/drawer_container_top.usd",
-                         scale=assetScale,
+                         scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                         #  articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
                          mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
