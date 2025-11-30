@@ -103,7 +103,6 @@ class DrawerGuide(BaseGuide):
                 self._static_obstacles[name] = (xf.ExtractTranslation(), xf.ExtractRotation().GetQuat())
 
         # --------- Compute simple target poses for previews ---------
-        # NOTE: these are approximate, based on your tolerances.
         if (
             self._static_table_pos is not None
             and self._static_obstacles["ObstacleLeft"] is not None
@@ -113,13 +112,13 @@ class DrawerGuide(BaseGuide):
             front_pos, front_quat = self._static_obstacles["ObstacleFront"]
             table_z = self._static_table_pos[2]
 
-            # target DrawerBox braced in corner (roughly within tolerance bounds)
+            # target DrawerBox braced in corner
             box_pos = Gf.Vec3d(
                 left_pos[0] + self.tol_x_dbox_lo,
                 front_pos[1] - self.tol_y_dbox_fo,
                 table_z + self.tol_z_dbox_t,
             )
-            box_quat = 180+front_quat
+            _, box_quat = self.get_live_part_pose("DrawerBox")
             self._target_poses["DrawerBox"] = (box_pos, box_quat)
 
             # DrawerBottom: relative to box target
