@@ -450,6 +450,9 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         #     gpu_max_num_partitions=1, 
 
         # ),
+        render=sim_utils.RenderCfg(
+            enable_translucency=True
+        )
     )
 
     def __post_init__(self):
