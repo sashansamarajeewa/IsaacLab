@@ -38,7 +38,7 @@ class MaterialRegistry:
     
     # Ghost preview material
     ghost_cfg = GlassMdlCfg(
-        glass_color=(1, 0.85, 0.68),
+        glass_color=(0.871, 1, 0.957),
         frosting_roughness=0.2,
         thin_walled=True,
     )

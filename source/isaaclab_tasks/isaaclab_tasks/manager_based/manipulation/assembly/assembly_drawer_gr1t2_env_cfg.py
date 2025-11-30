@@ -281,6 +281,7 @@ class ActionsCfg:
             ],
             fixed_input_tasks=[],
             xr_enabled=bool(carb.settings.get_settings().get("/app/xr/enabled")),
+            maxRefractionBounces=carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)
         ),
     )
 
