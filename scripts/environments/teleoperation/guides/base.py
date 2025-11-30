@@ -292,17 +292,20 @@ def spawn_ghost_preview(
     source_scale = get_xform_scale(stage, source_root_path)
     scale = source_scale if source_scale is not None else Gf.Vec3d(1.0, 1.0, 1.0)
 
-    # Author separate XformOps
     xformable = UsdGeom.Xformable(ghost_prim)
     xformable.ClearXformOpOrder()
+    op = xformable.AddTransformOp()
 
-    scale_op = xformable.AddScaleOp(UsdGeom.XformOp.PrecisionDouble)
-    orient_op = xformable.AddOrientOp(UsdGeom.XformOp.PrecisionDouble)
-    trans_op = xformable.AddTranslateOp(UsdGeom.XformOp.PrecisionDouble)
+    m = Gf.Matrix4d(1.0)
+    m.SetScale(scale)
+    # Apply rotation
+    rotM = Gf.Matrix4d(1.0)
+    rotM.SetRotate(target_rot)
+    m = rotM * m
+    # Finally translation
+    m.SetTranslate(target_pos)
 
-    scale_op.Set(scale)
-    orient_op.Set(target_rot)
-    trans_op.Set(target_pos)
+    op.Set(m)
 
     # Bind ghost material
     sim_utils.bind_visual_material(ghost_root_path, ghost_mat_path, stronger_than_descendants=True)
