@@ -306,7 +306,7 @@ def spawn_ghost_preview(
     tM = Gf.Matrix4d(1.0)
     tM.SetTranslate(target_pos)
     
-    m = sM * rotM * M
+    m = sM * rotM * tM
 
     op.Set(m)
 
