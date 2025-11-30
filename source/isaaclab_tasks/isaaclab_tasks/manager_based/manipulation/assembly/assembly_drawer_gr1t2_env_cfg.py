@@ -281,7 +281,6 @@ class ActionsCfg:
             ],
             fixed_input_tasks=[],
             xr_enabled=bool(carb.settings.get_settings().get("/app/xr/enabled")),
-            maxRefractionBounces=carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)
         ),
     )
 
@@ -465,6 +464,7 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         self.sim.dt = 1 / 160  # 120Hz
         self.sim.render_interval = 2 #6
         self.sim.physx.enable_ccd = False #True
+        carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)
 
         # Convert USD to URDF and change revolute joints to fixed
         temp_urdf_output_path, temp_urdf_meshes_output_path = ControllerUtils.convert_usd_to_urdf(
