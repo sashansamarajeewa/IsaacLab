@@ -41,6 +41,7 @@ class MaterialRegistry:
         glass_color=(0.871, 1, 0.957),
         frosting_roughness=0.2,
         thin_walled=True,
+        glass_ior=1.2,
     )
 
     @classmethod
