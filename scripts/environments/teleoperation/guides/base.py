@@ -3,9 +3,9 @@ import textwrap
 from typing import Callable, List, Optional, Sequence, Tuple
 from pxr import Usd, Gf, UsdPhysics, UsdGeom
 from isaaclab.sim import utils as sim_utils
-from isaaclab.sim.spawners.materials import spawn_preview_surface, spawn_rigid_body_material
+from isaaclab.sim.spawners.materials import spawn_preview_surface, spawn_rigid_body_material, spawn_from_mdl_file
 from isaaclab.sim.spawners.materials.physics_materials_cfg import RigidBodyMaterialCfg
-from isaaclab.sim.spawners.materials.visual_materials_cfg import PreviewSurfaceCfg
+from isaaclab.sim.spawners.materials.visual_materials_cfg import PreviewSurfaceCfg, GlassMdlCfg
 from pxr import UsdShade
 from omni.physx import get_physx_interface
 import math
@@ -37,10 +37,10 @@ class MaterialRegistry:
     )
     
     # Ghost preview material
-    ghost_cfg = PreviewSurfaceCfg(
-        diffuse_color=(0.92, 1.0, 0.92),
-        emissive_color=(0.0, 0.0, 0.0),
-        opacity=0.2,
+    ghost_cfg = GlassMdlCfg(
+        glass_color=(1, 0.85, 0.68),
+        frosting_roughness=0.2,
+        thin_walled=True,
     )
 
     @classmethod
@@ -50,7 +50,7 @@ class MaterialRegistry:
         # Create/update physics material
         spawn_rigid_body_material(prim_path=cls.physics_path, cfg=cls.physics_cfg)
         # Create/update host preview material
-        spawn_preview_surface(prim_path=cls.ghost_path,   cfg=cls.ghost_cfg)
+        spawn_from_mdl_file(prim_path=cls.ghost_path, cfg=cls.ghost_cfg)
 
 # ---------------------------------------------------------------------------
 # Visual highlighter using bind_visual_material at the asset root
