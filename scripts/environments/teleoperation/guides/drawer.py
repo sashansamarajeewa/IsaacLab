@@ -115,9 +115,10 @@ class DrawerGuide(BaseGuide):
 
             # target DrawerBox braced in corner (roughly within tolerance bounds)
             box_pos = Gf.Vec3d(
-                left_pos[0] + 0.9 * self.tol_x_dbox_lo,
-                front_pos[1] - 0.9 * self.tol_y_dbox_fo,
-                table_z + 0.9 * self.tol_z_dbox_t,
+                # left_pos[0] + 0.9 * self.tol_x_dbox_lo,
+                # front_pos[1] - 0.9 * self.tol_y_dbox_fo,
+                # table_z + 0.9 * self.tol_z_dbox_t,
+                -0.04, 0.46, 1.08
             )
             box_quat = front_quat
             self._target_poses["DrawerBox"] = (box_pos, box_quat)
