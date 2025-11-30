@@ -33,6 +33,7 @@ from . import mdp
 
 from isaaclab_assets.robots.fourier import GR1T2_HIGH_PD_CFG  # isort: skip
 
+ASSET_SCALE = (0.04, 0.04, 0.04)
 
 ##
 # Scene definition
@@ -82,50 +83,50 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     
     # Part0
     part0 = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/Part0",
+        prim_path="{ENV_REGEX_NS}/part0",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.06, 0.44, 1.2], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part0.usd",
-                         scale=(0.04, 0.04, 0.04),
+                         scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
     )
     
     # Part1
     part1 = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/Part1",
+        prim_path="{ENV_REGEX_NS}/part1",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.04, 0.44, 1.2], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part1.usd",
-                         scale=(0.04, 0.04, 0.04),
+                         scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
     )
     
     # Part2
     part2 = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/Part2",
+        prim_path="{ENV_REGEX_NS}/part2",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.02, 0.44, 1.2], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part2.usd",
-                         scale=(0.04, 0.04, 0.04),
+                         scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
     )
     
     # Part3
     part3 = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/Part3",
+        prim_path="{ENV_REGEX_NS}/part3",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.00, 0.44, 1.2], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part3.usd",
-                         scale=(0.04, 0.04, 0.04),
+                         scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
     )
     
     # Part4
     part4 = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/Part4",
+        prim_path="{ENV_REGEX_NS}/part4",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.02, 0.44, 1.2], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part4.usd",
-                         scale=(0.04, 0.04, 0.04),
+                         scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
     )
