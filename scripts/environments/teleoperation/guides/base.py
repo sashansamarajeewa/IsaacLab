@@ -296,12 +296,12 @@ def spawn_ghost_preview(
     xformable.ClearXformOpOrder()
     op = xformable.AddTransformOp()
 
-    m = Gf.Matrix4d(1.0)
-    m.SetScale(scale)
+    sc = Gf.Matrix4d(1.0)
+    sc.SetScale(scale)
     # Apply rotation
     rotM = Gf.Matrix4d(1.0)
     rotM.SetRotate(target_rot)
-    m = rotM * m
+    m = rotM * sc
     # Finally translation
     m.SetTranslate(target_pos)
 
