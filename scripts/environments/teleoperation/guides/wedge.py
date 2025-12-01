@@ -4,9 +4,9 @@ from typing import Optional, Tuple
 
 # ======================= Drawer Guide =======================
 
-class DrawerGuide(BaseGuide):
+class WedgeGuide(BaseGuide):
 
-    SEQUENCE = ["DrawerBox", "DrawerBox", "DrawerBottom", "DrawerTop"]
+    SEQUENCE = ["part0", "part1", "part2", "part3", "part4"]
     
     # tol_x_dbox_lo = 0.133 # distance between drawer box and left obstacle origin along X
     # tol_y_dbox_fo = 0.119 # distance between drawer box and front obstacle origin along Y
@@ -40,9 +40,11 @@ class DrawerGuide(BaseGuide):
         self._paths: dict[str, Optional[str]] = {}
         # Asset root paths for ghosts
         self._asset_roots: dict[str, Optional[str]] = {
-            "DrawerBox": None,
-            "DrawerBottom": None,
-            "DrawerTop": None,
+            "part0": None,
+            "part1": None,
+            "part2": None,
+            "part3": None,
+            "part4": None,
         }
         # Cached static world poses for this episode
         self._static_table_pos: Optional[Gf.Vec3d] = None
@@ -54,9 +56,11 @@ class DrawerGuide(BaseGuide):
         
         # Target poses for ghost previews
         self._target_poses: dict[str, Optional[Tuple[Gf.Vec3d, Gf.Quatd]]] = {
-            "DrawerBox": None,
-            "DrawerBottom": None,
-            "DrawerTop": None,
+            "part0": None,
+            "part1": None,
+            "part2": None,
+            "part3": None,
+            "part4": None,
         }
         
         # Ghost prim paths by logical name
@@ -69,8 +73,8 @@ class DrawerGuide(BaseGuide):
         stage: Usd.Stage = env.scene.stage
         env_ns: str = env.scene.env_ns
         self._paths.clear()
-        self._asset_roots = {"DrawerBox": None, "DrawerBottom": None, "DrawerTop": None}
-        self._target_poses = {"DrawerBox": None, "DrawerBottom": None, "DrawerTop": None}
+        self._asset_roots = {"part0": None,"part1": None,"part2": None,"part3": None,"part4": None}
+        self._target_poses = {"part0": None,"part1": None,"part2": None,"part3": None,"part4": None}
         self._ghost_paths_by_name.clear()
         self._static_table_pos = None
         self._static_obstacles = {"ObstacleLeft": None, "ObstacleFront": None, "ObstacleRight": None}
@@ -84,7 +88,7 @@ class DrawerGuide(BaseGuide):
             self._paths[name] = resolve_env_scoped_path(stage, env_ns, name)
 
         # Moving parts - rigid body prim if present else root
-        for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
+        for name in ("part0", "part1", "part2", "part3", "part3"):
             root_path = resolve_env_scoped_path(stage, env_ns, name)
             self._asset_roots[name] = root_path
             if not root_path:
@@ -120,18 +124,22 @@ class DrawerGuide(BaseGuide):
             table_z = self._static_table_pos[2]
 
             # target DrawerBox braced in corner
-            self._target_poses["DrawerBox"] = (self.tgt_box_pos, self.tgt_box_quat)
+            self._target_poses["part0"] = (self.tgt_box_pos, self.tgt_box_quat)
 
             # target DrawerBottom inserted to DrawerBox
-            self._target_poses["DrawerBottom"] = (self.tgt_bot_pos, self.tgt_bot_quat)
+            self._target_poses["part1"] = (self.tgt_bot_pos, self.tgt_bot_quat)
 
             # target DrawerTop inserted to DrawerBox
-            self._target_poses["DrawerTop"] = (self.tgt_top_pos, self.tgt_top_quat)
+            self._target_poses["part2"] = (self.tgt_top_pos, self.tgt_top_quat)
+
+            self._target_poses["part3"] = (self.tgt_top_pos, self.tgt_top_quat)
+
+            self._target_poses["part4"] = (self.tgt_top_pos, self.tgt_top_quat)
 
         # --------- Spawn/update ghosts at target poses ---------
         stage = self._stage  # cached from super().on_reset
         if stage is not None:
-            for name in ("DrawerBox", "DrawerBottom", "DrawerTop"):
+            for name in ("part0", "part1", "part2", "part3", "part3"):
                 root = self._asset_roots.get(name)
                 tgt = self._target_poses.get(name)
                 if not root or not tgt:

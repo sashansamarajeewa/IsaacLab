@@ -33,7 +33,7 @@ from . import mdp
 
 from isaaclab_assets.robots.fourier import GR1T2_HIGH_PD_CFG  # isort: skip
 
-ASSET_SCALE = (0.04, 0.04, 0.04)
+ASSET_SCALE = (0.035, 0.035, 0.035)
 
 ##
 # Scene definition
@@ -85,7 +85,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     part0 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part0",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.44, 1.1], rot=[0.7071068, 0.7071068, 0, 0]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part0.usd",
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/wedge/part0.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
@@ -95,7 +95,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     part1 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part1",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.44, 1.1], rot=[0.7071068, 0.7071068, 0, 0]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part1.usd",
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/wedge/part1.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
@@ -105,7 +105,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     part2 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part2",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.44, 1.1], rot=[0.7071068, 0.7071068, 0, 0]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part2.usd",
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/wedge/part2.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
@@ -115,7 +115,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     part3 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part3",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.44, 1.1], rot=[0.7071068, 0.7071068, 0, 0]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part3.usd",
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/wedge/part3.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
@@ -125,7 +125,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     part4 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part4",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.44, 1.1], rot=[0.7071068, 0.7071068, 0, 0]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part4.usd",
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/wedge/part4.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
@@ -135,7 +135,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # part5 = RigidObjectCfg(
     #     prim_path="{ENV_REGEX_NS}/Part5",
     #     init_state=RigidObjectCfg.InitialStateCfg(pos=[0.04, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
-    #     spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/blocks/part5.usd",
+    #     spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/wedge/part5.usd",
     #                      scale=(0.03, 0.03, 0.03),
     #                      rigid_props=sim_utils.RigidBodyPropertiesCfg(),
     #                      ),
@@ -386,7 +386,7 @@ class EventCfg:
 
 
 @configclass
-class AssemblyBlocksGR1T2EnvCfg(ManagerBasedRLEnvCfg):
+class AssemblyWedgeGR1T2EnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the GR1T2 environment."""
 
     # Scene settings
@@ -474,17 +474,21 @@ class AssemblyBlocksGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         #     gpu_max_num_partitions=1, 
 
         # ),
+        render=sim_utils.RenderCfg(
+            enable_translucency=True
+        )
     )
 
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 2 #6
+        self.decimation = 5 #6
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 160  # 120Hz
+        self.sim.dt = 1 / 200  # 120Hz
         self.sim.render_interval = 2 #6
         self.sim.physx.enable_ccd = False #True
+        carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)
 
         # Convert USD to URDF and change revolute joints to fixed
         temp_urdf_output_path, temp_urdf_meshes_output_path = ControllerUtils.convert_usd_to_urdf(
