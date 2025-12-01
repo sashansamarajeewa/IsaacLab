@@ -10,7 +10,7 @@ from . import (
     agents,
     assembly_drawer_gr1t2_env_cfg,
     assembly_lamp_gr1t2_env_cfg,
-    assembly_blocks_gr1t2_env_cfg,
+    assembly_wedge_gr1t2_env_cfg,
 )
 
 gym.register(
@@ -34,10 +34,10 @@ gym.register(
 )
 
 gym.register(
-    id="Isaac-Assembly-Blocks-GR1T2-Abs-v0",
+    id="Isaac-Assembly-Wedge-GR1T2-Abs-v0",
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     kwargs={
-        "env_cfg_entry_point": assembly_blocks_gr1t2_env_cfg.AssemblyBlocksGR1T2EnvCfg,
+        "env_cfg_entry_point": assembly_wedge_gr1t2_env_cfg.AssemblyWedgeGR1T2EnvCfg,
         "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_low_dim.json"),
     },
     disable_env_checker=True,

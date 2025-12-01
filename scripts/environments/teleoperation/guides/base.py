@@ -37,11 +37,19 @@ class MaterialRegistry:
     )
     
     # Ghost preview material
-    ghost_cfg = GlassMdlCfg(
-        glass_color=(0.871, 1, 0.957),
-        frosting_roughness=0.2,
-        thin_walled=True,
-        glass_ior=1.2,
+    # ghost_cfg = GlassMdlCfg(
+    #     glass_color=(0.871, 1, 0.957),
+    #     frosting_roughness=0,
+    #     thin_walled=True,
+    #     glass_ior=1.8,
+    # )
+
+    ghost_cfg = PreviewSurfaceCfg(
+        diffuse_color=(0.2, 0.9, 0.9),
+        roughness=0.9,
+        metallic=0.0,
+        opacity=1,
+        emissive_color=(0.05, 0.2, 0.2),
     )
 
     @classmethod
@@ -51,7 +59,8 @@ class MaterialRegistry:
         # Create/update physics material
         spawn_rigid_body_material(prim_path=cls.physics_path, cfg=cls.physics_cfg)
         # Create/update host preview material
-        spawn_from_mdl_file(prim_path=cls.ghost_path, cfg=cls.ghost_cfg)
+        # spawn_from_mdl_file(prim_path=cls.ghost_path, cfg=cls.ghost_cfg)
+        spawn_preview_surface(prim_path=cls.ghost_path, cfg=cls.ghost_cfg)
 
 # ---------------------------------------------------------------------------
 # Visual highlighter using bind_visual_material at the asset root

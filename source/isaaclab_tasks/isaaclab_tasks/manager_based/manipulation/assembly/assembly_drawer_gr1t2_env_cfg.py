@@ -458,10 +458,10 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 2 #6
+        self.decimation = 5 #6
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 160  # 120Hz
+        self.sim.dt = 1 / 200  # 120Hz
         self.sim.render_interval = 2 #6
         self.sim.physx.enable_ccd = False #True
         carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)
