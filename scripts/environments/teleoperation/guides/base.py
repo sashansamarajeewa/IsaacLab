@@ -711,6 +711,33 @@ class BaseGuide:
         if checks[idx]():
             highlighter.advance()
             
+    def any_part_fallen_below_table(
+        self,
+        part_names: Sequence[str],
+        z_margin: float = 0.05,
+    ) -> bool:
+        """
+        Returns True if any of the given parts is clearly below the table height.
+
+        Assumes the guide has set `self._static_table_pos` (Gf.Vec3d) in on_reset.
+        `z_margin` is how far below the table origin we allow before calling it "fallen".
+        """
+        table_pos = getattr(self, "_static_table_pos", None)
+        if table_pos is None:
+            return False
+
+        table_z = float(table_pos[2])
+
+        for name in part_names:
+            live = self.get_live_part_pose(name)
+            if not live:
+                continue
+            pos, _ = live
+            if pos[2] < table_z - z_margin:
+                return True
+
+        return False
+    
     def _ghost_name_for_step(self, step_index: int) -> Optional[str]:
         """
         Default mapping from step index to the logical name whose ghost should be visible.
