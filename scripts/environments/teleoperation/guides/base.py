@@ -387,6 +387,66 @@ class SimpleSceneWidget(ui.Widget):
 
                 ui.Label(text, height=3, style=style)
 
+class ControlPanelWidget(ui.Widget):
+    """
+    Simple XR-friendly panel with Start / Stop / Reset buttons.
+
+    Call set_callbacks(start=..., stop=..., reset=...) after construction
+    to wire it to your teleop functions.
+    """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._callbacks: dict[str, Optional[Callable[[], None]]] = {
+            "start": None,
+            "stop": None,
+            "reset": None,
+        }
+
+        with ui.ZStack():
+            ui.Rectangle(style={
+                "background_color": ui.color("#202020"),
+                "border_color": ui.color(0.7),
+                "border_width": 0.5,
+                "border_radius": 1,
+            })
+            with ui.VStack(style={"margin": 4, "spacing": 4}):
+                ui.Label("Teleoperation", style={"font_size": 1.5, "color": ui.color(0.9)})
+
+                with ui.HStack(style={"spacing": 4}):
+                    ui.Button("Start",  clicked_fn=self._on_start,  style={"font_size": 1.0})
+                    ui.Button("Stop",   clicked_fn=self._on_stop,   style={"font_size": 1.0})
+                    ui.Button("Reset",  clicked_fn=self._on_reset,  style={"font_size": 1.0})
+
+    # external API
+    def set_callbacks(
+        self,
+        start: Optional[Callable[[], None]] = None,
+        stop: Optional[Callable[[], None]] = None,
+        reset: Optional[Callable[[], None]] = None,
+    ):
+        if start is not None:
+            self._callbacks["start"] = start
+        if stop is not None:
+            self._callbacks["stop"] = stop
+        if reset is not None:
+            self._callbacks["reset"] = reset
+
+    # internal handlers
+    def _on_start(self):
+        cb = self._callbacks.get("start")
+        if cb:
+            cb()
+
+    def _on_stop(self):
+        cb = self._callbacks.get("stop")
+        if cb:
+            cb()
+
+    def _on_reset(self):
+        cb = self._callbacks.get("reset")
+        if cb:
+            cb()
+
 from omni.kit.xr.scene_view.utils.ui_container import UiContainer
 from omni.kit.xr.scene_view.utils.manipulator_components.widget_component import WidgetComponent
 from omni.kit.xr.scene_view.utils.spatial_source import SpatialSource
@@ -527,6 +587,56 @@ class HUDManager:
 
         if hasattr(self._widget, "set_steps"):
             self._widget.set_steps(wrapped_lines, active_idx)
+
+    def show(self):  self._widget_component.visible = True
+    def hide(self):  self._widget_component.visible = False
+    def destroy(self): pass
+    
+class ControlHUD:
+    """
+    XR HUD that shows the ControlPanelWidget (Start/Stop/Reset) at a fixed pose.
+    """
+    def __init__(
+        self,
+        widget_cls,
+        callbacks: dict[str, Callable[[], None]],
+        width: float = 0.4,
+        height: float = 0.18,
+        resolution_scale: int = 20,
+        unit_to_pixel_scale: int = 30,
+        translation: Gf.Vec3d = Gf.Vec3d(0.35, 0.9, 1.5),
+        rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
+    ):
+        self._widget = None
+
+        def on_constructed(widget_instance):
+            self._widget = widget_instance
+            # Wire the callbacks into the widget
+            if hasattr(widget_instance, "set_callbacks"):
+                widget_instance.set_callbacks(
+                    start=callbacks.get("start"),
+                    stop=callbacks.get("stop"),
+                    reset=callbacks.get("reset"),
+                )
+
+        self._widget_component = WidgetComponent(
+            widget_cls,
+            width=width,
+            height=height,
+            resolution_scale=resolution_scale,
+            unit_to_pixel_scale=unit_to_pixel_scale,
+            update_policy=sc.Widget.UpdatePolicy.ALWAYS,
+            construct_callback=on_constructed,
+        )
+        space_stack = [
+            SpatialSource.new_translation_source(translation),
+            SpatialSource.new_rotation_source(Gf.Vec3d(
+                math.radians(rotation_deg_xyz[0]),
+                math.radians(rotation_deg_xyz[1]),
+                math.radians(rotation_deg_xyz[2]),
+            )),
+        ]
+        self._ui_container = UiContainer(self._widget_component, space_stack=space_stack)
 
     def show(self):  self._widget_component.visible = True
     def hide(self):  self._widget_component.visible = False
