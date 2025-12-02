@@ -166,6 +166,16 @@ def main() -> None:
         "STOP": stop_teleoperation,
         "RESET": reset_recording_instance,
     }
+    
+    control_hud = base.ControlHUD(
+    base.ControlPanelWidget,
+    callbacks={
+        "start": start_teleoperation,
+        "stop": stop_teleoperation,
+        "reset": reset_recording_instance,
+    },
+    )
+    control_hud.show()
 
     # For hand tracking devices, add additional callbacks
     if args_cli.xr:
@@ -248,6 +258,7 @@ def main() -> None:
 
     # close the simulator
     hud.destroy()
+    control_hud.destroy()
     env.close()
     print("Environment closed")
 
