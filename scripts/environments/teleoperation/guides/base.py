@@ -434,6 +434,7 @@ class ControlPanelWidget(ui.Widget):
     # internal handlers
     def _on_start(self):
         cb = self._callbacks.get("start")
+        print("pressed start")
         if cb:
             cb()
 
