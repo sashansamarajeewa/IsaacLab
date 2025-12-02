@@ -409,10 +409,10 @@ class ControlPanelWidget(ui.Widget):
                 "border_width": 0.5,
                 "border_radius": 1,
             })
-            with ui.VStack(style={"margin": 4, "spacing": 4}):
+            with ui.VStack(style={"margin": 1, "spacing": 1}):
                 ui.Label("Teleoperation", style={"font_size": 1.5, "color": ui.color(0.9)})
 
-                with ui.HStack(style={"spacing": 4}):
+                with ui.HStack(style={"spacing": 1}):
                     ui.Button("Start",  clicked_fn=self._on_start,  style={"font_size": 1.0})
                     ui.Button("Stop",   clicked_fn=self._on_stop,   style={"font_size": 1.0})
                     ui.Button("Reset",  clicked_fn=self._on_reset,  style={"font_size": 1.0})
@@ -604,7 +604,7 @@ class ControlHUD:
         height: float = 0.6,
         resolution_scale: int = 20,
         unit_to_pixel_scale: int = 30,
-        translation: Gf.Vec3d = Gf.Vec3d(0.35, 0.9, 1.5),
+        translation: Gf.Vec3d = Gf.Vec3d(0.5, 0.9, 1.5),
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
     ):
         self._widget = None
