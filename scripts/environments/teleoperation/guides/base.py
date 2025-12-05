@@ -26,7 +26,6 @@ class MaterialRegistry:
     # Visual highlighter material (preview surface)
     visual_cfg = PreviewSurfaceCfg(
         diffuse_color=(0.6, 0.8, 0.1),
-        emissive_color=(0.0, 0.0, 0.0),
     )
 
     # Physics (friction) material
@@ -45,11 +44,8 @@ class MaterialRegistry:
     # )
 
     ghost_cfg = PreviewSurfaceCfg(
-        diffuse_color=(0.2, 0.9, 0.9),
-        roughness=0.9,
-        metallic=0.0,
-        opacity=1,
-        emissive_color=(0.05, 0.2, 0.2),
+        diffuse_color=(0.4, 1.0, 1.0),
+        roughness=1.0,
     )
 
     @classmethod
@@ -714,7 +710,7 @@ class BaseGuide:
     def any_part_fallen_below_table(
         self,
         part_names: Sequence[str],
-        z_margin: float = 0.05,
+        z_margin: float = 0.2,
     ) -> bool:
         """
         Returns True if any of the given parts is clearly below the table height.
@@ -733,7 +729,7 @@ class BaseGuide:
             if not live:
                 continue
             pos, _ = live
-            if pos[2] < table_z - z_margin:
+            if pos[2] < abs(table_z - z_margin):
                 return True
 
         return False
