@@ -33,7 +33,7 @@ from . import mdp
 
 from isaaclab_assets.robots.fourier import GR1T2_HIGH_PD_CFG  # isort: skip
 
-ASSET_SCALE = (2.0, 2.0, 2.0)
+ASSET_SCALE = (0.031, 0.031, 0.031)
 
 ##
 # Scene definition
@@ -81,36 +81,73 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
                          ),
     )
     
-    # DrawerBox
-    drawer_box = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerBox",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box/drawer_box.usd",
+    # Part0
+    part0 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/part0",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.3, 1.1], rot=[0.7071068, 0.7071068, 0, 0]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part0.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         mass_props=sim_utils.MassPropertiesCfg(mass=8),
+                         ),
+    )
+    
+    # Part1
+    part1 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/part1",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.3, 1.11], rot=[0.7071068, 0.7071068, 0, 0]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part1.usd",
+                         scale=ASSET_SCALE,
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         ),
+    )
+    
+    # Part2
+    part2 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/part2",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.3, 1.12], rot=[0.7071068, 0.7071068, 0, 0]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part2.usd",
+                         scale=ASSET_SCALE,
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         ),
+    )
+    
+    # Part3
+    part3 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/part3",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.3, 1.13], rot=[0.7071068, 0.7071068, 0, 0]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part3.usd",
+                         scale=ASSET_SCALE,
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         ),
+    )
+    
+    # Part4
+    part4 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/part4",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.3, 1.14], rot=[0.7071068, 0.7071068, 0, 0]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part4.usd",
+                         scale=ASSET_SCALE,
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         ),
+    )
+    
+    # Part5
+    part5 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/part5",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.0035, 0.367, 1.102], rot=[0.7442511916160583, 0.1649, 0.19942151010036469, -0.615713357925415]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part5.usd",
+                         scale=ASSET_SCALE,
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
                          ),
     )
 
-    # DrawerBottom
-    drawer_container_bottom = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerBottom",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.5, 1.085]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom/drawer_container_bottom.usd",
+    # Part6
+    part6 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/part6",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[3.263, 2.63, 1.102], rot=[-0.3388673663139343, 0.34143269062042236, 0.4476880729198456, -0.7537692785263062]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part6.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
-                         ),
-    )
-
-    # DrawerTop
-    drawer_container_top = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerTop",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.59, 1.085]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top/drawer_container_top.usd",
-                         scale=ASSET_SCALE,
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
                          ),
     )
 
@@ -359,7 +396,7 @@ class EventCfg:
 
 
 @configclass
-class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
+class AssemblyHexagonGR1T2EnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the GR1T2 environment."""
 
     # Scene settings
