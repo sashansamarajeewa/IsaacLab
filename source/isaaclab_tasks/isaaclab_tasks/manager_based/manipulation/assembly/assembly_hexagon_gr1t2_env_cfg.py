@@ -101,35 +101,35 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
                          ),
     )
     
-    # Part2
-    part2 = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/part2",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.3, 1.12], rot=[0.7071068, 0.7071068, 0, 0]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part2.usd",
-                         scale=ASSET_SCALE,
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         ),
-    )
+    # # Part2
+    # part2 = RigidObjectCfg(
+    #     prim_path="{ENV_REGEX_NS}/part2",
+    #     init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.3, 1.12], rot=[0.7071068, 0.7071068, 0, 0]),
+    #     spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part2.usd",
+    #                      scale=ASSET_SCALE,
+    #                      rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+    #                      ),
+    # )
     
-    # Part3
-    part3 = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/part3",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.3, 1.13], rot=[0.7071068, 0.7071068, 0, 0]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part3.usd",
-                         scale=ASSET_SCALE,
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         ),
-    )
+    # # Part3
+    # part3 = RigidObjectCfg(
+    #     prim_path="{ENV_REGEX_NS}/part3",
+    #     init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.3, 1.13], rot=[0.7071068, 0.7071068, 0, 0]),
+    #     spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part3.usd",
+    #                      scale=ASSET_SCALE,
+    #                      rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+    #                      ),
+    # )
     
-    # Part4
-    part4 = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/part4",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.3, 1.14], rot=[0.7071068, 0.7071068, 0, 0]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part4.usd",
-                         scale=ASSET_SCALE,
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         ),
-    )
+    # # Part4
+    # part4 = RigidObjectCfg(
+    #     prim_path="{ENV_REGEX_NS}/part4",
+    #     init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.3, 1.14], rot=[0.7071068, 0.7071068, 0, 0]),
+    #     spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part4.usd",
+    #                      scale=ASSET_SCALE,
+    #                      rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+    #                      ),
+    # )
     
     # Part5
     part5 = RigidObjectCfg(
@@ -142,14 +142,14 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     )
 
     # Part6
-    # part6 = RigidObjectCfg(
-    #     prim_path="{ENV_REGEX_NS}/part6",
-    #     init_state=RigidObjectCfg.InitialStateCfg(pos=[3.263, 2.63, 1.102], rot=[-0.3388673663139343, 0.34143269062042236, 0.4476880729198456, -0.7537692785263062]),
-    #     spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part6.usd",
-    #                      scale=ASSET_SCALE,
-    #                      rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-    #                      ),
-    # )
+    part6 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/part6",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[1949, 0.5, 1.0], rot=[-0.3388673663139343, 0.34143269062042236, 0.4476880729198456, -0.7537692785263062]),
+        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part6.usd",
+                         scale=ASSET_SCALE,
+                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         ),
+    )
 
     object = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Object",
