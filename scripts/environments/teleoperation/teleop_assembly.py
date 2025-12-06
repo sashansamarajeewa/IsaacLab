@@ -244,7 +244,7 @@ def main() -> None:
                 hud.update(guide, highlighter)
                 
                 if guide.any_part_fallen_below_table(getattr(guide, "MOVING_PARTS", [])):
-                    print("An object fallen below table...resetting")
+                    print("An object has fallen below table...resetting")
                     should_reset_recording_instance = True
                 
                 if should_reset_recording_instance:
