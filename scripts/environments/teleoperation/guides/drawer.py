@@ -1,5 +1,5 @@
 from .base import BaseGuide, VisualSequenceHighlighter, ang_deg, first_descendant_with_rigid_body, resolve_env_scoped_path, spawn_ghost_preview, MaterialRegistry
-from pxr import UsdGeom, Usd, UsdPhysics, Gf
+from pxr import UsdGeom, Usd, Gf
 from typing import Optional, Tuple
 
 # ======================= Drawer Guide =======================
