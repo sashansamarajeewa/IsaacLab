@@ -134,7 +134,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # Part5
     part5 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part5",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.0035, 0.367, 1.102], rot=[0.7071068, 0, 0.7071068, 0]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.3512, 0.514, 1.1], rot=[0.5, -0.5, 0.5, 0.5]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/hexagon/part5.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
