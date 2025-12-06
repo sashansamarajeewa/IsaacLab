@@ -193,7 +193,7 @@ class HexagonGuide(BaseGuide):
     def _check_pickup_box(self) -> bool:
         if self._static_table_pos is None:
             return False
-        box_pose = self.get_live_part_pose("part3")
+        box_pose = self.get_live_part_pose("part0")
         if not box_pose:
             return False
         box_pos, _ = box_pose
