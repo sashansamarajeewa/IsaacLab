@@ -2,12 +2,12 @@ from .base import BaseGuide, VisualSequenceHighlighter, ang_deg, first_descendan
 from pxr import UsdGeom, Usd, Gf
 from typing import Optional, Tuple
 
-# ======================= Hexagon Guide =======================
+# ======================= Motor Guide =======================
 
-class HexagonGuide(BaseGuide):
+class MotorGuide(BaseGuide):
 
-    SEQUENCE = ["part0", "part1", "part2", "part3", "part4", "part5", "part6"]
-    MOVING_PARTS = ["part0", "part1", "part2", "part3", "part4", "part5", "part6"]
+    SEQUENCE = ["part0", "part1", "part2", "part3", "part4", "part5"]
+    MOVING_PARTS = ["part0", "part1", "part2", "part3", "part4", "part5"]
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
     
     # tol_x_dbox_lo = 0.133 # distance between drawer box and left obstacle origin along X
@@ -48,7 +48,6 @@ class HexagonGuide(BaseGuide):
             "part3": None,
             "part4": None,
             "part5": None,
-            "part6": None,
         }
         # Cached static world poses for this episode
         self._static_table_pos: Optional[Gf.Vec3d] = None
@@ -66,7 +65,6 @@ class HexagonGuide(BaseGuide):
             "part3": None,
             "part4": None,
             "part5": None,
-            "part6": None,
         }
         
         # Ghost prim paths by logical name
@@ -79,8 +77,8 @@ class HexagonGuide(BaseGuide):
         stage: Usd.Stage = env.scene.stage
         env_ns: str = env.scene.env_ns
         self._paths.clear()
-        self._asset_roots = {"part0": None,"part1": None,"part2": None,"part3": None,"part4": None, "part5": None,"part6": None}
-        self._target_poses = {"part0": None,"part1": None,"part2": None,"part3": None,"part4": None, "part5": None,"part6": None}
+        self._asset_roots = {"part0": None,"part1": None,"part2": None,"part3": None,"part4": None, "part5": None}
+        self._target_poses = {"part0": None,"part1": None,"part2": None,"part3": None,"part4": None, "part5": None}
         self._ghost_paths_by_name.clear()
         self._static_table_pos = None
         self._static_obstacles = {"ObstacleLeft": None, "ObstacleFront": None, "ObstacleRight": None}
@@ -137,8 +135,6 @@ class HexagonGuide(BaseGuide):
             self._target_poses["part4"] = (self.tgt_top_pos, self.tgt_top_quat)
 
             self._target_poses["part5"] = (self.tgt_top_pos, self.tgt_top_quat)
-
-            self._target_poses["part6"] = (self.tgt_top_pos, self.tgt_top_quat)
 
         # --------- Spawn/update ghosts at target poses ---------
         stage = self._stage  # cached from super().on_reset
@@ -204,7 +200,6 @@ class HexagonGuide(BaseGuide):
         print(self.get_live_part_pose("part3"))
         print(self.get_live_part_pose("part4"))
         print(self.get_live_part_pose("part5"))
-        print(self.get_live_part_pose("part6"))
         print("##############")
         return (box_pos[0] - self._static_table_pos[2]) >= self.tol_z_dbox_t
 
