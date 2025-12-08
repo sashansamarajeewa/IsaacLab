@@ -94,7 +94,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # Part1
     part1 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part1",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.139, 0.514, 1.3], rot=[0, -1, 0, 0]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.1597, 0.5309, 1.08], rot=[0,0, -0.7071068, 0.7071068]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/motor/part1.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
@@ -134,7 +134,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # Part5
     part5 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part5",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.3512, 0.514, 1.3], rot=[0.5, -0.5, 0.5, 0.5]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.18, 0.5309, 1.08], rot=[0,0, -0.7071068, 0.7071068]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/motor/part5.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
