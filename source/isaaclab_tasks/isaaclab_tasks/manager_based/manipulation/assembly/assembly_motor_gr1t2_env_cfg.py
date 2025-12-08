@@ -33,7 +33,7 @@ from . import mdp
 
 from isaaclab_assets.robots.fourier import GR1T2_HIGH_PD_CFG  # isort: skip
 
-ASSET_SCALE = (0.033, 0.033, 0.033)
+ASSET_SCALE = (0.035, 0.035, 0.035)
 
 ##
 # Scene definition
@@ -84,60 +84,66 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # Part0
     part0 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part0",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.196, 0.32, 1.1], rot=[0.7071068, 0.7071068, 0, 0]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.271, 0.24, 1.007], rot=[0.5, 0.5, -0.5, -0.5]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/motor/part0.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
                          ),
     )
     
     # Part1
     part1 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part1",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.1597, 0.5309, 1.08], rot=[0,0, -0.7071068, 0.7071068]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.19, 0.56, 1.039], rot=[0, 0, -0.7071068, -0.7071068]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/motor/part1.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=2.0),
                          ),
     )
     
     # Part2
     part2 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part2",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.3, 1.12], rot=[0.7071068, 0.7071068, 0, 0]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.182, 0.256, 1.021], rot=[0.7071068, 0.7071068, 0, 0]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/motor/part2.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=1.5),
                          ),
     )
     
     # Part3
     part3 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part3",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.3, 1.13], rot=[0.7071068, 0.7071068, 0, 0]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.178, 0.3817, 1.036], rot=[0.7071068, -0.7071068, 0, 0]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/motor/part3.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
                          ),
     )
     
     # Part4
     part4 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part4",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.3, 1.14], rot=[0.7071068, 0.7071068, 0, 0]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.059, 0.6061, 1.02059], rot=[0.5, 0.5, -0.5, -0.5]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/motor/part4.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=1.5),
                          ),
     )
     
     # Part5
     part5 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part5",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.18, 0.5309, 1.08], rot=[0,0, -0.7071068, 0.7071068]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.168, 0.558, 1.0355], rot=[0, 0, 0.7071068, -0.7071068]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/motor/part5.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
                          ),
     )
 
@@ -473,17 +479,17 @@ class AssemblyMotorGR1T2EnvCfg(ManagerBasedRLEnvCfg):
             dynamic_friction=0.7,
             friction_combine_mode="multiply",
         ),
-        # physx=sim_utils.PhysxCfg(
-        #     max_position_iteration_count=192,
-        #     max_velocity_iteration_count=1,
-        #     bounce_threshold_velocity=0.2,
-        #     friction_offset_threshold=0.01,
-        #     friction_correlation_distance=0.00625,
-        #     gpu_max_rigid_contact_count=2**23,
-        #     gpu_max_rigid_patch_count=2**23,
-        #     gpu_max_num_partitions=1, 
-
-        # ),
+        physx=sim_utils.PhysxCfg(
+            solver_type=1,
+            max_position_iteration_count=192,  # Important to avoid interpenetration.
+            max_velocity_iteration_count=1,
+            bounce_threshold_velocity=0.2,
+            friction_offset_threshold=0.01,
+            friction_correlation_distance=0.00625,
+            gpu_max_rigid_contact_count=2**23,
+            gpu_max_rigid_patch_count=2**23,
+            gpu_max_num_partitions=1,  # Important for stable simulation.
+        ),
         render=sim_utils.RenderCfg(
             enable_translucency=True
         )
