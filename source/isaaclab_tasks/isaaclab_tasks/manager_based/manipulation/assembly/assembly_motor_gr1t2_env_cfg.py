@@ -33,7 +33,7 @@ from . import mdp
 
 from isaaclab_assets.robots.fourier import GR1T2_HIGH_PD_CFG  # isort: skip
 
-ASSET_SCALE = (0.031, 0.031, 0.031)
+ASSET_SCALE = (0.033, 0.033, 0.033)
 
 ##
 # Scene definition
@@ -94,7 +94,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # Part1
     part1 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part1",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.139, 0.514, 1.3], rot=[0.5, -0.5, 0.5, 0.5]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.139, 0.514, 1.3], rot=[0, -1, 0, 0]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/motor/part1.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
