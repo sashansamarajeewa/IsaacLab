@@ -436,17 +436,17 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
             dynamic_friction=0.7,
             friction_combine_mode="multiply",
         ),
-        physx=sim_utils.PhysxCfg(
-            solver_type=1,
-            max_position_iteration_count=192,  # Important to avoid interpenetration.
-            max_velocity_iteration_count=1,
-            bounce_threshold_velocity=0.2,
-            friction_offset_threshold=0.01,
-            friction_correlation_distance=0.00625,
-            gpu_max_rigid_contact_count=2**23,
-            gpu_max_rigid_patch_count=2**23,
-            gpu_max_num_partitions=1,  # Important for stable simulation.
-        ),
+        # physx=sim_utils.PhysxCfg(
+        #     solver_type=1,
+        #     max_position_iteration_count=192,  # Important to avoid interpenetration.
+        #     max_velocity_iteration_count=1,
+        #     bounce_threshold_velocity=0.2,
+        #     friction_offset_threshold=0.01,
+        #     friction_correlation_distance=0.00625,
+        #     gpu_max_rigid_contact_count=2**23,
+        #     gpu_max_rigid_patch_count=2**23,
+        #     gpu_max_num_partitions=1,  # Important for stable simulation.
+        # ),
         render=sim_utils.RenderCfg(
             enable_translucency=True
         )
@@ -459,7 +459,7 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         self.episode_length_s = 20.0
         # simulation settings
         self.sim.dt = 1 / 200  # 120Hz
-        self.sim.render_interval = 5 #6
+        self.sim.render_interval = 2 #6
         self.sim.physx.enable_ccd = False #True
         carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)
 
