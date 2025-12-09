@@ -1,5 +1,5 @@
 from .base import BaseGuide, VisualSequenceHighlighter, ang_deg, first_descendant_with_rigid_body, resolve_env_scoped_path, spawn_ghost_preview, MaterialRegistry
-from pxr import UsdGeom, Usd, UsdPhysics, Gf
+from pxr import UsdGeom, Usd, Gf
 from typing import Optional, Tuple
 
 # ======================= Drawer Guide =======================
@@ -7,6 +7,8 @@ from typing import Optional, Tuple
 class WedgeGuide(BaseGuide):
 
     SEQUENCE = ["part0", "part1", "part2", "part3", "part4"]
+    MOVING_PARTS = ["part0", "part1", "part2", "part3", "part4"]
+    STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
     
     # tol_x_dbox_lo = 0.133 # distance between drawer box and left obstacle origin along X
     # tol_y_dbox_fo = 0.119 # distance between drawer box and front obstacle origin along Y
@@ -84,11 +86,11 @@ class WedgeGuide(BaseGuide):
         self._paths["Table"] = table_path
 
         # Obstacles (static)
-        for name in ("ObstacleLeft", "ObstacleFront", "ObstacleRight"):
+        for name in self.STATIC_PARTS:
             self._paths[name] = resolve_env_scoped_path(stage, env_ns, name)
 
         # Moving parts - rigid body prim if present else root
-        for name in ("part0", "part1", "part2", "part3", "part3"):
+        for name in self.MOVING_PARTS:
             root_path = resolve_env_scoped_path(stage, env_ns, name)
             self._asset_roots[name] = root_path
             if not root_path:
@@ -104,7 +106,7 @@ class WedgeGuide(BaseGuide):
             if prim and prim.IsValid():
                 self._static_table_pos = cache.GetLocalToWorldTransform(prim).ExtractTranslation()
 
-        for name in ("ObstacleLeft", "ObstacleFront", "ObstacleRight"):
+        for name in self.STATIC_PARTS:
             p = self._paths.get(name)
             if not p:
                 continue
@@ -119,17 +121,10 @@ class WedgeGuide(BaseGuide):
             and self._static_obstacles["ObstacleLeft"] is not None
             and self._static_obstacles["ObstacleFront"] is not None
         ):
-            left_pos, left_quat = self._static_obstacles["ObstacleLeft"]
-            front_pos, front_quat = self._static_obstacles["ObstacleFront"]
-            table_z = self._static_table_pos[2]
-
-            # target DrawerBox braced in corner
             self._target_poses["part0"] = (self.tgt_box_pos, self.tgt_box_quat)
 
-            # target DrawerBottom inserted to DrawerBox
             self._target_poses["part1"] = (self.tgt_bot_pos, self.tgt_bot_quat)
 
-            # target DrawerTop inserted to DrawerBox
             self._target_poses["part2"] = (self.tgt_top_pos, self.tgt_top_quat)
 
             self._target_poses["part3"] = (self.tgt_top_pos, self.tgt_top_quat)
@@ -139,7 +134,7 @@ class WedgeGuide(BaseGuide):
         # --------- Spawn/update ghosts at target poses ---------
         stage = self._stage  # cached from super().on_reset
         if stage is not None:
-            for name in ("part0", "part1", "part2", "part3", "part3"):
+            for name in self.MOVING_PARTS:
                 root = self._asset_roots.get(name)
                 tgt = self._target_poses.get(name)
                 if not root or not tgt:
