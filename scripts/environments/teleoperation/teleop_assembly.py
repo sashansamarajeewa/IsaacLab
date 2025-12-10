@@ -30,6 +30,21 @@ parser.add_argument(
     help="Enable Pinocchio.",
 )
 parser.add_argument("--guide", type=str, default=None)
+parser.add_argument(
+    "--disable_highlight",
+    action="store_true",
+    help="Disable visual part highlighting",
+)
+parser.add_argument(
+    "--disable_instructions",
+    action="store_true",
+    help="Disable the instruction widget HUD",
+)
+parser.add_argument(
+    "--disable_ghosts",
+    action="store_true",
+    help="Disable ghost preview objects for target poses",
+)
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -110,14 +125,50 @@ def main() -> None:
     stage = omni.usd.get_context().get_stage()
     # Guide + Highlighter
     guide = loader.load_guide(task_name=args_cli.task, guide_name=args_cli.guide)
-    highlighter = guide.create_highlighter(stage)
+    
+    # Configure guide options from CLI
+    guide.enable_ghosts = not args_cli.disable_ghosts
+    
+    class DummyHighlighter:
+        def __init__(self, total_steps: int):
+            self._idx = 0
+            self._total = total_steps
+
+        def advance(self):
+            if self._idx < self._total:
+                self._idx += 1
+
+        def refresh_after_reset(self):
+            self._idx = 0
+
+        @property
+        def step_index(self):
+            return self._idx
+
+        @property
+        def total_steps(self):
+            return self._total
+
+    if not args_cli.disable_highlight:
+        # normal visual highlighter
+        highlighter = guide.create_highlighter(stage)
+    else:
+        # no visual material binding
+        highlighter = DummyHighlighter(total_steps=len(getattr(guide, "SEQUENCE", [])))
+
+        # we still need materials for physics/ghosts
+        base.MaterialRegistry.ensure_all(stage)
+
+    # Physics binder unaffected by highlight flag
     phys_binder = guide.create_physics_binder()
     
     # HUD
-    hud = base.HUDManager(base.SimpleSceneWidget)
-    hud.show()
-    # hud.update(guide.step_label(highlighter))
-    hud.update(guide, highlighter)
+    hud = None
+    if not args_cli.disable_instructions:
+        hud = base.HUDManager(base.SimpleSceneWidget)
+        hud.show()
+        # hud.update(guide.step_label(highlighter))
+        hud.update(guide, highlighter)
 
     # Callback handlers
     def reset_recording_instance() -> None:
@@ -217,7 +268,8 @@ def main() -> None:
     highlighter.refresh_after_reset()
     phys_binder.refresh_after_reset()
     guide.update_previews_for_step(highlighter)
-    hud.update(guide, highlighter)
+    if hud is not None:
+        hud.update(guide, highlighter)
     teleop_interface.reset()
 
     print("Teleoperation started. Press 'R' to reset the environment.")
@@ -241,7 +293,8 @@ def main() -> None:
 
                 guide.maybe_auto_advance(highlighter)
                 guide.update_previews_for_step(highlighter)
-                hud.update(guide, highlighter)
+                if hud is not None:
+                    hud.update(guide, highlighter)
                 
                 if guide.any_part_fallen_below_table(getattr(guide, "MOVING_PARTS", [])):
                     print("An object has fallen below table...resetting")
@@ -254,14 +307,16 @@ def main() -> None:
                     highlighter.refresh_after_reset()
                     phys_binder.refresh_after_reset()
                     guide.update_previews_for_step(highlighter)
-                    hud.update(guide, highlighter)
+                    if hud is not None:
+                        hud.update(guide, highlighter)
                     print("Environment reset complete")
         except Exception as e:
             omni.log.error(f"Error during simulation step: {e}")
             break
 
     # close the simulator
-    hud.destroy()
+    if hud is not None:
+        hud.destroy()
     control_hud.destroy()
     env.close()
     print("Environment closed")

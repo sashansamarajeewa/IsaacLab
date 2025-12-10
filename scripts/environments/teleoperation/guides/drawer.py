@@ -129,7 +129,7 @@ class DrawerGuide(BaseGuide):
 
         # --------- Spawn/update ghosts at target poses ---------
         stage = self._stage  # cached from super().on_reset
-        if stage is not None:
+        if stage is not None and getattr(self, "enable_ghosts", True):
             for name in self.MOVING_PARTS:
                 root = self._asset_roots.get(name)
                 tgt = self._target_poses.get(name)
@@ -148,7 +148,8 @@ class DrawerGuide(BaseGuide):
                 self._ghost_paths_by_name[name] = ghost_path
 
         # Initialize ghost visibility to step 0
-        self._update_ghost_visibility_for_step(0)
+        if getattr(self, "enable_ghosts", True):
+            self._update_ghost_visibility_for_step(0)
     
     def get_all_instructions(self) -> list[str]:
         total = len(self.SEQUENCE)

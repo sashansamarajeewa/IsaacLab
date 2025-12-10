@@ -1,6 +1,6 @@
 from __future__ import annotations
 import textwrap
-from typing import Callable, List, Optional, Sequence, Tuple
+from typing import Callable, List, Optional, Sequence, Tuple, Protocol
 from pxr import Usd, Gf, UsdPhysics, UsdGeom
 from isaaclab.sim import utils as sim_utils
 from isaaclab.sim.spawners.materials import spawn_preview_surface, spawn_rigid_body_material, spawn_from_mdl_file
@@ -171,6 +171,17 @@ class PhysicsSequenceBinder:
 
     def refresh_after_reset(self):
         self.bind_now()
+        
+class StepHighlighter(Protocol):
+    @property
+    def step_index(self) -> int: ...
+    
+    @property
+    def total_steps(self) -> int: ...
+    
+    def advance(self) -> None: ...
+    
+    def refresh_after_reset(self) -> None: ...
 
 # ----------------------- helpers -----------------------
 
@@ -547,7 +558,7 @@ class HUDManager:
         lines = textwrap.wrap(text, width=max_chars_per_line)
         return "\n".join(lines) if lines else text
     
-    def update(self, guide: "BaseGuide", highlighter: VisualSequenceHighlighter):
+    def update(self, guide: "BaseGuide", highlighter: StepHighlighter):
         if not self._widget or not hasattr(guide, "get_all_instructions"):
             return
 
@@ -555,7 +566,7 @@ class HUDManager:
         if not steps:
             return
         
-        total_real = len(guide.SEQUENCE)          # 4
+        total_real = len(guide.SEQUENCE)
         idx = highlighter.step_index   
 
         wrapped_lines: list[str] = []
@@ -650,6 +661,7 @@ class BaseGuide:
         self._stage: Optional[Usd.Stage] = None
         # Guides can fill this after on_reset:
         # logical_name (e.g. "DrawerBottom") -> ghost prim path
+        self.enable_ghosts: bool = True
         self._ghost_paths_by_name: dict[str, str] = {}
     
     def on_reset(self, env):
@@ -691,7 +703,7 @@ class BaseGuide:
     def create_physics_binder(self) -> PhysicsSequenceBinder:
         return PhysicsSequenceBinder(self.SEQUENCE, MaterialRegistry.physics_path)
 
-    def maybe_auto_advance(self, highlighter: VisualSequenceHighlighter):
+    def maybe_auto_advance(self, highlighter: StepHighlighter):
         """
         Call once per sim tick *after* env.step() or sim.render().
         Uses PhysX for moving parts, cached USD for statics.
@@ -763,10 +775,12 @@ class BaseGuide:
             else:
                 img.MakeInvisible()
 
-    def update_previews_for_step(self, highlighter: VisualSequenceHighlighter) -> None:
+    def update_previews_for_step(self, highlighter: StepHighlighter) -> None:
         """
         Called from the teleop loop; updates which ghost is visible.
         Subclasses normally just populate self._ghost_paths_by_name.
         """
+        if not getattr(self, "enable_ghosts", True):
+            return
         self._update_ghost_visibility_for_step(highlighter.step_index)
 
