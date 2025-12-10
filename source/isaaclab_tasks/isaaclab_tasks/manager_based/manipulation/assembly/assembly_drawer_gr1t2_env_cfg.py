@@ -436,17 +436,17 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
             dynamic_friction=0.7,
             friction_combine_mode="multiply",
         ),
-        # physx=sim_utils.PhysxCfg(
-        #     solver_type=1,
-        #     max_position_iteration_count=192,
-        #     max_velocity_iteration_count=1,
-        #     bounce_threshold_velocity=0.2,
-        #     friction_offset_threshold=0.01,
-        #     friction_correlation_distance=0.00625,
-        #     gpu_max_rigid_contact_count=2**23,
-        #     gpu_max_rigid_patch_count=2**23,
-        #     gpu_max_num_partitions=1,
-        # ),
+        physx=sim_utils.PhysxCfg(
+            solver_type=1,
+            max_position_iteration_count=192,
+            max_velocity_iteration_count=1,
+            bounce_threshold_velocity=0.2,
+            friction_offset_threshold=0.01,
+            friction_correlation_distance=0.00625,
+            gpu_max_rigid_contact_count=2**23,
+            gpu_max_rigid_patch_count=2**23,
+            gpu_max_num_partitions=1,
+        ),
         render=sim_utils.RenderCfg(
             enable_translucency=True
         )
