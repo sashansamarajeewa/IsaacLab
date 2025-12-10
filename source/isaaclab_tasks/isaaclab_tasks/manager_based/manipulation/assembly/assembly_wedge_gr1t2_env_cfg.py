@@ -88,16 +88,18 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/wedge/part0.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
                          ),
     )
     
     # Part1
     part1 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part1",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.44, 1.1], rot=[0.7071068, 0.7071068, 0, 0]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.59, 1.1], rot=[0.7071068, 0.7071068, 0, 0]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/wedge/part1.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
                          ),
     )
     
@@ -108,16 +110,18 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/wedge/part2.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
                          ),
     )
     
     # Part3
     part3 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/part3",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0, 0.44, 1.1], rot=[0.7071068, 0.7071068, 0, 0]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.4, 0.44, 1.1], rot=[0.7071068, 0.7071068, 0, 0]),
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/wedge/part3.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
                          ),
     )
     
@@ -128,6 +132,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/wedge/part4.usd",
                          scale=ASSET_SCALE,
                          rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+                         mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
                          ),
     )
     
