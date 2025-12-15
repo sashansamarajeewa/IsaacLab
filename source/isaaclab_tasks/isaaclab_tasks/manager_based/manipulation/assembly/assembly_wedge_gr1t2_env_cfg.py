@@ -470,6 +470,7 @@ class AssemblyWedgeGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         ),
         physx=sim_utils.PhysxCfg(
             solver_type=1,
+            min_position_iteration_count=96,
             max_position_iteration_count=192,
             max_velocity_iteration_count=1,
             bounce_threshold_velocity=0.2,
