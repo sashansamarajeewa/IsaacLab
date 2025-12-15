@@ -41,7 +41,7 @@ GR1T2_CFG = ArticulationCfg(
             max_depenetration_velocity=1.0,
         ),
         articulation_props=sim_utils.ArticulationRootPropertiesCfg(
-            enabled_self_collisions=True, solver_position_iteration_count=32, solver_velocity_iteration_count=8
+            enabled_self_collisions=True, solver_position_iteration_count=64, solver_velocity_iteration_count=8
         ),
     ),
     init_state=ArticulationCfg.InitialStateCfg(
@@ -128,14 +128,14 @@ GR1T2_CFG = ArticulationCfg(
 
 GR1T2_HIGH_PD_CFG = GR1T2_CFG.replace(
     actuators={
-        "trunk": ImplicitActuatorCfg(
-            joint_names_expr=["waist_.*"],
-            effort_limit=None,
-            velocity_limit=None,
-            stiffness=4400,
-            damping=40.0,
-            armature=0.01,
-        ),
+        # "trunk": ImplicitActuatorCfg(
+        #     joint_names_expr=["waist_.*"],
+        #     effort_limit=None,
+        #     velocity_limit=None,
+        #     stiffness=4400,
+        #     damping=40.0,
+        #     armature=0.01,
+        # ),
         "right-arm": ImplicitActuatorCfg(
             joint_names_expr=["right_shoulder_.*", "right_elbow_.*", "right_wrist_.*"],
             stiffness=4400.0,
