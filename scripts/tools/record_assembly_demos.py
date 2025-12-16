@@ -76,7 +76,7 @@ from isaaclab_tasks.utils import parse_env_cfg
 from isaaclab.envs.mdp.recorders.recorders_cfg import ActionStateRecorderManagerCfg
 from isaaclab.managers import DatasetExportMode
 
-from guides import base, loader
+from scripts.environments.teleoperation.guides import base, loader
 
 
 class RateLimiter:
