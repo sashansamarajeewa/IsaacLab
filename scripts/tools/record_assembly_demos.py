@@ -26,7 +26,6 @@ parser.add_argument("--dataset_file", type=str, default=None, help="Optional exp
 # parser.add_argument("--time_log_csv", type=str, default=None, help="Optional CSV path to append completion times")
 
 parser.add_argument("--num_envs", type=int, default=1)
-parser.add_argument("--device", type=str, default="cpu")
 
 parser.add_argument(
     "--teleop_device",
