@@ -97,12 +97,12 @@ class RateLimiter:
                 self.last_time += self.sleep_duration
 
 
-def _ensure_dir(path: str):
+def ensure_dir(path: str):
     if path and not os.path.exists(path):
         os.makedirs(path, exist_ok=True)
 
 
-def _default_dataset_path() -> str:
+def default_dataset_path() -> str:
     task_short = args_cli.task.split(":")[-1].replace("/", "_")
     fname = f"{args_cli.participant_id}_{task_short}.hdf5"
     return os.path.join(args_cli.out_dir, fname)
@@ -158,16 +158,17 @@ def annotate_hdf5(dataset_path: str, completion_time_sec: float, participant_id:
 
 def main():
     # Output paths
-    _ensure_dir(args_cli.out_dir)
-    dataset_path = args_cli.dataset_file or _default_dataset_path()
+    ensure_dir(args_cli.out_dir)
+    dataset_path = args_cli.dataset_file or default_dataset_path()
     dataset_dir = os.path.dirname(dataset_path)
     dataset_name_wo_ext = os.path.splitext(os.path.basename(dataset_path))[0]
-    _ensure_dir(dataset_dir)
+    ensure_dir(dataset_dir)
 
     # Parse env cfg
     env_cfg = parse_env_cfg(args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs)
     env_cfg.env_name = args_cli.task
     env_cfg.terminations.time_out = None
+    env_cfg.observations.policy.concatenate_terms = False
 
     # Extract success term
     success_term = None
@@ -194,7 +195,7 @@ def main():
         simulation_app.close()
         return
 
-    # Guide + UI
+    # Guide and UI
     stage = omni.usd.get_context().get_stage()
     guide = loader.load_guide(task_name=args_cli.task, guide_name=args_cli.guide)
     guide.enable_ghosts = not args_cli.disable_ghosts
@@ -229,7 +230,7 @@ def main():
         hud.show()
         hud.update(guide, highlighter)
 
-    # Teleop flow flags + timing
+    # Teleop flow flags and timing
     should_reset = False
     teleoperation_active = not getattr(args_cli, "xr", False)  # XR starts inactive
     demo_started = False
@@ -382,7 +383,7 @@ def main():
             if rate_limiter:
                 rate_limiter.sleep(env)
 
-    # Cleanup + time logging
+    # Cleanup and time logging
     if completion_time_sec is not None:
         # annotate HDF5
         annotate_hdf5(dataset_path, completion_time_sec, args_cli.participant_id, args_cli.task)
