@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import tempfile
+from isaaclab.sensors import CameraCfg
 import torch
 
 import carb
@@ -16,7 +17,9 @@ from isaaclab.assets import ArticulationCfg, AssetBaseCfg, RigidObjectCfg
 from isaaclab.controllers.pink_ik import NullSpacePostureTask, PinkIKControllerCfg
 from isaaclab.devices.device_base import DevicesCfg
 from isaaclab.devices.openxr import ManusViveCfg, OpenXRDeviceCfg, XrCfg
-from isaaclab.devices.openxr.retargeters.humanoid.fourier.gr1t2_retargeter import GR1T2RetargeterCfg
+from isaaclab.devices.openxr.retargeters.humanoid.fourier.gr1t2_retargeter import (
+    GR1T2RetargeterCfg,
+)
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.envs.mdp.actions.pink_actions_cfg import PinkInverseKinematicsActionCfg
 from isaaclab.managers import EventTermCfg as EventTerm
@@ -35,6 +38,7 @@ from isaaclab_assets.robots.fourier import GR1T2_HIGH_PD_CFG  # isort: skip
 
 ASSET_SCALE = (2.0, 2.0, 2.0)
 
+
 ##
 # Scene definition
 ##
@@ -44,83 +48,108 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # Table
     packing_table = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/PackingTable",
-        init_state=AssetBaseCfg.InitialStateCfg(pos=[0.0, 0.55, 0.0], rot=[1.0, 0.0, 0.0, 0.0]),
+        init_state=AssetBaseCfg.InitialStateCfg(
+            pos=[0.0, 0.55, 0.0], rot=[1.0, 0.0, 0.0, 0.0]
+        ),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/packing_table/packing_table.usd",
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
         ),
     )
-    
+
     # ObstacleFront
     obstacle_front = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleFront",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.67, 1.02]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_front/obstacle_front.usd",
-                         collision_props=sim_utils.CollisionPropertiesCfg(),
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
-                         ),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_front/obstacle_front.usd",
+            collision_props=sim_utils.CollisionPropertiesCfg(),
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
+        ),
     )
-    
+
     # ObstacleLeft
     obstacle_left = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleLeft",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.48, 1.02]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
-                         collision_props=sim_utils.CollisionPropertiesCfg(),
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
-                         ),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
+            collision_props=sim_utils.CollisionPropertiesCfg(),
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
+        ),
     )
-    
+
     # ObstacleRight
     obstacle_right = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleRight",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.48, 1.02]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
-                         collision_props=sim_utils.CollisionPropertiesCfg(),
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
-                         ),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
+            collision_props=sim_utils.CollisionPropertiesCfg(),
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
+        ),
     )
-    
+
     # DrawerBox
     drawer_box = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DrawerBox",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box/drawer_box.usd",
-                         scale=ASSET_SCALE,
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         mass_props=sim_utils.MassPropertiesCfg(mass=8),
-                         ),
+        init_state=RigidObjectCfg.InitialStateCfg(
+            pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]
+        ),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box/drawer_box.usd",
+            scale=ASSET_SCALE,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            mass_props=sim_utils.MassPropertiesCfg(mass=8),
+        ),
     )
 
     # DrawerBottom
     drawer_container_bottom = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DrawerBottom",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.5, 1.085]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom/drawer_container_bottom.usd",
-                         scale=ASSET_SCALE,
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
-                         ),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom/drawer_container_bottom.usd",
+            scale=ASSET_SCALE,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
+        ),
     )
 
     # DrawerTop
     drawer_container_top = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DrawerTop",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.59, 1.085]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top/drawer_container_top.usd",
-                         scale=ASSET_SCALE,
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                         mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
-                         ),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top/drawer_container_top.usd",
+            scale=ASSET_SCALE,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
+        ),
     )
 
     object = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Object",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.6, 0.47, 0.9996], rot=[1, 0, 0, 0]),
+        init_state=RigidObjectCfg.InitialStateCfg(
+            pos=[-0.6, 0.47, 0.9996], rot=[1, 0, 0, 0]
+        ),
         spawn=UsdFileCfg(
             usd_path=f"{ISAACLAB_NUCLEUS_DIR}/Mimic/pick_place_task/pick_place_assets/steering_wheel.usd",
             scale=(0.75, 0.75, 0.75),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+        ),
+    )
+
+    head_camera = CameraCfg(
+        prim_path="/World/envs/env_.*/Robot/head_yaw_link/HeadCamera",
+        height=1080,
+        width=1920,
+        data_types=["rgb"],
+        spawn=sim_utils.PinholeCameraCfg(focal_length=6.0),
+        offset=CameraCfg.OffsetCfg(
+            pos=(0.11, 0.0, 0.05),
+            rot=(0.65328, 0.2706, -0.2706, -0.65328),
+            convention="opengl",
         ),
     )
 
@@ -295,26 +324,58 @@ class ObservationsCfg:
             func=base_mdp.joint_pos,
             params={"asset_cfg": SceneEntityCfg("robot")},
         )
-        robot_root_pos = ObsTerm(func=base_mdp.root_pos_w, params={"asset_cfg": SceneEntityCfg("robot")})
-        robot_root_rot = ObsTerm(func=base_mdp.root_quat_w, params={"asset_cfg": SceneEntityCfg("robot")})
-        object_pos = ObsTerm(func=base_mdp.root_pos_w, params={"asset_cfg": SceneEntityCfg("object")})
-        object_rot = ObsTerm(func=base_mdp.root_quat_w, params={"asset_cfg": SceneEntityCfg("object")})
+        robot_root_pos = ObsTerm(
+            func=base_mdp.root_pos_w, params={"asset_cfg": SceneEntityCfg("robot")}
+        )
+        robot_root_rot = ObsTerm(
+            func=base_mdp.root_quat_w, params={"asset_cfg": SceneEntityCfg("robot")}
+        )
+        object_pos = ObsTerm(
+            func=base_mdp.root_pos_w, params={"asset_cfg": SceneEntityCfg("object")}
+        )
+        object_rot = ObsTerm(
+            func=base_mdp.root_quat_w, params={"asset_cfg": SceneEntityCfg("object")}
+        )
         robot_links_state = ObsTerm(func=mdp.get_all_robot_link_state)
 
-        left_eef_pos = ObsTerm(func=mdp.get_eef_pos, params={"link_name": "left_hand_roll_link"})
-        left_eef_quat = ObsTerm(func=mdp.get_eef_quat, params={"link_name": "left_hand_roll_link"})
-        right_eef_pos = ObsTerm(func=mdp.get_eef_pos, params={"link_name": "right_hand_roll_link"})
-        right_eef_quat = ObsTerm(func=mdp.get_eef_quat, params={"link_name": "right_hand_roll_link"})
+        left_eef_pos = ObsTerm(
+            func=mdp.get_eef_pos, params={"link_name": "left_hand_roll_link"}
+        )
+        left_eef_quat = ObsTerm(
+            func=mdp.get_eef_quat, params={"link_name": "left_hand_roll_link"}
+        )
+        right_eef_pos = ObsTerm(
+            func=mdp.get_eef_pos, params={"link_name": "right_hand_roll_link"}
+        )
+        right_eef_quat = ObsTerm(
+            func=mdp.get_eef_quat, params={"link_name": "right_hand_roll_link"}
+        )
 
-        hand_joint_state = ObsTerm(func=mdp.get_robot_joint_state, params={"joint_names": ["R_.*", "L_.*"]})
+        hand_joint_state = ObsTerm(
+            func=mdp.get_robot_joint_state, params={"joint_names": ["R_.*", "L_.*"]}
+        )
         head_joint_state = ObsTerm(
             func=mdp.get_robot_joint_state,
-            params={"joint_names": ["head_pitch_joint", "head_roll_joint", "head_yaw_joint"]},
+            params={
+                "joint_names": ["head_pitch_joint", "head_roll_joint", "head_yaw_joint"]
+            },
         )
 
         object = ObsTerm(
             func=mdp.object_obs,
-            params={"left_eef_link_name": "left_hand_roll_link", "right_eef_link_name": "right_hand_roll_link"},
+            params={
+                "left_eef_link_name": "left_hand_roll_link",
+                "right_eef_link_name": "right_hand_roll_link",
+            },
+        )
+
+        head_camera_rgb = ObsTerm(
+            func=base_mdp.image,
+            params={
+                "sensor_cfg": SceneEntityCfg("head_camera"),
+                "data_type": "rgb",
+                "normalize": False,
+            },
         )
 
         def __post_init__(self):
@@ -332,10 +393,13 @@ class TerminationsCfg:
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 
     object_dropping = DoneTerm(
-        func=mdp.root_height_below_minimum, params={"minimum_height": 0.5, "asset_cfg": SceneEntityCfg("object")}
+        func=mdp.root_height_below_minimum,
+        params={"minimum_height": 0.5, "asset_cfg": SceneEntityCfg("object")},
     )
 
-    success = DoneTerm(func=mdp.task_done_pick_place, params={"task_link_name": "right_hand_roll_link"})
+    success = DoneTerm(
+        func=mdp.task_done_pick_place, params={"task_link_name": "right_hand_roll_link"}
+    )
 
 
 @configclass
@@ -363,7 +427,9 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the GR1T2 environment."""
 
     # Scene settings
-    scene: ObjectTableSceneCfg = ObjectTableSceneCfg(num_envs=1, env_spacing=2.5, replicate_physics=True)
+    scene: ObjectTableSceneCfg = ObjectTableSceneCfg(
+        num_envs=1, env_spacing=2.5, replicate_physics=True
+    )
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
@@ -391,44 +457,46 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
     # Idle action to hold robot in default pose
     # Action format: [left arm pos (3), left arm quat (4), right arm pos (3), right arm quat (4),
     #                 left hand joint pos (11), right hand joint pos (11)]
-    idle_action = torch.tensor([
-        -0.22878,
-        0.2536,
-        1.0953,
-        0.5,
-        0.5,
-        -0.5,
-        0.5,
-        0.22878,
-        0.2536,
-        1.0953,
-        0.5,
-        0.5,
-        -0.5,
-        0.5,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-    ])
+    idle_action = torch.tensor(
+        [
+            -0.22878,
+            0.2536,
+            1.0953,
+            0.5,
+            0.5,
+            -0.5,
+            0.5,
+            0.22878,
+            0.2536,
+            1.0953,
+            0.5,
+            0.5,
+            -0.5,
+            0.5,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        ]
+    )
 
     sim: sim_utils.SimulationCfg = sim_utils.SimulationCfg(
         physics_material=sim_utils.RigidBodyMaterialCfg(
@@ -448,25 +516,27 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
             gpu_max_rigid_patch_count=2**23,
             gpu_max_num_partitions=1,
         ),
-        render=sim_utils.RenderCfg(
-            enable_translucency=True
-        )
+        render=sim_utils.RenderCfg(enable_translucency=True),
     )
 
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 5 #6
+        self.decimation = 5  # 6
         self.episode_length_s = 20.0
         # simulation settings
         self.sim.dt = 1 / 200  # 120Hz
-        self.sim.render_interval = 2 #6
-        self.sim.physx.enable_ccd = False #True
+        self.sim.render_interval = 2  # 6
+        self.sim.physx.enable_ccd = False  # True
         carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)
 
         # Convert USD to URDF and change revolute joints to fixed
-        temp_urdf_output_path, temp_urdf_meshes_output_path = ControllerUtils.convert_usd_to_urdf(
-            self.scene.robot.spawn.usd_path, self.temp_urdf_dir, force_conversion=True
+        temp_urdf_output_path, temp_urdf_meshes_output_path = (
+            ControllerUtils.convert_usd_to_urdf(
+                self.scene.robot.spawn.usd_path,
+                self.temp_urdf_dir,
+                force_conversion=True,
+            )
         )
 
         # Set the URDF and mesh paths for the IK controller
