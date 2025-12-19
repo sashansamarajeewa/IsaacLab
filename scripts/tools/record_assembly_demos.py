@@ -212,9 +212,10 @@ def main():
         success_term = env_cfg.terminations.success
         env_cfg.terminations.success = None
 
-    # XR compatibility
-    if getattr(args_cli, "xr", False):
-        env_cfg = remove_camera_configs(env_cfg)
+    if args_cli.xr:
+        # If cameras are not enabled and XR is enabled, remove camera configs
+        if not args_cli.enable_cameras:
+            env_cfg = remove_camera_configs(env_cfg)
         env_cfg.sim.render.antialiasing_mode = "DLSS"
 
     # Recorder config
