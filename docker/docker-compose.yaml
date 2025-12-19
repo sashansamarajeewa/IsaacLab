@@ -87,7 +87,6 @@ services:
   isaac-lab-base:
     profiles: [ "base" ]
     env_file: .env.base
-    user: "${UID}:${GID}"
     build:
       context: ../
       dockerfile: docker/Dockerfile.base
