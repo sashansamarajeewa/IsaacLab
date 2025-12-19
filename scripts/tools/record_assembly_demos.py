@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 """
-Record a single furniture-assembly demonstration using your custom teleop UI
+Record furniture-assembly demonstrations using your custom teleop UI
 (guide, highlighting, HUD) while saving trajectories via Isaac Lab RecorderManager.
 
-One run = one participant + one task = one successful demo exported to HDF5.
-Also logs completion time as HDF5 attribute and optionally into a CSV.
+Default: one run = one participant + one task = 1 successful demo exported to HDF5.
+Supports multiple demos per run via --num_demos.
+Stores completion time per demo as HDF5 attributes under /data/demo_<i>.
 """
 
 import argparse
@@ -18,12 +19,19 @@ from collections.abc import Callable
 from isaaclab.app import AppLauncher
 
 # -------------------------- CLI --------------------------
-parser = argparse.ArgumentParser(description="Record assembly demos with custom teleop UI")
+parser = argparse.ArgumentParser(
+    description="Record assembly demos with custom teleop UI"
+)
 parser.add_argument("--task", type=str, required=True, help="Name of the task")
-parser.add_argument("--participant_id", type=str, required=True, help="Participant identifier, e.g. P01")
-parser.add_argument("--out_dir", type=str, default="./datasets", help="Directory to save datasets")
-parser.add_argument("--dataset_file", type=str, default=None, help="Optional explicit dataset file path")
-# parser.add_argument("--time_log_csv", type=str, default=None, help="Optional CSV path to append completion times")
+parser.add_argument(
+    "--participant_id", type=str, required=True, help="Participant identifier, e.g. P01"
+)
+parser.add_argument(
+    "--out_dir", type=str, default="./datasets", help="Directory to save datasets"
+)
+parser.add_argument(
+    "--dataset_file", type=str, default=None, help="Optional explicit dataset file path"
+)
 
 parser.add_argument("--num_envs", type=int, default=1)
 
@@ -33,8 +41,19 @@ parser.add_argument(
     default="dualhandtracking_abs",
     help="teleop device key (e.g. dualhandtracking_abs, handtracking, keyboard, spacemouse)",
 )
-parser.add_argument("--num_success_steps", type=int, default=10, help="Consecutive success steps to finalize demo")
-parser.add_argument("--step_hz", type=int, default=30, help="Rate limit for non-XR teleop (Hz)")
+parser.add_argument(
+    "--num_success_steps",
+    type=int,
+    default=10,
+    help="Consecutive success steps to finalize demo",
+)
+parser.add_argument(
+    "--step_hz", type=int, default=30, help="Rate limit for non-XR teleop (Hz)"
+)
+
+parser.add_argument(
+    "--num_demos", type=int, default=1, help="Number of successful demos to record"
+)
 
 parser.add_argument("--guide", type=str, default=None)
 
@@ -51,7 +70,7 @@ args_cli = parser.parse_args()
 app_launcher_args = vars(args_cli)
 
 if args_cli.enable_pinocchio:
-    import pinocchio  # noqa: F401
+    import pinocchio
 
 # Enable XR if handtracking
 if "handtracking" in args_cli.teleop_device.lower():
@@ -60,17 +79,16 @@ if "handtracking" in args_cli.teleop_device.lower():
 app_launcher = AppLauncher(app_launcher_args)
 simulation_app = app_launcher.app
 
-# -------------------------- rest imports (after app launch) --------------------------
+# -------------------------- imports after app launch --------------------------
 import gymnasium as gym
 import torch
-import numpy as np
 import omni.log
 import omni.usd
 
 from isaaclab.devices.openxr import remove_camera_configs
 from isaaclab.devices.teleop_device_factory import create_teleop_device
 
-import isaaclab_tasks  # noqa: F401
+import isaaclab_tasks
 from isaaclab_tasks.utils import parse_env_cfg
 
 from isaaclab.envs.mdp.recorders.recorders_cfg import ActionStateRecorderManagerCfg
@@ -108,20 +126,14 @@ def default_dataset_path() -> str:
     return os.path.join(args_cli.out_dir, fname)
 
 
-# def _append_time_csv(csv_path: str, participant_id: str, task: str, seconds: float, success: bool):
-#     if not csv_path:
-#         return
-#     header = "timestamp_iso,participant_id,task,success,completion_time_sec\n"
-#     row = f"{time.strftime('%Y-%m-%dT%H:%M:%S')},{participant_id},{task},{int(success)},{seconds:.6f}\n"
-#     write_header = not os.path.exists(csv_path)
-#     with open(csv_path, "a", encoding="utf-8") as f:
-#         if write_header:
-#             f.write(header)
-#         f.write(row)
+def annotate_hdf5_demo(
+    dataset_path: str,
+    demo_index: int,
+    completion_time_sec: float,
+    participant_id: str,
+    task: str,
+):
 
-
-def annotate_hdf5(dataset_path: str, completion_time_sec: float, participant_id: str, task: str):
-    """Add time + metadata as HDF5 attributes without changing dataset layout."""
     try:
         import h5py
     except Exception:
@@ -133,27 +145,49 @@ def annotate_hdf5(dataset_path: str, completion_time_sec: float, participant_id:
         return
 
     with h5py.File(dataset_path, "a") as f:
-        if "data" in f:
-            data_grp = f["data"]
-            # pick last demo
-            demo_keys = list(data_grp.keys())
-            if not demo_keys:
-                return
-            def _demo_index(k: str) -> int:
-                try:
-                    return int(k.split("_")[-1])
-                except Exception:
-                    return -1
-            demo_key = sorted(demo_keys, key=_demo_index)[-1]
-            demo_grp = data_grp[demo_key]
-            demo_grp.attrs["completion_time_sec"] = float(completion_time_sec)
-            demo_grp.attrs["participant_id"] = str(participant_id)
-            demo_grp.attrs["task"] = str(task)
-        else:
-            # set file-level attrs
+        if "data" not in f:
+            omni.log.warn(
+                "No '/data' group found in dataset. Writing file-level attrs instead."
+            )
             f.attrs["completion_time_sec"] = float(completion_time_sec)
             f.attrs["participant_id"] = str(participant_id)
             f.attrs["task"] = str(task)
+            f.attrs["demo_index"] = int(demo_index)
+            return
+
+        data_grp = f["data"]
+        demo_key = f"demo_{int(demo_index)}"
+        if demo_key not in data_grp:
+            omni.log.warn(
+                f"Expected demo group '{demo_key}' not found under '/data'. Available: {list(data_grp.keys())}"
+            )
+            # fallback to writing file-level attrs
+            f.attrs["completion_time_sec"] = float(completion_time_sec)
+            f.attrs["participant_id"] = str(participant_id)
+            f.attrs["task"] = str(task)
+            f.attrs["demo_index"] = int(demo_index)
+            return
+
+        demo_grp = data_grp[demo_key]
+        demo_grp.attrs["completion_time_sec"] = float(completion_time_sec)
+        demo_grp.attrs["participant_id"] = str(participant_id)
+        demo_grp.attrs["task"] = str(task)
+
+
+def reset_all(env, guide, highlighter, phys_binder, hud, teleop_interface):
+    """Reset sim/env/recorder?UI/guide state for the next demo."""
+    env.sim.reset()
+    env.recorder_manager.reset()
+    env.reset()
+
+    guide.on_reset(env)
+    highlighter.refresh_after_reset()
+    phys_binder.refresh_after_reset()
+    guide.update_previews_for_step(highlighter)
+    if hud is not None:
+        hud.update(guide, highlighter)
+
+    teleop_interface.reset()
 
 
 def main():
@@ -165,7 +199,9 @@ def main():
     ensure_dir(dataset_dir)
 
     # Parse env cfg
-    env_cfg = parse_env_cfg(args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs)
+    env_cfg = parse_env_cfg(
+        args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs
+    )
     env_cfg.env_name = args_cli.task
     env_cfg.terminations.time_out = None
     env_cfg.observations.policy.concatenate_terms = False
@@ -204,14 +240,18 @@ def main():
         def __init__(self, total_steps: int):
             self._idx = 0
             self._total = total_steps
+
         def advance(self):
             if self._idx < self._total:
                 self._idx += 1
+
         def refresh_after_reset(self):
             self._idx = 0
+
         @property
         def step_index(self):
             return self._idx
+
         @property
         def total_steps(self):
             return self._total
@@ -236,8 +276,9 @@ def main():
     demo_started = False
     start_time = None
     success_step_count = 0
+
+    demos_recorded = 0
     finished = False
-    completion_time_sec = None
 
     def reset_trial():
         nonlocal should_reset
@@ -273,11 +314,20 @@ def main():
 
     # Create teleop interface
     try:
-        if hasattr(env_cfg, "teleop_devices") and args_cli.teleop_device in env_cfg.teleop_devices.devices:
-            teleop_interface = create_teleop_device(args_cli.teleop_device, env_cfg.teleop_devices.devices, callbacks)
+        if (
+            hasattr(env_cfg, "teleop_devices")
+            and args_cli.teleop_device in env_cfg.teleop_devices.devices
+        ):
+            teleop_interface = create_teleop_device(
+                args_cli.teleop_device, env_cfg.teleop_devices.devices, callbacks
+            )
         else:
-            omni.log.warn(f"No teleop device '{args_cli.teleop_device}' found in environment config. Creating default.")
-            teleop_interface = create_teleop_device(args_cli.teleop_device, {}, callbacks)
+            omni.log.warn(
+                f"No teleop device '{args_cli.teleop_device}' found in environment config. Creating default."
+            )
+            teleop_interface = create_teleop_device(
+                args_cli.teleop_device, {}, callbacks
+            )
     except Exception as e:
         omni.log.error(f"Failed to create teleop device: {e}")
         env.close()
@@ -289,11 +339,13 @@ def main():
         env.close()
         simulation_app.close()
         return
-    
+
     print(f"Using teleop device: {teleop_interface}")
-    
+
     # Rate limiting
-    rate_limiter = None if getattr(args_cli, "xr", False) else RateLimiter(args_cli.step_hz)
+    rate_limiter = (
+        None if getattr(args_cli, "xr", False) else RateLimiter(args_cli.step_hz)
+    )
 
     # Initial reset
     env.reset()
@@ -306,7 +358,12 @@ def main():
     teleop_interface.reset()
 
     print(f"Recording to: {dataset_path}")
-    print("Do the task. On success, demo is exported and the app exits.")
+    if args_cli.num_demos == 0:
+        print(
+            "Do the task. On each success, a demo is exported. (num_demos=0 => infinite)"
+        )
+    else:
+        print(f"Do the task. Need {args_cli.num_demos} successful demo(s).")
 
     with contextlib.suppress(KeyboardInterrupt) and torch.inference_mode():
         while simulation_app.is_running():
@@ -333,45 +390,74 @@ def main():
             if success_term is not None:
                 is_success = bool(success_term.func(env, **success_term.params)[0])
             else:
-                # Consider completed when guide reaches last step
-                is_success = (highlighter.step_index >= highlighter.total_steps)
+                is_success = highlighter.step_index >= highlighter.total_steps
 
+            # If success stable long enough -> export one demo
             if is_success:
                 success_step_count += 1
                 if success_step_count >= args_cli.num_success_steps:
+                    # Determine the demo index that will be written
+                    prev_count = env.recorder_manager.exported_successful_episode_count
+
                     # Export demo
-                    env.recorder_manager.record_pre_reset([0], force_export_or_skip=False)
+                    env.recorder_manager.record_pre_reset(
+                        [0], force_export_or_skip=False
+                    )
                     env.recorder_manager.set_success_to_episodes(
                         [0], torch.tensor([[True]], dtype=torch.bool, device=env.device)
                     )
                     env.recorder_manager.export_episodes([0])
 
+                    # Compute time (per demo)
                     if start_time is not None:
                         completion_time_sec = time.time() - start_time
                     else:
                         completion_time_sec = float("nan")
 
-                    finished = True
+                    # Annotate the exact demo group we just exported
+                    annotate_hdf5_demo(
+                        dataset_path=dataset_path,
+                        demo_index=prev_count,  # newly exported demo index
+                        completion_time_sec=completion_time_sec,
+                        participant_id=args_cli.participant_id,
+                        task=args_cli.task,
+                    )
+
+                    demos_recorded += 1
+                    print(
+                        f"Demo {demos_recorded} exported. Time: {completion_time_sec:.3f} sec"
+                    )
+
+                    # Check stop condition
+                    if args_cli.num_demos > 0 and demos_recorded >= args_cli.num_demos:
+                        finished = True
+                    else:
+                        # Prepare next demo
+                        reset_all(
+                            env, guide, highlighter, phys_binder, hud, teleop_interface
+                        )
+
+                        # Reset per demo
+                        success_step_count = 0
+                        demo_started = False
+                        start_time = None
+
+                        if getattr(args_cli, "xr", False):
+                            teleoperation_active = False
+
             else:
                 success_step_count = 0
 
-            # Reset handling
+            # Manual reset handling
             if should_reset:
-                env.sim.reset()
-                env.recorder_manager.reset()
-                env.reset()
-                guide.on_reset(env)
-                highlighter.refresh_after_reset()
-                phys_binder.refresh_after_reset()
-                guide.update_previews_for_step(highlighter)
-                if hud is not None:
-                    hud.update(guide, highlighter)
-                teleop_interface.reset()
+                reset_all(env, guide, highlighter, phys_binder, hud, teleop_interface)
 
                 should_reset = False
                 success_step_count = 0
                 demo_started = False
                 start_time = None
+                if getattr(args_cli, "xr", False):
+                    teleoperation_active = False
 
             # Stop when finished
             if finished:
@@ -383,19 +469,7 @@ def main():
             if rate_limiter:
                 rate_limiter.sleep(env)
 
-    # Cleanup and time logging
-    if completion_time_sec is not None:
-        # annotate HDF5
-        annotate_hdf5(dataset_path, completion_time_sec, args_cli.participant_id, args_cli.task)
-        # if args_cli.time_log_csv is None:
-        #     # default CSV next to datasets
-        #     csv_path = os.path.join(args_cli.out_dir, "timings.csv")
-        # else:
-        #     csv_path = args_cli.time_log_csv
-        # _append_time_csv(csv_path, args_cli.participant_id, args_cli.task, completion_time_sec, success=True)
-        print(f"Completion time: {completion_time_sec:.3f} sec")
-        # print(f"Timing appended to: {csv_path}")
-
+    # Cleanup
     if hud is not None:
         hud.destroy()
     control_hud.destroy()

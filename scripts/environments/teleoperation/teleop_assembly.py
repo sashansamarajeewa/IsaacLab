@@ -13,8 +13,12 @@ from collections.abc import Callable
 from isaaclab.app import AppLauncher
 
 # add argparse arguments
-parser = argparse.ArgumentParser(description="Teleoperation for Isaac Lab environments.")
-parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to simulate.")
+parser = argparse.ArgumentParser(
+    description="Teleoperation for Isaac Lab environments."
+)
+parser.add_argument(
+    "--num_envs", type=int, default=1, help="Number of environments to simulate."
+)
 parser.add_argument(
     "--teleop_device",
     type=str,
@@ -22,7 +26,9 @@ parser.add_argument(
     help="Device for interacting with environment. Examples: keyboard, spacemouse, gamepad, handtracking, manusvive",
 )
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
-parser.add_argument("--sensitivity", type=float, default=1.0, help="Sensitivity factor.")
+parser.add_argument(
+    "--sensitivity", type=float, default=1.0, help="Sensitivity factor."
+)
 parser.add_argument(
     "--enable_pinocchio",
     action="store_true",
@@ -85,7 +91,8 @@ if args_cli.enable_pinocchio:
 import omni.ui as ui
 import omni.ui.scene as sc
 import omni.usd
-from guides import base,loader
+from guides import base, loader
+
 
 def main() -> None:
     """
@@ -98,7 +105,9 @@ def main() -> None:
         None
     """
     # parse configuration
-    env_cfg = parse_env_cfg(args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs)
+    env_cfg = parse_env_cfg(
+        args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs
+    )
     env_cfg.env_name = args_cli.task
     # modify configuration
     env_cfg.terminations.time_out = None
@@ -120,15 +129,15 @@ def main() -> None:
     # Flags for controlling teleoperation flow
     should_reset_recording_instance = False
     teleoperation_active = True
-    
+
     # USD stage + highlight material
     stage = omni.usd.get_context().get_stage()
     # Guide + Highlighter
     guide = loader.load_guide(task_name=args_cli.task, guide_name=args_cli.guide)
-    
+
     # Configure guide options from CLI
     guide.enable_ghosts = not args_cli.disable_ghosts
-    
+
     class DummyHighlighter:
         def __init__(self, total_steps: int):
             self._idx = 0
@@ -161,7 +170,7 @@ def main() -> None:
 
     # Physics binder unaffected by highlight flag
     phys_binder = guide.create_physics_binder()
-    
+
     # HUD
     hud = None
     if not args_cli.disable_instructions:
@@ -217,14 +226,14 @@ def main() -> None:
         "STOP": stop_teleoperation,
         "RESET": reset_recording_instance,
     }
-    
+
     control_hud = base.ControlHUD(
-    base.ControlPanelWidget,
-    callbacks={
-        "start": start_teleoperation,
-        "stop": stop_teleoperation,
-        "reset": reset_recording_instance,
-    },
+        base.ControlPanelWidget,
+        callbacks={
+            "start": start_teleoperation,
+            "stop": stop_teleoperation,
+            "reset": reset_recording_instance,
+        },
     )
     control_hud.show()
 
@@ -239,14 +248,23 @@ def main() -> None:
     # Create teleop device from config if present, otherwise create manually
     teleop_interface = None
     try:
-        if hasattr(env_cfg, "teleop_devices") and args_cli.teleop_device in env_cfg.teleop_devices.devices:
+        if (
+            hasattr(env_cfg, "teleop_devices")
+            and args_cli.teleop_device in env_cfg.teleop_devices.devices
+        ):
             teleop_interface = create_teleop_device(
-                args_cli.teleop_device, env_cfg.teleop_devices.devices, teleoperation_callbacks
+                args_cli.teleop_device,
+                env_cfg.teleop_devices.devices,
+                teleoperation_callbacks,
             )
         else:
-            omni.log.warn(f"No teleop device '{args_cli.teleop_device}' found in environment config. Creating default.")
+            omni.log.warn(
+                f"No teleop device '{args_cli.teleop_device}' found in environment config. Creating default."
+            )
             # Create fallback teleop device
-            teleop_interface = create_teleop_device(args_cli.teleop_device, {}, teleoperation_callbacks)
+            teleop_interface = create_teleop_device(
+                args_cli.teleop_device, {}, teleoperation_callbacks
+            )
 
     except Exception as e:
         omni.log.error(f"Failed to create teleop device: {e}")
@@ -273,7 +291,7 @@ def main() -> None:
     teleop_interface.reset()
 
     print("Teleoperation started. Press 'R' to reset the environment.")
-    
+
     # simulate environment
     while simulation_app.is_running():
         try:
@@ -295,11 +313,13 @@ def main() -> None:
                 guide.update_previews_for_step(highlighter)
                 if hud is not None:
                     hud.update(guide, highlighter)
-                
-                if guide.any_part_fallen_below_table(getattr(guide, "MOVING_PARTS", [])):
+
+                if guide.any_part_fallen_below_table(
+                    getattr(guide, "MOVING_PARTS", [])
+                ):
                     print("An object has fallen below table...resetting")
                     should_reset_recording_instance = True
-                
+
                 if should_reset_recording_instance:
                     env.reset()
                     should_reset_recording_instance = False
