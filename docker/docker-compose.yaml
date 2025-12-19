@@ -51,6 +51,9 @@ x-default-isaac-lab-volumes: &default-isaac-lab-volumes
   - type: bind
     source: ../tools
     target: ${DOCKER_ISAACLAB_PATH}/tools
+  - type: bind
+    source: ../datasets
+    target: ${DOCKER_ISAACLAB_PATH}/datasets
     # The effect of these volumes is twofold:
     # 1. Prevent root-owned files from flooding the _build and logs dir
     #    on the host machine

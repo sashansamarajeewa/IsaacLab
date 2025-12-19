@@ -27,7 +27,7 @@ parser.add_argument(
     "--participant_id", type=str, required=True, help="Participant identifier, e.g. P01"
 )
 parser.add_argument(
-    "--out_dir", type=str, default="./datasets", help="Directory to save datasets"
+    "--out_dir", type=str, default="/workspace/isaaclab/datasets", help="Directory to save datasets"
 )
 parser.add_argument(
     "--dataset_file", type=str, default=None, help="Optional explicit dataset file path"
