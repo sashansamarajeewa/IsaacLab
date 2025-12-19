@@ -141,7 +141,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     )
 
     head_camera = CameraCfg(
-        prim_path="/World/envs/env_.*/Robot/head_yaw_link/HeadCamera",
+        prim_path="/World/envs/env_.*/Robot/GR1T2_fourier_hand_6dof/head_yaw_link/HeadCamera",
         height=1080,
         width=1920,
         data_types=["rgb"],
