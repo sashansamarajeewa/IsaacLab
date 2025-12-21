@@ -27,7 +27,10 @@ parser.add_argument(
     "--participant_id", type=str, required=True, help="Participant identifier, e.g. P01"
 )
 parser.add_argument(
-    "--out_dir", type=str, default="/workspace/isaaclab/datasets", help="Directory to save datasets"
+    "--out_dir",
+    type=str,
+    default="/workspace/isaaclab/datasets",
+    help="Directory to save datasets",
 )
 parser.add_argument(
     "--dataset_file", type=str, default=None, help="Optional explicit dataset file path"
@@ -306,13 +309,6 @@ def main():
         "STOP": stop_teleop,
     }
 
-    # Optional small control panel
-    control_hud = base.ControlHUD(
-        base.ControlPanelWidget,
-        callbacks={"start": start_teleop, "stop": stop_teleop, "reset": reset_trial},
-    )
-    control_hud.show()
-
     # Create teleop interface
     try:
         if (
@@ -384,16 +380,19 @@ def main():
 
             # Safety reset
             if guide.any_part_fallen_below_table(getattr(guide, "MOVING_PARTS", [])):
-                print("Object fell below table -> reset")
+                print("Object fell below table. Reset")
                 should_reset = True
 
             # Success detection
-            if success_term is not None:
-                is_success = bool(success_term.func(env, **success_term.params)[0])
-            else:
-                is_success = highlighter.step_index >= highlighter.total_steps
+            step_complete = highlighter.step_index >= highlighter.total_steps
+            global_ok = (
+                guide.is_final_assembly_valid()
+                if hasattr(guide, "is_final_assembly_valid")
+                else step_complete
+            )
+            is_success = step_complete and global_ok
 
-            # If success stable long enough -> export one demo
+            # If success stable long enough, export one demo
             if is_success:
                 success_step_count += 1
                 if success_step_count >= args_cli.num_success_steps:
@@ -409,13 +408,13 @@ def main():
                     )
                     env.recorder_manager.export_episodes([0])
 
-                    # Compute time (per demo)
+                    # Compute time per demo
                     if start_time is not None:
                         completion_time_sec = time.time() - start_time
                     else:
                         completion_time_sec = float("nan")
 
-                    # Annotate the exact demo group we just exported
+                    # Annotate the demo group exported
                     annotate_hdf5_demo(
                         dataset_path=dataset_path,
                         demo_index=prev_count,  # newly exported demo index
@@ -473,7 +472,6 @@ def main():
     # Cleanup
     if hud is not None:
         hud.destroy()
-    control_hud.destroy()
     env.close()
     print("Done. Closing app.")
 
