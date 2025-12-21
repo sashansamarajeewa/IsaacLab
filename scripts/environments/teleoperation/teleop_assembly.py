@@ -150,17 +150,17 @@ def main() -> None:
         # no visual material binding
         highlighter = DummyHighlighter(total_steps=len(getattr(guide, "SEQUENCE", [])))
 
-        # we still need materials for physics/ghosts
         base.MaterialRegistry.ensure_all(stage)
 
     # Physics binder unaffected by highlight flag
     phys_binder = guide.create_physics_binder()
 
     # HUD
-    hud = base.HUDManager(base.SimpleSceneWidget)
-    hud.show()
-    # hud.update(guide.step_label(highlighter))
-    hud.update(guide, highlighter)
+    hud = None
+    if not args_cli.disable_instructions:
+        hud = base.HUDManager(base.SimpleSceneWidget)
+        hud.show()
+        hud.update(guide, highlighter)
 
     # Callback handlers
     def reset_recording_instance() -> None:
@@ -209,16 +209,6 @@ def main() -> None:
         "STOP": stop_teleoperation,
         "RESET": reset_recording_instance,
     }
-
-    control_hud = base.ControlHUD(
-        base.ControlPanelWidget,
-        callbacks={
-            "start": start_teleoperation,
-            "stop": stop_teleoperation,
-            "reset": reset_recording_instance,
-        },
-    )
-    control_hud.show()
 
     # For hand tracking devices, add additional callbacks
     if args_cli.xr:
@@ -316,8 +306,8 @@ def main() -> None:
             break
 
     # close the simulator
-    hud.destroy()
-    control_hud.destroy()
+    if hud is not None:
+        hud.destroy()
     env.close()
     print("Environment closed")
 
