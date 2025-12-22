@@ -373,7 +373,8 @@ class SimpleSceneWidget(ui.Widget):
                 if is_active:
                     style["border_radius"] = 2
 
-                ui.Label(text, height=3, style=style)
+                line_count = text.count("\n") + 1
+                ui.Label(text, word_wrap=True, height=3 * line_count, style=style)
 
 
 from omni.kit.xr.scene_view.utils.ui_container import UiContainer
@@ -428,8 +429,12 @@ class HUDManager:
         char_width = 0.009 * self._font_size
         usable_width = self._width * 0.9
         max_chars_per_line = max(10, int(usable_width / char_width))
-        lines = textwrap.wrap(text, width=max_chars_per_line)
-        return "\n".join(lines) if lines else text
+        wrapped_lines: list[str] = []
+        for line in text.splitlines() or [""]:
+            chunks = textwrap.wrap(line, width=max_chars_per_line) or [""]
+            wrapped_lines.extend(chunks)
+
+        return "\n".join(wrapped_lines)
 
     def update(self, guide: "BaseGuide", highlighter: StepHighlighter):
         if not self._widget or not hasattr(guide, "get_all_instructions"):
