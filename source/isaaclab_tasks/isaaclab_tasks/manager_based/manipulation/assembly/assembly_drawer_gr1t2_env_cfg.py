@@ -128,22 +128,22 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         ),
     )
 
-    object = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/Object",
-        init_state=RigidObjectCfg.InitialStateCfg(
-            pos=[-0.6, 0.47, 0.9996], rot=[1, 0, 0, 0]
-        ),
-        spawn=UsdFileCfg(
-            usd_path=f"{ISAACLAB_NUCLEUS_DIR}/Mimic/pick_place_task/pick_place_assets/steering_wheel.usd",
-            scale=(0.75, 0.75, 0.75),
-            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-        ),
-    )
+    # object = RigidObjectCfg(
+    #     prim_path="{ENV_REGEX_NS}/Object",
+    #     init_state=RigidObjectCfg.InitialStateCfg(
+    #         pos=[-0.6, 0.47, 0.9996], rot=[1, 0, 0, 0]
+    #     ),
+    #     spawn=UsdFileCfg(
+    #         usd_path=f"{ISAACLAB_NUCLEUS_DIR}/Mimic/pick_place_task/pick_place_assets/steering_wheel.usd",
+    #         scale=(0.75, 0.75, 0.75),
+    #         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+    #     ),
+    # )
 
     head_camera = CameraCfg(
         prim_path="/World/envs/env_.*/Robot/GR1T2_fourier_hand_6dof/head_yaw_link/HeadCamera",
-        height=1080,
-        width=1920,
+        height=720,
+        width=1280,
         data_types=["rgb"],
         spawn=sim_utils.PinholeCameraCfg(focal_length=6.0),
         offset=CameraCfg.OffsetCfg(
@@ -330,12 +330,12 @@ class ObservationsCfg:
         robot_root_rot = ObsTerm(
             func=base_mdp.root_quat_w, params={"asset_cfg": SceneEntityCfg("robot")}
         )
-        object_pos = ObsTerm(
-            func=base_mdp.root_pos_w, params={"asset_cfg": SceneEntityCfg("object")}
-        )
-        object_rot = ObsTerm(
-            func=base_mdp.root_quat_w, params={"asset_cfg": SceneEntityCfg("object")}
-        )
+        # object_pos = ObsTerm(
+        #     func=base_mdp.root_pos_w, params={"asset_cfg": SceneEntityCfg("object")}
+        # )
+        # object_rot = ObsTerm(
+        #     func=base_mdp.root_quat_w, params={"asset_cfg": SceneEntityCfg("object")}
+        # )
         robot_links_state = ObsTerm(func=mdp.get_all_robot_link_state)
 
         left_eef_pos = ObsTerm(
@@ -361,13 +361,13 @@ class ObservationsCfg:
             },
         )
 
-        object = ObsTerm(
-            func=mdp.object_obs,
-            params={
-                "left_eef_link_name": "left_hand_roll_link",
-                "right_eef_link_name": "right_hand_roll_link",
-            },
-        )
+        # object = ObsTerm(
+        #     func=mdp.object_obs,
+        #     params={
+        #         "left_eef_link_name": "left_hand_roll_link",
+        #         "right_eef_link_name": "right_hand_roll_link",
+        #     },
+        # )
 
         head_camera_rgb = ObsTerm(
             func=base_mdp.image,
@@ -392,10 +392,10 @@ class TerminationsCfg:
 
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 
-    object_dropping = DoneTerm(
-        func=mdp.root_height_below_minimum,
-        params={"minimum_height": 0.5, "asset_cfg": SceneEntityCfg("object")},
-    )
+    # object_dropping = DoneTerm(
+    #     func=mdp.root_height_below_minimum,
+    #     params={"minimum_height": 0.5, "asset_cfg": SceneEntityCfg("object")},
+    # )
 
     success = DoneTerm(
         func=mdp.task_done_pick_place, params={"task_link_name": "right_hand_roll_link"}
@@ -408,18 +408,18 @@ class EventCfg:
 
     reset_all = EventTerm(func=mdp.reset_scene_to_default, mode="reset")
 
-    reset_object = EventTerm(
-        func=mdp.reset_root_state_uniform,
-        mode="reset",
-        params={
-            "pose_range": {
-                "x": [-0.01, 0.01],
-                "y": [-0.01, 0.01],
-            },
-            "velocity_range": {},
-            "asset_cfg": SceneEntityCfg("object"),
-        },
-    )
+    # reset_object = EventTerm(
+    #     func=mdp.reset_root_state_uniform,
+    #     mode="reset",
+    #     params={
+    #         "pose_range": {
+    #             "x": [-0.01, 0.01],
+    #             "y": [-0.01, 0.01],
+    #         },
+    #         "velocity_range": {},
+    #         "asset_cfg": SceneEntityCfg("object"),
+    #     },
+    # )
 
 
 @configclass

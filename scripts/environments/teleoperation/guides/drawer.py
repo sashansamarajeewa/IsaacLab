@@ -193,7 +193,7 @@ class DrawerGuide(BaseGuide):
             f"Step 3/{total}: Insert Drawer Bottom into Drawer Box",
             f"Step 4/{total}: Insert Drawer Top to finish",
         ]
-        base_steps.append("Assembly complete! Press 'Stop' button")
+        base_steps.append("Assembly complete!")
         return base_steps
 
     # ---------------------- checks ----------------------

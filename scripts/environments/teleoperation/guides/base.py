@@ -473,12 +473,12 @@ class HUDManager:
 
                 # show only first 1–2 messages to keep XR readable
                 msgs = [msg for _, msg in issues]
-                short = (
-                    "; ".join(msgs[:2])
-                    if msgs
-                    else "Alignment check failed. Please adjust parts"
-                )
-                final_text = f"Fix: {short}"
+                if msgs:
+                    short = "\n".join(f"- {m}" for m in msgs[:2])
+                    final_text = f"Fix:\n{short}"
+
+                else:
+                    final_text = "Fix:\n- Alignment check failed. Please adjust parts"
 
             wrapped_lines[-1] = self.wrap_text(final_text)
             active_idx = len(steps) - 1
