@@ -373,8 +373,7 @@ class SimpleSceneWidget(ui.Widget):
                 if is_active:
                     style["border_radius"] = 2
 
-                line_count = text.count("\n") + 1
-                ui.Label(text, word_wrap=True, height=3 * line_count, style=style)
+                ui.Label(text, word_wrap=True, height=3, style=style)
 
 
 from omni.kit.xr.scene_view.utils.ui_container import UiContainer
@@ -389,7 +388,7 @@ class HUDManager:
         self,
         widget_cls,
         width: float = 0.6,
-        height: float = 0.6,
+        height: float = 0.8,
         resolution_scale: int = 20,
         unit_to_pixel_scale: int = 30,
         translation: Gf.Vec3d = Gf.Vec3d(0, 0.9, 1.5),
