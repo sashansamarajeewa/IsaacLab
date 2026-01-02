@@ -546,7 +546,7 @@ class HUDManager:
 class NameTagWidget(ui.Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._label = None
+        self._text_model = ui.SimpleStringModel("test")
 
         with ui.ZStack():
             # Border + background
@@ -561,12 +561,12 @@ class NameTagWidget(ui.Widget):
 
             # Content container (use VStack)
             with ui.VStack(height=0.1, style={"margin": 0.1, "spacing": 0.1}):
-                self._label = ui.Label(
-                    "test",
+                ui.Label(   
+                    self._text_model,
                     word_wrap=False,
                     alignment=ui.Alignment.CENTER,
                     style={
-                        "font_size": 0.5,
+                        "font_size": 0.8,
                         "color": ui.color("#f5f5f5"),
                     },
                 )
@@ -649,13 +649,9 @@ class NameTagManager:
 
         # Only update text when it changes
         if name != self._last_name:
-            if (
-                self._widget is not None
-                and hasattr(self._widget, "_label")
-                and self._widget._label is not None
-            ):
-                self._widget._label.text = name
-                print("settext")
+            if self._widget is not None and hasattr(self._widget, "_text_model"):
+                self._widget._text_model.set_value(name)
+                print("settext:", name)
             self._last_name = name
 
         # Update position every frame
