@@ -556,10 +556,10 @@ class NameTagManager:
         self,
         widget_cls=NameTagWidget,
         width: float = 0.2,
-        height: float = 0.08,
-        resolution_scale: int = 20,
+        height: float = 0.1,
+        resolution_scale: int = 10,
         unit_to_pixel_scale: int = 30,
-        z_offset: float = 0.08,
+        z_offset: float = 0.1,
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
     ):
         self._widget = None
@@ -619,7 +619,7 @@ class NameTagManager:
             return
 
         pos, _quat = live
-        pos_above = pos + Gf.Vec3d(0.0, 0.0, 0.08)
+        pos_above = pos + Gf.Vec3d(0.0, 0.0, 0.1)
 
         # Update text
         if self._widget and hasattr(self._widget, "set_text"):
