@@ -536,11 +536,11 @@ class NameTagWidget(ui.Widget):
                     "border_radius": 1,
                 }
             )
-            with ui.HStack(style={"margin": 2}):
+            with ui.HStack(style={"margin": 1}):
                 self._label = ui.Label(
                     "",
                     word_wrap=True,
-                    style={"font_size": 1.2, "color": ui.color("#f5f5f5")},
+                    style={"font_size": 0.6, "color": ui.color("#f5f5f5")},
                 )
 
     def set_text(self, text: str):
@@ -557,9 +557,9 @@ class NameTagManager:
         widget_cls=NameTagWidget,
         width: float = 0.2,
         height: float = 0.1,
-        resolution_scale: int = 20,
-        unit_to_pixel_scale: int = 30,
-        z_offset: float = 0.1,
+        resolution_scale: int = 10,
+        unit_to_pixel_scale: int = 20,
+        z_offset: float = 0.5,
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
     ):
         self._widget = None
@@ -619,7 +619,7 @@ class NameTagManager:
             return
 
         pos, _quat = live
-        pos_above = pos + Gf.Vec3d(0.0, 0.0, 0.1)
+        pos_above = pos + Gf.Vec3d(0.0, 0.0, self._z_offset)
 
         # Update text
         if self._widget and hasattr(self._widget, "set_text"):
