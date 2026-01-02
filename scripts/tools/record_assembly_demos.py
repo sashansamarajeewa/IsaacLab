@@ -63,6 +63,7 @@ parser.add_argument("--guide", type=str, default=None)
 parser.add_argument("--disable_highlight", action="store_true")
 parser.add_argument("--disable_instructions", action="store_true")
 parser.add_argument("--disable_ghosts", action="store_true")
+parser.add_argument("--disable_nametag", action="store_true")
 
 parser.add_argument("--enable_pinocchio", action="store_true", default=False)
 
@@ -213,6 +214,8 @@ def main():
         # If cameras are not enabled and XR is enabled, remove camera configs
         if not args_cli.enable_cameras:
             env_cfg = remove_camera_configs(env_cfg)
+            if hasattr(env_cfg.observations, "policy") and hasattr(env_cfg.observations.policy, "head_camera"):
+                env_cfg.observations.policy.head_camera = None
         env_cfg.sim.render.antialiasing_mode = "DLSS"
 
     # Recorder config
@@ -267,6 +270,11 @@ def main():
         hud = base.HUDManager(base.SimpleSceneWidget)
         hud.show()
         hud.update(guide, highlighter)
+        
+    name_tag = None
+    if not args_cli.disable_nametag:
+        name_tag = base.NameTagManager()
+        name_tag.show() 
 
     # Teleop flow flags and timing
     should_reset = False
@@ -344,9 +352,30 @@ def main():
     highlighter.refresh_after_reset()
     phys_binder.refresh_after_reset()
     guide.update_previews_for_step(highlighter)
-    if hud is not None:
+    last_step_idx = None
+    last_final_sig = None
+    need_hud_update = False
+    step_idx = highlighter.step_index
+    total_real = len(getattr(guide, "SEQUENCE", []))
+
+    if last_step_idx is None or step_idx != last_step_idx:
+        need_hud_update = True
+    else:
+        # If we're in verification, final messages can change even if step idx doesn't
+        if step_idx >= total_real and hasattr(guide, "final_unmet_constraints"):
+            try:
+                issues = list(guide.final_unmet_constraints())
+            except Exception:
+                issues = []
+            sig = tuple(msg for _, msg in issues[:2])
+            if sig != last_final_sig:
+                last_final_sig = sig
+                need_hud_update = True
+
+    if hud is not None and need_hud_update:
         hud.update(guide, highlighter)
-    teleop_interface.reset()
+        last_step_idx = step_idx
+        teleop_interface.reset()
 
     print(f"Recording to: {dataset_path}")
     if args_cli.num_demos == 0:
@@ -366,15 +395,17 @@ def main():
             else:
                 env.sim.render()
 
-            # Your interface updates
+            # Interface updates
             guide.maybe_auto_advance(highlighter)
             guide.update_previews_for_step(highlighter)
             if hud is not None:
                 hud.update(guide, highlighter)
+            if name_tag is not None:
+                name_tag.update(guide, highlighter)
 
             # Safety reset
             if guide.any_part_fallen_below_table(getattr(guide, "MOVING_PARTS", [])):
-                print("Object fell below table. Reset")
+                print("An object has fallen below table...resetting")
                 should_reset = True
 
             # Success detection
@@ -466,6 +497,8 @@ def main():
     # Cleanup
     if hud is not None:
         hud.destroy()
+    if name_tag is not None:
+        name_tag.destroy()
     env.close()
     print("Done. Closing app.")
 
