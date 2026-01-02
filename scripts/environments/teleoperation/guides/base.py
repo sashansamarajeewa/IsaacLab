@@ -552,7 +552,7 @@ class NameTagWidget(ui.Widget):
             # Border + background
             ui.Rectangle(
                 style={
-                    "background_color": ui.color("#7C7A7A47"),
+                    "background_color": ui.color("#666262FF"),
                     "border_color": ui.color("#ffffff"),
                     "border_width": 0.1,
                     "border_radius": 0.2,
@@ -566,10 +566,14 @@ class NameTagWidget(ui.Widget):
                     word_wrap=False,
                     alignment=ui.Alignment.CENTER,
                     style={
-                        "font_size": 0.5,  # this is in *pixels* in most Omni UI contexts
+                        "font_size": 0.5,
                         "color": ui.color("#f5f5f5"),
                     },
                 )
+                
+    def set_text(self, text: str):
+        if self._label is not None:
+            self._label.text = text
 
 
 # NameTag Manager
@@ -648,10 +652,8 @@ class NameTagManager:
 
         # Only update text when it changes
         if name != self._last_name:
-            print("not equal")
             if self._widget and hasattr(self._widget, "set_text"):
                 self._widget.set_text(name)
-                print("settext")
             self._last_name = name
 
         # Update position every frame
