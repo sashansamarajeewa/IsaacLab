@@ -560,13 +560,13 @@ class NameTagWidget(ui.Widget):
             )
 
             # Content container (use VStack)
-            with ui.VStack(height=2, style={"margin": 1, "spacing": 1}):
+            with ui.VStack(height=0.5, style={"margin": 0.1, "spacing": 0.1}):
                 self._label = ui.Label(
                     "",
-                    word_wrap=False,  # keep it one line
+                    word_wrap=False,
                     alignment=ui.Alignment.CENTER,
                     style={
-                        "font_size": 0.1,  # this is in *pixels* in most Omni UI contexts
+                        "font_size": 0.3,  # this is in *pixels* in most Omni UI contexts
                         "color": ui.color("#f5f5f5"),
                     },
                 )
