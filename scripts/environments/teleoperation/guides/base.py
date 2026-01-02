@@ -592,7 +592,6 @@ class NameTagManager:
         self._last_name: Optional[str] = None
 
         def on_constructed(widget_instance):
-            print("NameTagWidget constructed:", type(widget_instance))
             self._widget = widget_instance
 
         self._widget_component = WidgetComponent(
@@ -628,6 +627,7 @@ class NameTagManager:
         self._widget_component.visible = False
 
     def update(self, guide: "BaseGuide", highlighter: StepHighlighter):
+        print("Update called")
         idx = highlighter.step_index
         if idx < 0 or idx >= len(getattr(guide, "SEQUENCE", [])):
             self.hide()
@@ -650,6 +650,8 @@ class NameTagManager:
 
         # Only update text when it changes
         if name != self._last_name:
+            print(name)
+            print(self._last_name)
             if self._widget is not None and hasattr(self._widget, "set_text"):
                 self._widget.set_text(name)
                 print("settext:", name)
