@@ -554,19 +554,19 @@ class NameTagWidget(ui.Widget):
                 style={
                     "background_color": ui.color("#292929"),
                     "border_color": ui.color("#ffffff"),
-                    "border_width": 1.0,
-                    "border_radius": 2,
+                    "border_width": 0.3,
+                    "border_radius": 0.7,
                 }
             )
 
             # Content container (use VStack)
-            with ui.VStack(style={"padding": 2, "spacing": 0}):
+            with ui.VStack(height=1, style={"margin": 1, "spacing": 1}):
                 self._label = ui.Label(
                     "",
                     word_wrap=False,  # keep it one line
                     alignment=ui.Alignment.CENTER,
                     style={
-                        "font_size": 14,  # this is in *pixels* in most Omni UI contexts
+                        "font_size": 0.8,  # this is in *pixels* in most Omni UI contexts
                         "color": ui.color("#f5f5f5"),
                     },
                 )
@@ -583,7 +583,7 @@ class NameTagManager:
         height: float = 0.1,
         resolution_scale: int = 20,
         unit_to_pixel_scale: int = 30,
-        z_offset: float = 0.3,
+        z_offset: float = 0.2,
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
     ):
         self._widget = None
