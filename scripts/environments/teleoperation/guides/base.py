@@ -560,7 +560,7 @@ class NameTagWidget(ui.Widget):
             )
 
             # Content container (use VStack)
-            with ui.VStack(height=1, style={"margin": 0.01, "spacing": 0.01}):
+            with ui.VStack(height=0.1, style={"margin": 0.01, "spacing": 0.01}):
                 self._label = ui.Label(
                     "",
                     word_wrap=False,
@@ -582,7 +582,7 @@ class NameTagManager:
         width: float = 0.15,
         height: float = 0.15,
         resolution_scale: int = 20,
-        unit_to_pixel_scale: int = 40,
+        unit_to_pixel_scale: int = 30,
         z_offset: float = 0.25,
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
     ):
