@@ -650,12 +650,13 @@ class NameTagManager:
 
         # Only update text when it changes
         if name != self._last_name:
-            print(name)
-            print(self._last_name)
             if self._widget is not None and hasattr(self._widget, "set_text"):
                 self._widget.set_text(name)
                 print("settext:", name)
-            self._last_name = name
+                self._last_name = name
+            else:
+                # widget not ready yet
+                print("widget not ready yet")
 
         # Update position every frame
         self._ui_container.manipulator.translation = isaac_world_to_xr_ui(pos_above)
