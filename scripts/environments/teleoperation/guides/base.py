@@ -562,7 +562,8 @@ class NameTagWidget(ui.Widget):
             # Content container (use VStack)
             with ui.VStack(height=0.1, style={"margin": 0.1, "spacing": 0.1}):
                 ui.Label(   
-                    self._text_model,
+                    "",
+                    model=self._text_model,
                     word_wrap=False,
                     alignment=ui.Alignment.CENTER,
                     style={
