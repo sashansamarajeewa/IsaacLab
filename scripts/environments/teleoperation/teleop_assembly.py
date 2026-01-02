@@ -121,8 +121,8 @@ def main() -> None:
         # If cameras are not enabled and XR is enabled, remove camera configs
         if not args_cli.enable_cameras:
             env_cfg = remove_camera_configs(env_cfg)
-            if hasattr(env_cfg.observations, "policy") and hasattr(env_cfg.observations.policy, "head_camera_rgb"):
-                env_cfg.observations.policy.head_camera_rgb = None
+            if hasattr(env_cfg.observations, "policy") and hasattr(env_cfg.observations.policy, "head_camera"):
+                env_cfg.observations.policy.head_camera = None
         env_cfg.sim.render.antialiasing_mode = "DLSS"
 
     try:
