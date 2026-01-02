@@ -580,7 +580,7 @@ class NameTagManager:
         self,
         widget_cls=NameTagWidget,
         width: float = 0.15,
-        height: float = 0.05,
+        height: float = 0.15,
         resolution_scale: int = 20,
         unit_to_pixel_scale: int = 40,
         z_offset: float = 0.25,
