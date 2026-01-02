@@ -369,7 +369,7 @@ class ObservationsCfg:
         #     },
         # )
 
-        head_camera_rgb = ObsTerm(
+        head_camera = ObsTerm(
             func=base_mdp.image,
             params={
                 "sensor_cfg": SceneEntityCfg("head_camera"),
