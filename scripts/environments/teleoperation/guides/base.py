@@ -566,7 +566,7 @@ class NameTagWidget(ui.Widget):
                     word_wrap=False,
                     alignment=ui.Alignment.CENTER,
                     style={
-                        "font_size": 1,  # this is in *pixels* in most Omni UI contexts
+                        "font_size": 0.5,  # this is in *pixels* in most Omni UI contexts
                         "color": ui.color("#f5f5f5"),
                     },
                 )
@@ -579,8 +579,8 @@ class NameTagManager:
     def __init__(
         self,
         widget_cls=NameTagWidget,
-        width: float = 0.2,
-        height: float = 0.1,
+        width: float = 0.15,
+        height: float = 0.05,
         resolution_scale: int = 20,
         unit_to_pixel_scale: int = 30,
         z_offset: float = 0.25,
