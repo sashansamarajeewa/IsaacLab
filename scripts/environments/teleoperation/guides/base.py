@@ -584,7 +584,7 @@ class NameTagManager:
         height: float = 0.05,
         resolution_scale: int = 30,
         unit_to_pixel_scale: int = 30,
-        z_offset: float = 0.25,
+        z_offset: float = 0.15,
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
     ):
         self._widget = None
@@ -627,7 +627,6 @@ class NameTagManager:
         self._widget_component.visible = False
 
     def update(self, guide: "BaseGuide", highlighter: StepHighlighter):
-        print("Update called")
         idx = highlighter.step_index
         if idx < 0 or idx >= len(getattr(guide, "SEQUENCE", [])):
             self.hide()
@@ -652,10 +651,9 @@ class NameTagManager:
         if name != self._last_name:
             if self._widget is not None and hasattr(self._widget, "set_text"):
                 self._widget.set_text(name)
-                print("settext:", name)
                 self._last_name = name
             else:
-                # widget not ready yet
+                # widget not ready
                 print("widget not ready yet")
 
         # Update position every frame
