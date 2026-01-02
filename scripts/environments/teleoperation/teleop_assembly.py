@@ -284,9 +284,30 @@ def main() -> None:
     highlighter.refresh_after_reset()
     phys_binder.refresh_after_reset()
     guide.update_previews_for_step(highlighter)
-    if hud is not None:
+    last_step_idx = None
+    last_final_sig = None
+    need_hud_update = False
+    step_idx = highlighter.step_index
+    total_real = len(getattr(guide, "SEQUENCE", []))
+
+    if last_step_idx is None or step_idx != last_step_idx:
+        need_hud_update = True
+    else:
+        # If we're in verification, final messages can change even if step idx doesn't
+        if step_idx >= total_real and hasattr(guide, "final_unmet_constraints"):
+            try:
+                issues = list(guide.final_unmet_constraints())
+            except Exception:
+                issues = []
+            sig = tuple(msg for _, msg in issues[:2])
+            if sig != last_final_sig:
+                last_final_sig = sig
+                need_hud_update = True
+
+    if hud is not None and need_hud_update:
         hud.update(guide, highlighter)
-    teleop_interface.reset()
+        last_step_idx = step_idx
+        teleop_interface.reset()
 
     print("Teleoperation started. Press 'R' to reset the environment.")
 
@@ -338,7 +359,7 @@ def main() -> None:
     if hud is not None:
         hud.destroy()
     if name_tag is not None:
-        name_tag.hide()
+        name_tag.destroy()
     env.close()
     print("Environment closed")
 
