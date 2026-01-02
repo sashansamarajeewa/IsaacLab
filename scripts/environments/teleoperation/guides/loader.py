@@ -23,7 +23,10 @@ _GUIDE_MAP = {
     "motor": MotorGuide,
 }
 
-def load_guide(task_name: Optional[str] = None, guide_name: Optional[str] = None) -> BaseGuide:
+
+def load_guide(
+    task_name: Optional[str] = None, guide_name: Optional[str] = None
+) -> BaseGuide:
     if guide_name:
         cls = _GUIDE_MAP.get(guide_name.lower())
         if cls:

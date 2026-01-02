@@ -209,12 +209,6 @@ def main():
     env_cfg.terminations.time_out = None
     env_cfg.observations.policy.concatenate_terms = False
 
-    # Extract success term
-    success_term = None
-    if hasattr(env_cfg.terminations, "success"):
-        success_term = env_cfg.terminations.success
-        env_cfg.terminations.success = None
-
     if args_cli.xr:
         # If cameras are not enabled and XR is enabled, remove camera configs
         if not args_cli.enable_cameras:
