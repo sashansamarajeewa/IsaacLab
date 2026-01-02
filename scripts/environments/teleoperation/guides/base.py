@@ -328,13 +328,15 @@ def spawn_ghost_preview(
     )
     return ghost_root_path
 
+
 def isaac_world_to_xr_ui(pos_xyz):  # pos_xyz is Gf.Vec3d or tuple/list (x,y,z)
-    x = float(pos_xyz[0])      # left/right
-    y = float(pos_xyz[1])      # forward (Isaac)
-    z = float(pos_xyz[2])      # up (Isaac)
+    x = float(pos_xyz[0])  # left/right
+    y = float(pos_xyz[1])  # forward (Isaac)
+    z = float(pos_xyz[2])  # up (Isaac)
 
     # Common mapping if XR expects: X right, Y up, -Z forward
     return carb.Float3(x, z, -y)
+
 
 # Minimal HUD
 
@@ -378,7 +380,7 @@ class SimpleSceneWidget(ui.Widget):
             if i < len(wrapped_steps):
                 lbl.visible = True
                 lbl.text = wrapped_steps[i]
-                is_active = (i == active_index)
+                is_active = i == active_index
                 lbl.style = {
                     "font_size": 1,
                     "color": ui.color("#83ff6d") if is_active else ui.color("#f5f5f5"),
@@ -545,25 +547,29 @@ class NameTagWidget(ui.Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._label = None
+
         with ui.ZStack():
+            # Border + background
             ui.Rectangle(
                 style={
                     "background_color": ui.color("#292929"),
-                    "border_color": ui.color(0.7),
-                    "border_width": 0.5,
-                    "border_radius": 1,
+                    "border_color": ui.color("#ffffff"),
+                    "border_width": 1.0,
+                    "border_radius": 2,
                 }
             )
-            with ui.HStack(style={"margin": 1}):
+
+            # Content container (use VStack)
+            with ui.VStack(style={"padding": 2, "spacing": 0}):
                 self._label = ui.Label(
                     "",
-                    word_wrap=True,
-                    style={"font_size": 0.6, "color": ui.color("#f5f5f5")},
+                    word_wrap=False,  # keep it one line
+                    alignment=ui.Alignment.CENTER,
+                    style={
+                        "font_size": 14,  # this is in *pixels* in most Omni UI contexts
+                        "color": ui.color("#f5f5f5"),
+                    },
                 )
-
-    def set_text(self, text: str):
-        if self._label:
-            self._label.text = text
 
 
 # NameTag Manager
@@ -577,7 +583,7 @@ class NameTagManager:
         height: float = 0.1,
         resolution_scale: int = 20,
         unit_to_pixel_scale: int = 30,
-        z_offset: float = 0.5,
+        z_offset: float = 0.3,
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
     ):
         self._widget = None
@@ -619,7 +625,6 @@ class NameTagManager:
     def hide(self):
         self._widget_component.visible = False
 
-
     def update(self, guide: "BaseGuide", highlighter: StepHighlighter):
         idx = highlighter.step_index
         if idx < 0 or idx >= len(getattr(guide, "SEQUENCE", [])):
@@ -650,7 +655,7 @@ class NameTagManager:
         # Update position every frame
         self._ui_container.manipulator.translation = isaac_world_to_xr_ui(pos_above)
         self.show()
-        
+
     def destroy(self):
         try:
             self.hide()
