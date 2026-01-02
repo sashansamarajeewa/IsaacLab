@@ -579,8 +579,8 @@ class NameTagManager:
     def __init__(
         self,
         widget_cls=NameTagWidget,
-        width: float = 0.15,
-        height: float = 0.15,
+        width: float = 0.6,
+        height: float = 0.8,
         resolution_scale: int = 20,
         unit_to_pixel_scale: int = 30,
         z_offset: float = 0.25,
