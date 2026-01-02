@@ -570,10 +570,6 @@ class NameTagWidget(ui.Widget):
                         "color": ui.color("#f5f5f5"),
                     },
                 )
-                
-    def set_text(self, text: str):
-        if self._label is not None:
-            self._label.text = text
 
 
 # NameTag Manager
@@ -595,6 +591,7 @@ class NameTagManager:
         self._last_name: Optional[str] = None
 
         def on_constructed(widget_instance):
+            print("NameTagWidget constructed:", type(widget_instance))
             self._widget = widget_instance
 
         self._widget_component = WidgetComponent(
@@ -652,8 +649,13 @@ class NameTagManager:
 
         # Only update text when it changes
         if name != self._last_name:
-            if self._widget and hasattr(self._widget, "set_text"):
-                self._widget.set_text(name)
+            if (
+                self._widget is not None
+                and hasattr(self._widget, "_label")
+                and self._widget._label is not None
+            ):
+                self._widget._label.text = name
+                print("settext")
             self._last_name = name
 
         # Update position every frame
