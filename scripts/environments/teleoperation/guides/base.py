@@ -554,13 +554,13 @@ class NameTagWidget(ui.Widget):
                 style={
                     "background_color": ui.color("#292929"),
                     "border_color": ui.color("#ffffff"),
-                    "border_width": 0.3,
-                    "border_radius": 0.7,
+                    "border_width": 0.1,
+                    "border_radius": 0.2,
                 }
             )
 
             # Content container (use VStack)
-            with ui.VStack(height=1, style={"margin": 1, "spacing": 1}):
+            with ui.VStack(height=2, style={"margin": 1, "spacing": 1}):
                 self._label = ui.Label(
                     "",
                     word_wrap=False,  # keep it one line
