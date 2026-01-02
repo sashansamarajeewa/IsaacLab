@@ -512,6 +512,116 @@ class HUDManager:
         pass
 
 
+# NameTag Widget
+
+
+class NameTagWidget(ui.Widget):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._label = None
+        with ui.ZStack():
+            ui.Rectangle(
+                style={
+                    "background_color": ui.color("#101010"),
+                    "border_color": ui.color(0.7),
+                    "border_width": 0.5,
+                    "border_radius": 1,
+                }
+            )
+            with ui.HStack(style={"margin": 2}):
+                self._label = ui.Label(
+                    "",
+                    word_wrap=True,
+                    style={"font_size": 1.2, "color": ui.color("#ffffff")},
+                )
+
+    def set_text(self, text: str):
+        if self._label:
+            self._label.text = text
+
+
+# NameTag Manager
+
+
+class NameTagManager:
+    def __init__(
+        self,
+        widget_cls=NameTagWidget,
+        width: float = 0.25,
+        height: float = 0.10,
+        resolution_scale: int = 20,
+        unit_to_pixel_scale: int = 60,
+        z_offset: float = 0.08,  # float above part
+        rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),  # similar to your HUD
+    ):
+        self._widget = None
+        self._z_offset = float(z_offset)
+
+        def on_constructed(widget_instance):
+            self._widget = widget_instance
+
+        self._widget_component = WidgetComponent(
+            widget_cls,
+            width=width,
+            height=height,
+            resolution_scale=resolution_scale,
+            unit_to_pixel_scale=unit_to_pixel_scale,
+            update_policy=sc.Widget.UpdatePolicy.ALWAYS,
+            construct_callback=on_constructed,
+        )
+
+        # Start at origin; we’ll move it each frame via manipulator.translation
+        space_stack = [
+            SpatialSource.new_translation_source(Gf.Vec3d(0.0, 0.0, 0.0)),
+            SpatialSource.new_rotation_source(
+                Gf.Vec3d(
+                    math.radians(rotation_deg_xyz[0]),
+                    math.radians(rotation_deg_xyz[1]),
+                    math.radians(rotation_deg_xyz[2]),
+                )
+            ),
+        ]
+        self._ui_container = UiContainer(
+            self._widget_component, space_stack=space_stack
+        )
+        self.hide()
+
+    def show(self):
+        self._widget_component.visible = True
+
+    def hide(self):
+        self._widget_component.visible = False
+
+    def update(self, guide: "BaseGuide", highlighter: StepHighlighter):
+        # Get current target name
+        idx = highlighter.step_index
+        if idx < 0 or idx >= len(getattr(guide, "SEQUENCE", [])):
+            self.hide()
+            return
+
+        name = guide.SEQUENCE[idx]
+        if not name:
+            self.hide()
+            return
+
+        # Get live pose
+        live = guide.get_live_part_pose(name)
+        if not live:
+            self.hide()
+            return
+
+        pos, _quat = live
+        x, y, z = float(pos[0]), float(pos[1]), float(pos[2]) + self._z_offset
+
+        # Update text
+        if self._widget and hasattr(self._widget, "set_text"):
+            self._widget.set_text(name)
+
+        # Move the UI container
+        self._ui_container.manipulator.translation = sc.Float3(x, y, z)
+        self.show()
+
+
 # Base guide
 
 

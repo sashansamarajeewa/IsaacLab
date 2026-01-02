@@ -51,6 +51,11 @@ parser.add_argument(
     action="store_true",
     help="Disable ghost preview objects for target poses",
 )
+parser.add_argument(
+    "--disable_nametag",
+    action="store_true",
+    help="Disable the floating name tag for the current step target",
+)
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -176,6 +181,11 @@ def main() -> None:
         hud = base.HUDManager(base.SimpleSceneWidget)
         hud.show()
         hud.update(guide, highlighter)
+        
+    name_tag = None
+    if not args_cli.disable_nametag:
+        name_tag = base.NameTagManager()
+        name_tag.show() 
 
     # Callback handlers
     def reset_recording_instance() -> None:
@@ -301,6 +311,8 @@ def main() -> None:
                 guide.update_previews_for_step(highlighter)
                 if hud is not None:
                     hud.update(guide, highlighter)
+                if name_tag is not None:
+                    name_tag.update(guide, highlighter)
 
                 if guide.any_part_fallen_below_table(
                     getattr(guide, "MOVING_PARTS", [])
@@ -325,6 +337,8 @@ def main() -> None:
     # close the simulator
     if hud is not None:
         hud.destroy()
+    if name_tag is not None:
+        name_tag.hide()
     env.close()
     print("Environment closed")
 
