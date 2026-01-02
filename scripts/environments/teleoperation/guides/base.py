@@ -328,6 +328,13 @@ def spawn_ghost_preview(
     )
     return ghost_root_path
 
+def isaac_world_to_xr_ui(pos_xyz):  # pos_xyz is Gf.Vec3d or tuple/list (x,y,z)
+    x = float(pos_xyz[0])      # left/right
+    y = float(pos_xyz[1])      # forward (Isaac)
+    z = float(pos_xyz[2])      # up (Isaac)
+
+    # Common mapping if XR expects: X right, Y up, -Z forward
+    return carb.Float3(x, z, -y)
 
 # Minimal HUD
 
@@ -523,7 +530,7 @@ class NameTagWidget(ui.Widget):
         with ui.ZStack():
             ui.Rectangle(
                 style={
-                    "background_color": ui.color("#101010"),
+                    "background_color": ui.color("#292929"),
                     "border_color": ui.color(0.7),
                     "border_width": 0.5,
                     "border_radius": 1,
@@ -533,7 +540,7 @@ class NameTagWidget(ui.Widget):
                 self._label = ui.Label(
                     "",
                     word_wrap=True,
-                    style={"font_size": 1.2, "color": ui.color("#ffffff")},
+                    style={"font_size": 1.2, "color": ui.color("#f5f5f5")},
                 )
 
     def set_text(self, text: str):
@@ -548,12 +555,12 @@ class NameTagManager:
     def __init__(
         self,
         widget_cls=NameTagWidget,
-        width: float = 0.25,
-        height: float = 0.10,
+        width: float = 0.2,
+        height: float = 0.08,
         resolution_scale: int = 20,
-        unit_to_pixel_scale: int = 60,
-        z_offset: float = 0.08,  # float above part
-        rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),  # similar to your HUD
+        unit_to_pixel_scale: int = 30,
+        z_offset: float = 0.08,
+        rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
     ):
         self._widget = None
         self._z_offset = float(z_offset)
@@ -612,14 +619,14 @@ class NameTagManager:
             return
 
         pos, _quat = live
-        x, y, z = float(pos[0]), float(pos[1]), float(pos[2]) + self._z_offset
+        pos_above = pos + Gf.Vec3d(0.0, 0.0, 0.08)
 
         # Update text
         if self._widget and hasattr(self._widget, "set_text"):
             self._widget.set_text(name)
 
         # Move the UI container
-        self._ui_container.manipulator.translation = carb.Float3(x, y, z)
+        self._ui_container.manipulator.translation = isaac_world_to_xr_ui(pos_above)
         self.show()
 
 
