@@ -343,9 +343,10 @@ import omni.ui.scene as sc
 
 
 class SimpleSceneWidget(ui.Widget):
-    def __init__(self, **kwargs):
+    def __init__(self, max_lines: int = 10, **kwargs):
         super().__init__(**kwargs)
-        self._root = None
+        self._labels: list[ui.Label] = []
+        self._max_lines = max_lines
 
         with ui.ZStack():
             ui.Rectangle(
@@ -356,21 +357,29 @@ class SimpleSceneWidget(ui.Widget):
                     "border_radius": 1,
                 }
             )
-            # vertical list of steps
-            with ui.VStack(height=1, style={"margin": 1, "spacing": 1}) as root:
-                self._root = root
+            with ui.VStack(height=1, style={"margin": 1, "spacing": 1}):
+                for _ in range(max_lines):
+                    lbl = ui.Label(
+                        "",
+                        word_wrap=True,
+                        height=3,
+                        style={"font_size": 1, "color": ui.color("#f5f5f5")},
+                    )
+                    lbl.visible = False
+                    self._labels.append(lbl)
 
     def set_steps(self, wrapped_steps: list[str], active_index: int):
-        if self._root is None:
-            return
+        # Ensure we have enough labels (optional: grow if needed)
+        if len(wrapped_steps) > self._max_lines:
+            # if you expect more lines, increase max_lines at construction time
+            wrapped_steps = wrapped_steps[: self._max_lines]
 
-        self._root.clear()
-
-        with self._root:
-            for i, text in enumerate(wrapped_steps):
-                is_active = i == active_index
-
-                style = {
+        for i, lbl in enumerate(self._labels):
+            if i < len(wrapped_steps):
+                lbl.visible = True
+                lbl.text = wrapped_steps[i]
+                is_active = (i == active_index)
+                lbl.style = {
                     "font_size": 1,
                     "color": ui.color("#83ff6d") if is_active else ui.color("#f5f5f5"),
                     "margin": 1,
@@ -378,10 +387,8 @@ class SimpleSceneWidget(ui.Widget):
                     "margin_width": 0,
                     "padding": 1,
                 }
-                if is_active:
-                    style["border_radius"] = 2
-
-                ui.Label(text, word_wrap=True, height=3, style=style)
+            else:
+                lbl.visible = False
 
 
 from omni.kit.xr.scene_view.utils.ui_container import UiContainer
@@ -517,7 +524,18 @@ class HUDManager:
         self._widget_component.visible = False
 
     def destroy(self):
-        pass
+        try:
+            self.hide()
+        except Exception:
+            pass
+        self._widget = None
+        try:
+            if hasattr(self._ui_container, "destroy"):
+                self._ui_container.destroy()
+        except Exception:
+            pass
+        self._ui_container = None
+        self._widget_component = None
 
 
 # NameTag Widget
@@ -600,19 +618,20 @@ class NameTagManager:
     def hide(self):
         self._widget_component.visible = False
 
+
     def update(self, guide: "BaseGuide", highlighter: StepHighlighter):
-        # Get current target name
         idx = highlighter.step_index
         if idx < 0 or idx >= len(getattr(guide, "SEQUENCE", [])):
             self.hide()
+            self._last_name = None
             return
 
         name = guide.SEQUENCE[idx]
         if not name:
             self.hide()
+            self._last_name = None
             return
 
-        # Get live pose
         live = guide.get_live_part_pose(name)
         if not live:
             self.hide()
@@ -621,13 +640,29 @@ class NameTagManager:
         pos, _quat = live
         pos_above = pos + Gf.Vec3d(0.0, 0.0, self._z_offset)
 
-        # Update text
-        if self._widget and hasattr(self._widget, "set_text"):
-            self._widget.set_text(name)
+        # Only update text when it changes
+        if name != self._last_name:
+            if self._widget and hasattr(self._widget, "set_text"):
+                self._widget.set_text(name)
+            self._last_name = name
 
-        # Move the UI container
+        # Update position every frame
         self._ui_container.manipulator.translation = isaac_world_to_xr_ui(pos_above)
         self.show()
+        
+    def destroy(self):
+        try:
+            self.hide()
+        except Exception:
+            pass
+        self._widget = None
+        try:
+            if hasattr(self._ui_container, "destroy"):
+                self._ui_container.destroy()
+        except Exception:
+            pass
+        self._ui_container = None
+        self._widget_component = None
 
 
 # Base guide
