@@ -557,7 +557,7 @@ class NameTagManager:
         widget_cls=NameTagWidget,
         width: float = 0.2,
         height: float = 0.1,
-        resolution_scale: int = 10,
+        resolution_scale: int = 20,
         unit_to_pixel_scale: int = 30,
         z_offset: float = 0.1,
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
