@@ -566,7 +566,7 @@ class NameTagWidget(ui.Widget):
                     word_wrap=False,
                     alignment=ui.Alignment.CENTER,
                     style={
-                        "font_size": 0.3,  # this is in *pixels* in most Omni UI contexts
+                        "font_size": 0.05,  # this is in *pixels* in most Omni UI contexts
                         "color": ui.color("#f5f5f5"),
                     },
                 )
