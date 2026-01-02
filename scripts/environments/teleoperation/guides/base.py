@@ -582,6 +582,7 @@ class NameTagManager:
     ):
         self._widget = None
         self._z_offset = float(z_offset)
+        self._last_name: Optional[str] = None
 
         def on_constructed(widget_instance):
             self._widget = widget_instance
