@@ -354,7 +354,7 @@ class SimpleSceneWidget(ui.Widget):
             ui.Rectangle(
                 style={
                     "background_color": ui.color("#292929"),
-                    "border_color": ui.color(0.7),
+                    "border_color": ui.color("#ffffff"),
                     "border_width": 0.5,
                     "border_radius": 1,
                 }
@@ -552,7 +552,7 @@ class NameTagWidget(ui.Widget):
             # Border + background
             ui.Rectangle(
                 style={
-                    "background_color": ui.color("#292929"),
+                    "background_color": ui.color("#7C7A7A47"),
                     "border_color": ui.color("#ffffff"),
                     "border_width": 0.1,
                     "border_radius": 0.2,
@@ -566,7 +566,7 @@ class NameTagWidget(ui.Widget):
                     word_wrap=False,
                     alignment=ui.Alignment.CENTER,
                     style={
-                        "font_size": 0.7,  # this is in *pixels* in most Omni UI contexts
+                        "font_size": 0.5,  # this is in *pixels* in most Omni UI contexts
                         "color": ui.color("#f5f5f5"),
                     },
                 )
