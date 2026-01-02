@@ -579,11 +579,11 @@ class NameTagManager:
     def __init__(
         self,
         widget_cls=NameTagWidget,
-        width: float = 0.2,
+        width: float = 0.15,
         height: float = 0.1,
         resolution_scale: int = 100,
         unit_to_pixel_scale: int = 30,
-        z_offset: float = 0.2,
+        z_offset: float = 0.25,
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
     ):
         self._widget = None
