@@ -16,6 +16,7 @@ from isaaclab.sim.spawners.materials.visual_materials_cfg import (
 from pxr import UsdShade
 from omni.physx import get_physx_interface
 import math
+import carb
 
 # Material registry
 
@@ -570,7 +571,7 @@ class NameTagManager:
             construct_callback=on_constructed,
         )
 
-        # Start at origin; we’ll move it each frame via manipulator.translation
+        # Start at origin
         space_stack = [
             SpatialSource.new_translation_source(Gf.Vec3d(0.0, 0.0, 0.0)),
             SpatialSource.new_rotation_source(
@@ -618,7 +619,7 @@ class NameTagManager:
             self._widget.set_text(name)
 
         # Move the UI container
-        self._ui_container.manipulator.translation = sc.Float3(x, y, z)
+        self._ui_container.manipulator.translation = carb.Float3(x, y, z)
         self.show()
 
 
