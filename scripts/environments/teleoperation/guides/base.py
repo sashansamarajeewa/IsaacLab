@@ -582,7 +582,7 @@ class NameTagManager:
         width: float = 0.15,
         height: float = 0.05,
         resolution_scale: int = 20,
-        unit_to_pixel_scale: int = 20,
+        unit_to_pixel_scale: int = 40,
         z_offset: float = 0.25,
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
     ):
