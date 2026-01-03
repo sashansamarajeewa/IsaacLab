@@ -90,9 +90,9 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         ),
     )
 
-    # Drawer Box
+    # DrawerBox
     drawer_box = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/Drawer Box",
+        prim_path="{ENV_REGEX_NS}/DrawerBox",
         init_state=RigidObjectCfg.InitialStateCfg(
             pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]
         ),
@@ -104,9 +104,9 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         ),
     )
 
-    # Drawer Bottom
+    # DrawerBottom
     drawer_container_bottom = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/Drawer Bottom",
+        prim_path="{ENV_REGEX_NS}/DrawerBottom",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.5, 1.085]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom/drawer_container_bottom.usd",
@@ -116,9 +116,9 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         ),
     )
 
-    # Drawer Top
+    # DrawerTop
     drawer_container_top = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/Drawer Top",
+        prim_path="{ENV_REGEX_NS}/DrawerTop",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.59, 1.085]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top/drawer_container_top.usd",
