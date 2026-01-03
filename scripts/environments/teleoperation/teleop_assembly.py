@@ -350,7 +350,8 @@ def main() -> None:
                     highlighter.refresh_after_reset()
                     phys_binder.refresh_after_reset()
                     guide.update_previews_for_step(highlighter)
-                    hud.update(guide, highlighter)
+                    if hud is not None:
+                        hud.update(guide, highlighter)
                     print("Environment reset complete")
         except Exception as e:
             omni.log.error(f"Error during simulation step: {e}")

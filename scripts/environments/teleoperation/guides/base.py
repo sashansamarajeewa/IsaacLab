@@ -1,6 +1,6 @@
 from __future__ import annotations
 import textwrap
-from typing import Callable, List, Optional, Sequence, Tuple
+from typing import Callable, List, Optional, Sequence, Tuple, Protocol
 from pxr import Usd, Gf, UsdPhysics, UsdGeom
 from isaaclab.sim import utils as sim_utils
 from isaaclab.sim.spawners.materials import (
@@ -686,6 +686,7 @@ class BaseGuide:
         # Guides can fill this after on_reset:
         # logical_name (e.g. "DrawerBottom") -> ghost prim path
         self._ghost_paths_by_name: dict[str, str] = {}
+        self.enable_ghosts: bool = True
 
     def on_reset(self, env):
         self._stage = env.scene.stage
