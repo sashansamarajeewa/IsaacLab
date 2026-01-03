@@ -14,8 +14,8 @@ from typing import List, Optional, Tuple
 
 class DrawerGuide(BaseGuide):
 
-    SEQUENCE = ["DrawerBox", "DrawerBox", "DrawerBottom", "DrawerTop"]
-    MOVING_PARTS = ("DrawerBox", "DrawerBottom", "DrawerTop")
+    SEQUENCE = ["Drawer Box", "Drawer Box", "Drawer Bottom", "Drawer Top"]
+    MOVING_PARTS = ("Drawer Box", "Drawer Bottom", "Drawer Top")
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
 
     # tol_x_dbox_lo = 0.133 # distance between drawer box and left obstacle origin along X
@@ -59,9 +59,9 @@ class DrawerGuide(BaseGuide):
         self._paths: dict[str, Optional[str]] = {}
         # Asset root paths for ghosts
         self._asset_roots: dict[str, Optional[str]] = {
-            "DrawerBox": None,
-            "DrawerBottom": None,
-            "DrawerTop": None,
+            "Drawer Box": None,
+            "Drawer Bottom": None,
+            "Drawer Top": None,
         }
         # Cached static world poses for this episode
         self._static_table_pos: Optional[Gf.Vec3d] = None
@@ -73,9 +73,9 @@ class DrawerGuide(BaseGuide):
 
         # Target poses for ghost previews
         self._target_poses: dict[str, Optional[Tuple[Gf.Vec3d, Gf.Quatd]]] = {
-            "DrawerBox": None,
-            "DrawerBottom": None,
-            "DrawerTop": None,
+            "Drawer Box": None,
+            "Drawer Bottom": None,
+            "Drawer Top": None,
         }
 
         # Ghost prim paths by logical name
@@ -88,11 +88,11 @@ class DrawerGuide(BaseGuide):
         stage: Usd.Stage = env.scene.stage
         env_ns: str = env.scene.env_ns
         self._paths.clear()
-        self._asset_roots = {"DrawerBox": None, "DrawerBottom": None, "DrawerTop": None}
+        self._asset_roots = {"Drawer Box": None, "Drawer Bottom": None, "Drawer Top": None}
         self._target_poses = {
-            "DrawerBox": None,
-            "DrawerBottom": None,
-            "DrawerTop": None,
+            "Drawer Box": None,
+            "Drawer Bottom": None,
+            "Drawer Top": None,
         }
         self._ghost_paths_by_name.clear()
         self._static_table_pos = None
@@ -152,14 +152,14 @@ class DrawerGuide(BaseGuide):
             and self._static_obstacles["ObstacleFront"] is not None
         ):
 
-            # target DrawerBox braced in corner
-            self._target_poses["DrawerBox"] = (self.tgt_box_pos, self.tgt_box_quat)
+            # target Drawer Box braced in corner
+            self._target_poses["Drawer Box"] = (self.tgt_box_pos, self.tgt_box_quat)
 
-            # target DrawerBottom inserted to DrawerBox
-            self._target_poses["DrawerBottom"] = (self.tgt_bot_pos, self.tgt_bot_quat)
+            # target Drawer Bottom inserted to Drawer Box
+            self._target_poses["Drawer Bottom"] = (self.tgt_bot_pos, self.tgt_bot_quat)
 
-            # target DrawerTop inserted to DrawerBox
-            self._target_poses["DrawerTop"] = (self.tgt_top_pos, self.tgt_top_quat)
+            # target Drawer Top inserted to Drawer Box
+            self._target_poses["Drawer Top"] = (self.tgt_top_pos, self.tgt_top_quat)
 
         # --------- Spawn ghosts at target poses ---------
         stage = self._stage
@@ -201,15 +201,15 @@ class DrawerGuide(BaseGuide):
     def _check_pickup_box(self) -> bool:
         if self._static_table_pos is None:
             return False
-        box_pose = self.get_live_part_pose("DrawerBox")
+        box_pose = self.get_live_part_pose("Drawer Box")
         if not box_pose:
             return False
         box_pos, _ = box_pose
         return (box_pos[2] - self._static_table_pos[2]) >= self.tol_z_dbox_t
 
     def _check_braced_box(self) -> bool:
-        tgt = self._target_poses.get("DrawerBox")
-        live = self.get_live_part_pose("DrawerBox")
+        tgt = self._target_poses.get("Drawer Box")
+        live = self.get_live_part_pose("Drawer Box")
         if not (tgt and live):
             return False
 
@@ -221,8 +221,8 @@ class DrawerGuide(BaseGuide):
         return pos_err <= 0.01 and ang_err <= 3.0
 
     def _check_bottom_insert(self) -> bool:
-        tgt = self._target_poses.get("DrawerBottom")
-        live = self.get_live_part_pose("DrawerBottom")
+        tgt = self._target_poses.get("Drawer Bottom")
+        live = self.get_live_part_pose("Drawer Bottom")
         if not (tgt and live):
             return False
 
@@ -234,8 +234,8 @@ class DrawerGuide(BaseGuide):
         return pos_err <= 0.01 and ang_err <= 3.0
 
     def _check_top_insert(self) -> bool:
-        tgt = self._target_poses.get("DrawerTop")
-        live = self.get_live_part_pose("DrawerTop")
+        tgt = self._target_poses.get("Drawer Top")
+        live = self.get_live_part_pose("Drawer Top")
         if not (tgt and live):
             return False
 
@@ -258,11 +258,11 @@ class DrawerGuide(BaseGuide):
 
         if not self._check_braced_box():
             issues.append(
-                ("DrawerBox", "Drawer Box is not aligned in the corner (Step 2)")
+                ("Drawer Box", "Drawer Box is not aligned in the corner (Step 2)")
             )
         if not self._check_bottom_insert():
-            issues.append(("DrawerBottom", "Drawer Bottom is not aligned (Step 3)"))
+            issues.append(("Drawer Bottom", "Drawer Bottom is not aligned (Step 3)"))
         if not self._check_top_insert():
-            issues.append(("DrawerTop", "Drawer Top is not aligned (Step 4)"))
+            issues.append(("Drawer Top", "Drawer Top is not aligned (Step 4)"))
 
         return issues
