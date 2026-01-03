@@ -17,6 +17,7 @@ from pxr import UsdShade
 from omni.physx import get_physx_interface
 import math
 import carb
+import re
 
 # Material registry
 
@@ -337,6 +338,14 @@ def isaac_world_to_xr_ui(pos_xyz):  # pos_xyz is Gf.Vec3d or tuple/list (x,y,z)
     # Common mapping if XR expects: X right, Y up, -Z forward
     return carb.Float3(x, z, -y)
 
+# Add a space in between "DrawerBottom" -> "Drawer Bottom"
+def pretty_name(name: str) -> str:
+    if not name:
+        return ""
+    name = name.replace("_", " ").replace("-", " ")
+    name = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", name)
+    name = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", " ", name)
+    return re.sub(r"\s+", " ", name).strip()
 
 # Minimal HUD
 
@@ -634,6 +643,7 @@ class NameTagManager:
             return
 
         name = guide.SEQUENCE[idx]
+        display = pretty_name(name)
         if not name:
             self.hide()
             self._last_name = None
@@ -650,7 +660,7 @@ class NameTagManager:
         # Only update text when it changes
         if name != self._last_name:
             if self._widget is not None and hasattr(self._widget, "set_text"):
-                self._widget.set_text(name)
+                self._widget.set_text(display)
                 self._last_name = name
             else:
                 # widget not ready
