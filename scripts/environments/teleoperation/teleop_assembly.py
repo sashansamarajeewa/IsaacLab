@@ -187,7 +187,7 @@ def main() -> None:
     name_tag = None
     if not args_cli.disable_nametag:
         name_tag = base.NameTagManager()
-        name_tag.show() 
+        #name_tag.show() 
 
     # Callback handlers
     def reset_recording_instance() -> None:
