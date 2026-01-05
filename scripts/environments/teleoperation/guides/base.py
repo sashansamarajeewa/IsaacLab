@@ -402,7 +402,8 @@ class SimpleSceneWidget(ui.Widget):
                 lbl.visible = False
 
 
-from omni.kit.xr.scene_view.utils import UiContainer, WidgetComponent
+from omni.kit.xr.scene_view.utils.ui_container import UiContainer
+from omni.kit.xr.scene_view.utils.manipulator_components.widget_component import WidgetComponent
 from omni.kit.xr.scene_view.utils.spatial_source import SpatialSource
 
 
@@ -412,7 +413,7 @@ class HUDManager:
         widget_cls,
         width: float = 0.6,
         height: float = 0.8,
-        resolution_scale: int = 20,
+        resolution_scale: int = 300,
         unit_to_pixel_scale: int = 30,
         translation: Gf.Vec3d = Gf.Vec3d(0, 0.9, 1.5),
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
@@ -588,7 +589,7 @@ class NameTagManager:
         widget_cls=NameTagWidget,
         width: float = 0.2,
         height: float = 0.04,
-        resolution_scale: int = 30,
+        resolution_scale: int = 300,
         unit_to_pixel_scale: int = 30,
         z_offset: float = 0.2,
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
@@ -624,20 +625,20 @@ class NameTagManager:
         self._ui_container = UiContainer(
             self._widget_component, space_stack=space_stack
         )
-        self.hide()
 
     def show(self):
         self._widget_component.visible = True
 
     def hide(self):
-        self._widget_component.visible = False
+        if self._ui_container is not None:
+            self._ui_container.root.clear()
+        self._widget = None
+        self._last_name = None
 
     def update(self, guide: "BaseGuide", highlighter: StepHighlighter):
         idx = highlighter.step_index
-        seq = len(getattr(guide, "SEQUENCE", []))
-        print(f"idx:{idx}")
-        print(f"length:{seq}")
-        if idx < 0 or idx >= len(getattr(guide, "SEQUENCE", [])):
+        seq_len = len(getattr(guide, "SEQUENCE", []))
+        if idx >= seq_len:
             self.hide()
             self._last_name = None
             return
