@@ -573,7 +573,7 @@ class NameTagWidget(ui.Widget):
             # Content container (use VStack)
             with ui.VStack(height=0.1, style={"margin": 0.1, "spacing": 0.1}):
                 self._label = ui.Label(
-                    "test",
+                    "",
                     word_wrap=False,
                     alignment=ui.Alignment.CENTER,
                     style={"font_size": 0.7, "color": ui.color("#f5f5f5")},
@@ -611,6 +611,7 @@ class NameTagManager:
         self._widget_component = None
 
     def _build_ui(self):
+        self._widget = None
 
         def on_constructed(widget_instance):
             self._widget = widget_instance
@@ -642,17 +643,14 @@ class NameTagManager:
 
     def _ensure_ui(self):
         if self._ui_container is None:
-            print("_ui_container is None")
             self._build_ui()
-
-    def show(self):
-        self._widget_component.visible = True
 
     def hide(self):
         if self._ui_container is not None:
             self._ui_container.root.clear()
-            self._ui_container = None
-        #self._widget = None
+        self._ui_container = None
+        self._widget = None
+        self._widget_component = None
         self._last_name = None
 
     def update(self, guide: "BaseGuide", highlighter: StepHighlighter):
@@ -681,9 +679,7 @@ class NameTagManager:
 
         # Only update text when it changes
         if name != self._last_name:
-            print("name != self._last_name")
             if self._widget is not None and hasattr(self._widget, "set_text"):
-                print("set text")
                 self._widget.set_text(display)
                 self._last_name = name
             else:
@@ -692,7 +688,6 @@ class NameTagManager:
 
         # Update position every frame
         self._ui_container.manipulator.translation = isaac_world_to_xr_ui(pos_above)
-        #self.show()
 
     def destroy(self):
         try:
@@ -774,7 +769,7 @@ class BaseGuide:
             if not live:
                 continue
             pos, _ = live
-            if pos[2] < abs(table_z - z_margin):
+            if pos[2] < z_margin - table_z:
                 return True
 
         return False

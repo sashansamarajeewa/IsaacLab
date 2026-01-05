@@ -178,7 +178,7 @@ def annotate_hdf5_demo(
         demo_grp.attrs["task"] = str(task)
 
 
-def reset_all(env, guide, highlighter, phys_binder, hud, name_tag, teleop_interface):
+def reset_all(env, guide, highlighter, phys_binder, hud, teleop_interface):
     """Reset sim/env/recorder?UI/guide state for the next demo."""
     env.sim.reset()
     env.recorder_manager.reset()
@@ -190,8 +190,6 @@ def reset_all(env, guide, highlighter, phys_binder, hud, name_tag, teleop_interf
     guide.update_previews_for_step(highlighter)
     if hud is not None:
         hud.update(guide, highlighter)
-    if name_tag is not None:
-        name_tag.update(guide, highlighter)
 
     teleop_interface.reset()
 
@@ -276,7 +274,6 @@ def main():
     name_tag = None
     if not args_cli.disable_nametag:
         name_tag = base.NameTagManager()
-        #name_tag.show() 
 
     # Teleop flow flags and timing
     should_reset = False
@@ -461,7 +458,7 @@ def main():
                     else:
                         # Prepare next demo
                         reset_all(
-                            env, guide, highlighter, phys_binder, hud, name_tag, teleop_interface
+                            env, guide, highlighter, phys_binder, hud, teleop_interface
                         )
 
                         # Reset per demo
@@ -477,7 +474,7 @@ def main():
 
             # Manual reset handling
             if should_reset:
-                reset_all(env, guide, highlighter, phys_binder, hud, name_tag, teleop_interface)
+                reset_all(env, guide, highlighter, phys_binder, hud, teleop_interface)
 
                 should_reset = False
                 success_step_count = 0
