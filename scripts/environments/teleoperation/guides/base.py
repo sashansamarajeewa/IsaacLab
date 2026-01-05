@@ -338,6 +338,7 @@ def isaac_world_to_xr_ui(pos_xyz):  # pos_xyz is Gf.Vec3d or tuple/list (x,y,z)
     # Common mapping if XR expects: X right, Y up, -Z forward
     return carb.Float3(x, z, -y)
 
+
 # Add a space in between "DrawerBottom" -> "Drawer Bottom"
 def pretty_name(name: str) -> str:
     if not name:
@@ -346,6 +347,7 @@ def pretty_name(name: str) -> str:
     name = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", name)
     name = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", " ", name)
     return re.sub(r"\s+", " ", name).strip()
+
 
 # Minimal HUD
 
@@ -403,7 +405,9 @@ class SimpleSceneWidget(ui.Widget):
 
 
 from omni.kit.xr.scene_view.utils.ui_container import UiContainer
-from omni.kit.xr.scene_view.utils.manipulator_components.widget_component import WidgetComponent
+from omni.kit.xr.scene_view.utils.manipulator_components.widget_component import (
+    WidgetComponent,
+)
 from omni.kit.xr.scene_view.utils.spatial_source import SpatialSource
 
 
@@ -574,7 +578,7 @@ class NameTagWidget(ui.Widget):
                     alignment=ui.Alignment.CENTER,
                     style={"font_size": 0.7, "color": ui.color("#f5f5f5")},
                 )
-    
+
     def set_text(self, text: str):
         if self._label:
             self._label.text = text
@@ -594,19 +598,29 @@ class NameTagManager:
         z_offset: float = 0.2,
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
     ):
+        self.widget_cls = widget_cls
+        self.width = width
+        self.height = height
+        self.resolution_scale = resolution_scale
+        self.unit_to_pixel_scale = unit_to_pixel_scale
+        self.rotation_deg_xyz = rotation_deg_xyz
         self._widget = None
         self._z_offset = float(z_offset)
         self._last_name: Optional[str] = None
+        self._ui_container = None
+        self._widget_component = None
+
+    def _build_ui(self):
 
         def on_constructed(widget_instance):
             self._widget = widget_instance
 
         self._widget_component = WidgetComponent(
-            widget_cls,
-            width=width,
-            height=height,
-            resolution_scale=resolution_scale,
-            unit_to_pixel_scale=unit_to_pixel_scale,
+            self.widget_cls,
+            self.width,
+            self.height,
+            self.resolution_scale,
+            self.unit_to_pixel_scale,
             update_policy=sc.Widget.UpdatePolicy.ALWAYS,
             construct_callback=on_constructed,
         )
@@ -616,15 +630,19 @@ class NameTagManager:
             SpatialSource.new_translation_source(Gf.Vec3d(0.0, 0.0, 0.0)),
             SpatialSource.new_rotation_source(
                 Gf.Vec3d(
-                    math.radians(rotation_deg_xyz[0]),
-                    math.radians(rotation_deg_xyz[1]),
-                    math.radians(rotation_deg_xyz[2]),
+                    math.radians(self.rotation_deg_xyz[0]),
+                    math.radians(self.rotation_deg_xyz[1]),
+                    math.radians(self.rotation_deg_xyz[2]),
                 )
             ),
         ]
         self._ui_container = UiContainer(
             self._widget_component, space_stack=space_stack
         )
+
+    def _ensure_ui(self):
+        if self._ui_container is None:
+            self._build_ui()
 
     def show(self):
         self._widget_component.visible = True
@@ -643,6 +661,7 @@ class NameTagManager:
             self._last_name = None
             return
 
+        self._ensure_ui()
         name = guide.SEQUENCE[idx]
         display = pretty_name(name)
         if not name:
