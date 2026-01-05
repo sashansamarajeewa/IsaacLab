@@ -402,10 +402,7 @@ class SimpleSceneWidget(ui.Widget):
                 lbl.visible = False
 
 
-from omni.kit.xr.scene_view.utils.ui_container import UiContainer
-from omni.kit.xr.scene_view.utils.manipulator_components.widget_component import (
-    WidgetComponent,
-)
+from omni.kit.xr.scene_view.utils import UiContainer, WidgetComponent
 from omni.kit.xr.scene_view.utils.spatial_source import SpatialSource
 
 
@@ -564,7 +561,7 @@ class NameTagWidget(ui.Widget):
                     "background_color": ui.color("#666262FF"),
                     "border_color": ui.color("#ffffff"),
                     "border_width": 0.1,
-                    "border_radius": 0.2,
+                    "border_radius": 0.1,
                 }
             )
 
@@ -574,7 +571,7 @@ class NameTagWidget(ui.Widget):
                     "test",
                     word_wrap=False,
                     alignment=ui.Alignment.CENTER,
-                    style={"font_size": 1, "color": ui.color("#f5f5f5")},
+                    style={"font_size": 0.7, "color": ui.color("#f5f5f5")},
                 )
     
     def set_text(self, text: str):
@@ -590,7 +587,7 @@ class NameTagManager:
         self,
         widget_cls=NameTagWidget,
         width: float = 0.2,
-        height: float = 0.05,
+        height: float = 0.04,
         resolution_scale: int = 30,
         unit_to_pixel_scale: int = 30,
         z_offset: float = 0.2,
@@ -637,6 +634,9 @@ class NameTagManager:
 
     def update(self, guide: "BaseGuide", highlighter: StepHighlighter):
         idx = highlighter.step_index
+        seq = len(getattr(guide, "SEQUENCE", []))
+        print(f"idx:{idx}")
+        print(f"length:{seq}")
         if idx < 0 or idx >= len(getattr(guide, "SEQUENCE", [])):
             self.hide()
             self._last_name = None
