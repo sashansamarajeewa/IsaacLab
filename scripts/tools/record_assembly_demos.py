@@ -214,7 +214,9 @@ def main():
         # If cameras are not enabled and XR is enabled, remove camera configs
         if not args_cli.enable_cameras:
             env_cfg = remove_camera_configs(env_cfg)
-            if hasattr(env_cfg.observations, "policy") and hasattr(env_cfg.observations.policy, "head_camera"):
+            if hasattr(env_cfg.observations, "policy") and hasattr(
+                env_cfg.observations.policy, "head_camera"
+            ):
                 env_cfg.observations.policy.head_camera = None
         env_cfg.sim.render.antialiasing_mode = "DLSS"
 
@@ -268,9 +270,8 @@ def main():
     hud = None
     if not args_cli.disable_instructions:
         hud = base.HUDManager(base.SimpleSceneWidget)
-        hud.show()
         hud.update(guide, highlighter)
-        
+
     name_tag = None
     if not args_cli.disable_nametag:
         name_tag = base.NameTagManager()
@@ -494,10 +495,6 @@ def main():
                 rate_limiter.sleep(env)
 
     # Cleanup
-    if hud is not None:
-        hud.destroy()
-    if name_tag is not None:
-        name_tag.destroy()
     env.close()
     print("Done. Closing app.")
 

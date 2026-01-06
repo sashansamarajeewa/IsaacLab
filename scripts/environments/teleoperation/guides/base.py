@@ -404,10 +404,7 @@ class SimpleSceneWidget(ui.Widget):
                 lbl.visible = False
 
 
-from omni.kit.xr.scene_view.utils.ui_container import UiContainer
-from omni.kit.xr.scene_view.utils.manipulator_components.widget_component import (
-    WidgetComponent,
-)
+from omni.kit.xr.scene_view.utils import UiContainer, WidgetComponent
 from omni.kit.xr.scene_view.utils.spatial_source import SpatialSource
 
 
@@ -530,25 +527,25 @@ class HUDManager:
         if hasattr(self._widget, "set_steps"):
             self._widget.set_steps(wrapped_lines, active_idx)
 
-    def show(self):
-        self._widget_component.visible = True
+    # def show(self):
+    #     self._widget_component.visible = True
 
-    def hide(self):
-        self._widget_component.visible = False
+    # def hide(self):
+    #     self._widget_component.visible = False
 
-    def destroy(self):
-        try:
-            self.hide()
-        except Exception:
-            pass
-        self._widget = None
-        try:
-            if hasattr(self._ui_container, "destroy"):
-                self._ui_container.destroy()
-        except Exception:
-            pass
-        self._ui_container = None
-        self._widget_component = None
+    # def destroy(self):
+    #     try:
+    #         self.hide()
+    #     except Exception:
+    #         pass
+    #     self._widget = None
+    #     try:
+    #         if hasattr(self._ui_container, "destroy"):
+    #             self._ui_container.destroy()
+    #     except Exception:
+    #         pass
+    #     self._ui_container = None
+    #     self._widget_component = None
 
 
 # NameTag Widget
@@ -687,21 +684,21 @@ class NameTagManager:
                 print("widget not ready yet")
 
         # Update position every frame
-        self._ui_container.manipulator.translation = isaac_world_to_xr_ui(pos_above)
+        self._ui_container.manipulator.translation = isaac_world_to_xr_ui(pos_above) # type: ignore
 
-    def destroy(self):
-        try:
-            self.hide()
-        except Exception:
-            pass
-        self._widget = None
-        try:
-            if hasattr(self._ui_container, "destroy"):
-                self._ui_container.destroy()
-        except Exception:
-            pass
-        self._ui_container = None
-        self._widget_component = None
+    # def destroy(self):
+    #     try:
+    #         self.hide()
+    #     except Exception:
+    #         pass
+    #     self._widget = None
+    #     try:
+    #         if hasattr(self._ui_container, "destroy"):
+    #             self._ui_container.destroy()
+    #     except Exception:
+    #         pass
+    #     self._ui_container = None
+    #     self._widget_component = None
 
 
 # Base guide
