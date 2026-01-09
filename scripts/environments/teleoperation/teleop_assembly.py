@@ -122,9 +122,12 @@ def main() -> None:
         if not args_cli.enable_cameras:
             env_cfg = remove_camera_configs(env_cfg)
             if hasattr(env_cfg.observations, "policy") and hasattr(
-                env_cfg.observations.policy, "head_camera"
+                env_cfg.observations.policy, "head_camera_rgb"
+            ) and hasattr(
+                env_cfg.observations.policy, "head_camera_depth"
             ):
-                env_cfg.observations.policy.head_camera = None
+                env_cfg.observations.policy.head_camera_rgb = None
+                env_cfg.observations.policy.head_camera_depth = None
         env_cfg.sim.render.antialiasing_mode = "DLSS"
 
     try:

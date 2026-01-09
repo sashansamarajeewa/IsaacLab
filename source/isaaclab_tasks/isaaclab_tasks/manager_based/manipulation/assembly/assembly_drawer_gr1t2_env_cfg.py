@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import tempfile
+from typing import Optional
 from isaaclab.sensors import CameraCfg
 import torch
 
@@ -141,10 +142,10 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # )
 
     head_camera = CameraCfg(
-        prim_path="/World/envs/env_.*/Robot/GR1T2_fourier_hand_6dof/head_yaw_link/HeadCamera",
+        prim_path="/World/envs/env_.*/Robot/GR1T2_fourier_hand_6dof/head_yaw_link/HeadCameraRGB",
         height=720,
         width=1280,
-        data_types=["rgb"],
+        data_types=["rgb", "distance_to_image_plane"],
         spawn=sim_utils.PinholeCameraCfg(focal_length=6.0),
         offset=CameraCfg.OffsetCfg(
             pos=(0.11, 0.0, 0.05),
@@ -369,12 +370,21 @@ class ObservationsCfg:
         #     },
         # )
 
-        head_camera = ObsTerm(
+        head_camera_rgb = ObsTerm(
             func=base_mdp.image,
             params={
                 "sensor_cfg": SceneEntityCfg("head_camera"),
                 "data_type": "rgb",
                 "normalize": False,
+            },
+        )
+
+        head_camera_depth = ObsTerm(
+            func=base_mdp.image,
+            params={
+                "sensor_cfg": SceneEntityCfg("head_camera"),
+                "data_type": "distance_to_image_plane",
+                "normalize": True,
             },
         )
 
