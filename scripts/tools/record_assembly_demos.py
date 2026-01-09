@@ -89,7 +89,6 @@ import torch
 import omni.log
 import omni.usd
 
-from isaaclab.devices.openxr import remove_camera_configs
 from isaaclab.devices.teleop_device_factory import create_teleop_device
 
 import isaaclab_tasks
@@ -128,6 +127,64 @@ def default_dataset_path() -> str:
     task_short = args_cli.task.split(":")[-1].replace("/", "_")
     fname = f"{args_cli.participant_id}_{task_short}.hdf5"
     return os.path.join(args_cli.out_dir, fname)
+
+
+from typing import Any
+
+
+def remove_camera_configs_safe(env_cfg: Any) -> Any:
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    from isaaclab.managers import SceneEntityCfg
+    from isaaclab.sensors import CameraCfg
+
+    # Collect all cameras defined on the scene
+    camera_names: list[str] = []
+    for attr_name in dir(env_cfg.scene):
+        try:
+            attr = getattr(env_cfg.scene, attr_name)
+        except Exception:
+            continue
+        if isinstance(attr, CameraCfg):
+            camera_names.append(attr_name)
+
+    if not camera_names:
+        return env_cfg
+
+    # Remove camera configs
+    for cam_name in camera_names:
+        if hasattr(env_cfg.scene, cam_name):
+            delattr(env_cfg.scene, cam_name)
+            logger.info(f"Removed camera config: {cam_name}")
+
+    # Remove any ObsTerms that reference removed cameras
+    if hasattr(env_cfg.observations, "policy"):
+        policy = env_cfg.observations.policy
+
+        obs_to_delete: list[str] = []
+        for obs_name in dir(policy):
+            try:
+                obsterm = getattr(policy, obs_name)
+            except Exception:
+                continue
+
+            params = getattr(obsterm, "params", None)
+            if not params:
+                continue
+
+            for v in params.values():
+                if isinstance(v, SceneEntityCfg) and v.name in camera_names:
+                    obs_to_delete.append(obs_name)
+                    break
+
+        for obs_name in sorted(set(obs_to_delete)):
+            if hasattr(policy, obs_name):
+                delattr(policy, obs_name)
+                logger.info(f"Removed camera observation term: {obs_name}")
+
+    return env_cfg
 
 
 def annotate_hdf5_demo(
@@ -213,14 +270,9 @@ def main():
     if args_cli.xr:
         # If cameras are not enabled and XR is enabled, remove camera configs
         if not args_cli.enable_cameras:
-            env_cfg = remove_camera_configs(env_cfg)
-            if hasattr(env_cfg.observations, "policy") and hasattr(
-                env_cfg.observations.policy, "head_camera_rgb"
-            ) and hasattr(
-                env_cfg.observations.policy, "head_camera_depth"
-            ):
-                env_cfg.observations.policy.head_camera_rgb = None
-                env_cfg.observations.policy.head_camera_depth = None
+            env_cfg = remove_camera_configs_safe(env_cfg)
+            if hasattr(env_cfg.observations, "policy") and hasattr(env_cfg.observations.policy, "head_camera"):
+                env_cfg.observations.policy.head_camera = None
         env_cfg.sim.render.antialiasing_mode = "DLSS"
 
     # Recorder config
