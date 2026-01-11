@@ -92,13 +92,13 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     )
 
     # FrontLeftLeg
-    desk_leg_1 = RigidObjectCfg(
+    desk_leg1 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/FrontLeftLeg",
         init_state=RigidObjectCfg.InitialStateCfg(
             pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]
         ),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg_1.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg1.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
             mass_props=sim_utils.MassPropertiesCfg(mass=1),
@@ -106,11 +106,11 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     )
 
     # FrontRightLeg
-    desk_leg_2 = RigidObjectCfg(
+    desk_leg2 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/FrontRightLeg",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.5, 1.085]),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg_2.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg2.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
             mass_props=sim_utils.MassPropertiesCfg(mass=1),
@@ -118,11 +118,11 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     )
 
     # BackLeftLeg
-    desk_leg_3 = RigidObjectCfg(
+    desk_leg3 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/BackLeftLeg",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.59, 1.085]),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg_3.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg3.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
             mass_props=sim_utils.MassPropertiesCfg(mass=1),
@@ -130,11 +130,11 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     )
     
     # BackRightLeg
-    desk_leg_4 = RigidObjectCfg(
+    desk_leg4 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/BackRightLeg",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.59, 1.085]),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg_4.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg4.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
             mass_props=sim_utils.MassPropertiesCfg(mass=1),
