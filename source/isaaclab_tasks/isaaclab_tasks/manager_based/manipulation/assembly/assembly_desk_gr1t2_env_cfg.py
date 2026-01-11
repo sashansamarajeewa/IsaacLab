@@ -98,7 +98,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
             pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]
         ),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg1.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg2.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
             mass_props=sim_utils.MassPropertiesCfg(mass=1),
