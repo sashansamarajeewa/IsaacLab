@@ -325,7 +325,10 @@ def spawn_ghost_preview(
 
     # Remove shadow from ghost mesh
     mesh_prim = stage.GetPrimAtPath(f"{ghost_root_path}/mesh")
+    print(mesh_prim)
+    print(mesh_prim.IsValid())
     if mesh_prim and mesh_prim.IsValid():
+        print("In")
         pv = UsdGeom.PrimvarsAPI(mesh_prim).CreatePrimvar(
             "rtx:castShadows", Sdf.ValueTypeNames.Bool
         )
