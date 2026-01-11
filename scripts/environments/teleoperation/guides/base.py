@@ -330,7 +330,7 @@ def spawn_ghost_preview(
     if mesh_prim and mesh_prim.IsValid():
         print("In")
         pv = UsdGeom.PrimvarsAPI(mesh_prim).CreatePrimvar(
-            "rtx:castShadows", Sdf.ValueTypeNames.Bool
+            "doNotCastShadows", Sdf.ValueTypeNames.Bool
         )
         pv.Set(False)
 
