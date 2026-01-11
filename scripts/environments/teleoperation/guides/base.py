@@ -332,7 +332,7 @@ def spawn_ghost_preview(
         pv = UsdGeom.PrimvarsAPI(mesh_prim).CreatePrimvar(
             "doNotCastShadows", Sdf.ValueTypeNames.Bool
         )
-        pv.Set(False)
+        pv.Set(True)
 
     # Bind ghost material
     sim_utils.bind_visual_material(
