@@ -94,9 +94,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # FrontLeftLeg
     desk_leg1 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/FrontLeftLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(
-            pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]
-        ),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.2207, 0.34485, 1.03]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg1.usd",
             scale=ASSET_SCALE,
@@ -108,7 +106,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # FrontRightLeg
     desk_leg2 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/FrontRightLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.5, 1.085]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.2205, 0.34485, 1.03]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg2.usd",
             scale=ASSET_SCALE,
@@ -144,7 +142,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # DeskTop
     desk_top = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DeskTop",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.13, 0.34, 1.05], rot=[0.0, 0.0, -0.7071068, -0.7071068]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.13, 0.34, 1.03], rot=[0.0, 0.0, -0.7071068, -0.7071068]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_top.usd",
             scale=ASSET_SCALE,
