@@ -325,10 +325,7 @@ def spawn_ghost_preview(
 
     # Remove shadow from ghost mesh
     mesh_prim = stage.GetPrimAtPath(f"{ghost_root_path}/mesh")
-    print(mesh_prim)
-    print(mesh_prim.IsValid())
     if mesh_prim and mesh_prim.IsValid():
-        print("In")
         pv = UsdGeom.PrimvarsAPI(mesh_prim).CreatePrimvar(
             "doNotCastShadows", Sdf.ValueTypeNames.Bool
         )
@@ -341,10 +338,10 @@ def spawn_ghost_preview(
     return ghost_root_path
 
 
-def isaac_world_to_xr_ui(pos_xyz):  # pos_xyz is Gf.Vec3d or tuple/list (x,y,z)
+def isaac_world_to_xr_ui(pos_xyz):
     x = float(pos_xyz[0])  # left/right
-    y = float(pos_xyz[1])  # forward (Isaac)
-    z = float(pos_xyz[2])  # up (Isaac)
+    y = float(pos_xyz[1])  # forward
+    z = float(pos_xyz[2])  # up
 
     # Common mapping if XR expects: X right, Y up, -Z forward
     return carb.Float3(x, z, -y)
