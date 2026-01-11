@@ -1,7 +1,7 @@
 from __future__ import annotations
 import textwrap
 from typing import Callable, List, Optional, Sequence, Tuple, Protocol
-from pxr import Usd, Gf, UsdPhysics, UsdGeom
+from pxr import Usd, Gf, UsdPhysics, UsdGeom, Sdf
 from isaaclab.sim import utils as sim_utils
 from isaaclab.sim.spawners.materials import (
     spawn_preview_surface,
@@ -322,6 +322,14 @@ def spawn_ghost_preview(
     m = sM * rotM * tM
 
     op.Set(m)
+
+    # Remove shadow from ghost mesh
+    mesh_prim = stage.GetPrimAtPath(f"{ghost_root_path}/mesh")
+    if mesh_prim and mesh_prim.IsValid():
+        pv = UsdGeom.PrimvarsAPI(mesh_prim).CreatePrimvar(
+            "rtx:castShadows", Sdf.ValueTypeNames.Bool
+        )
+        pv.Set(False)
 
     # Bind ghost material
     sim_utils.bind_visual_material(
@@ -684,7 +692,7 @@ class NameTagManager:
                 print("widget not ready yet")
 
         # Update position every frame
-        self._ui_container.manipulator.translation = isaac_world_to_xr_ui(pos_above) # type: ignore
+        self._ui_container.manipulator.translation = isaac_world_to_xr_ui(pos_above)  # type: ignore
 
     # def destroy(self):
     #     try:
