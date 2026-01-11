@@ -92,7 +92,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     )
 
     # FrontLeftLeg
-    drawer_box = RigidObjectCfg(
+    desk_leg_1 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/FrontLeftLeg",
         init_state=RigidObjectCfg.InitialStateCfg(
             pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]
@@ -106,7 +106,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     )
 
     # FrontRightLeg
-    drawer_container_bottom = RigidObjectCfg(
+    desk_leg_2 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/FrontRightLeg",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.5, 1.085]),
         spawn=UsdFileCfg(
@@ -118,7 +118,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     )
 
     # BackLeftLeg
-    drawer_container_top = RigidObjectCfg(
+    desk_leg_3 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/BackLeftLeg",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.59, 1.085]),
         spawn=UsdFileCfg(
@@ -130,7 +130,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     )
     
     # BackRightLeg
-    drawer_container_top = RigidObjectCfg(
+    desk_leg_4 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/BackRightLeg",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.59, 1.085]),
         spawn=UsdFileCfg(
@@ -142,7 +142,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     )
     
     # DeskTop
-    drawer_container_top = RigidObjectCfg(
+    desk_top = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DeskTop",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.59, 1.085]),
         spawn=UsdFileCfg(
