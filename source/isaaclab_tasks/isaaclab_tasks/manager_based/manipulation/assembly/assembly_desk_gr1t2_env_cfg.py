@@ -144,7 +144,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # DeskTop
     desk_top = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DeskTop",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.59, 1.085]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.39, 1.085], rot=[0.0, 0.0, -0.7071, 0.7071]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_top.usd",
             scale=ASSET_SCALE,
