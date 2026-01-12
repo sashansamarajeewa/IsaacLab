@@ -118,7 +118,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # BackLeftLeg
     desk_leg3 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/BackLeftLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.271, 0.44, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.271, 0.5, 1.03]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg3.usd",
             scale=ASSET_SCALE,
@@ -130,7 +130,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # BackRightLeg
     desk_leg4 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/BackRightLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.2205, 0.44, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.2205, 0.5, 1.03]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg4.usd",
             scale=ASSET_SCALE,
