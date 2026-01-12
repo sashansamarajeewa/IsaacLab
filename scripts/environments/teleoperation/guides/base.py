@@ -49,8 +49,9 @@ class MaterialRegistry:
     # )
 
     ghost_cfg = PreviewSurfaceCfg(
-        diffuse_color=(0.4, 1.0, 1.0),
-        roughness=1.0,
+        diffuse_color=(0.2, 0.9, 1.0),
+        roughness=0.01,
+        opacity = 0.01
     )
 
     @classmethod

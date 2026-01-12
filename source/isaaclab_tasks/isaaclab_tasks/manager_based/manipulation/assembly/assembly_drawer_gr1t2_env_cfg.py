@@ -539,6 +539,7 @@ class AssemblyDrawerGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         self.sim.render_interval = 2  # 6
         self.sim.physx.enable_ccd = False  # True
         carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)
+        carb.settings.get_settings().set_int("rtx/translucency/worldEps", 0)
 
         # Convert USD to URDF and change revolute joints to fixed
         temp_urdf_output_path, temp_urdf_meshes_output_path = (

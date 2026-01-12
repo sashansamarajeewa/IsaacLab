@@ -37,7 +37,7 @@ from . import mdp
 
 from isaaclab_assets.robots.fourier import GR1T2_HIGH_PD_CFG  # isort: skip
 
-ASSET_SCALE = (2.0, 2.0, 2.0)
+ASSET_SCALE = (1.7, 1.7, 1.7)
 
 
 ##
@@ -61,7 +61,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleFront
     obstacle_front = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleFront",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.67, 1.02]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.64, 1.02]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_front/obstacle_front.usd",
             collision_props=sim_utils.CollisionPropertiesCfg(),
@@ -72,7 +72,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleLeft
     obstacle_left = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleLeft",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.48, 1.02]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.45, 1.02]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
             collision_props=sim_utils.CollisionPropertiesCfg(),
@@ -83,7 +83,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleRight
     obstacle_right = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleRight",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.48, 1.02]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.45, 1.02]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
             collision_props=sim_utils.CollisionPropertiesCfg(),
@@ -94,60 +94,60 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # FrontLeftLeg
     desk_leg1 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/FrontLeftLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.271, 0.33, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.273, 0.26, 1.03]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg1.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=1),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
         ),
     )
 
     # FrontRightLeg
     desk_leg2 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/FrontRightLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.2205, 0.33, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.219, 0.26, 1.03]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg2.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=1),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
         ),
     )
 
     # BackLeftLeg
     desk_leg3 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/BackLeftLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.271, 0.5, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.273, 0.51, 1.03]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg3.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=1),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
         ),
     )
     
     # BackRightLeg
     desk_leg4 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/BackRightLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.2205, 0.5, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.219, 0.51, 1.03]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_leg4.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=1),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
         ),
     )
     
     # DeskTop
     desk_top = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DeskTop",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.13, 0.34, 1.03], rot=[0.0, 0.0, -0.7071068, -0.7071068]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.13, 0.31, 1.03], rot=[0.0, 0.0, -0.7071068, -0.7071068]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/desk_top.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=5),
+            mass_props=sim_utils.MassPropertiesCfg(mass=3),
         ),
     )
 
@@ -561,6 +561,7 @@ class AssemblyDeskGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         self.sim.render_interval = 2  # 6
         self.sim.physx.enable_ccd = False  # True
         carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)
+        carb.settings.get_settings().set_int("rtx/translucency/worldEps", 0)
 
         # Convert USD to URDF and change revolute joints to fixed
         temp_urdf_output_path, temp_urdf_meshes_output_path = (
