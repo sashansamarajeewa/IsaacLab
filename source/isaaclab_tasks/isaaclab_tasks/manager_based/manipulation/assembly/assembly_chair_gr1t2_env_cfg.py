@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import tempfile
+from typing import Optional
+from isaaclab.sensors import CameraCfg
 import torch
 
 import carb
@@ -16,7 +18,9 @@ from isaaclab.assets import ArticulationCfg, AssetBaseCfg, RigidObjectCfg
 from isaaclab.controllers.pink_ik import NullSpacePostureTask, PinkIKControllerCfg
 from isaaclab.devices.device_base import DevicesCfg
 from isaaclab.devices.openxr import ManusViveCfg, OpenXRDeviceCfg, XrCfg
-from isaaclab.devices.openxr.retargeters.humanoid.fourier.gr1t2_retargeter import GR1T2RetargeterCfg
+from isaaclab.devices.openxr.retargeters.humanoid.fourier.gr1t2_retargeter import (
+    GR1T2RetargeterCfg,
+)
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.envs.mdp.actions.pink_actions_cfg import PinkInverseKinematicsActionCfg
 from isaaclab.managers import EventTermCfg as EventTerm
@@ -33,6 +37,8 @@ from . import mdp
 
 from isaaclab_assets.robots.fourier import GR1T2_HIGH_PD_CFG  # isort: skip
 
+ASSET_SCALE = (1.7, 1.7, 1.7)
+
 
 ##
 # Scene definition
@@ -43,86 +49,142 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # Table
     packing_table = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/PackingTable",
-        init_state=AssetBaseCfg.InitialStateCfg(pos=[0.0, 0.55, 0.0], rot=[1.0, 0.0, 0.0, 0.0]),
+        init_state=AssetBaseCfg.InitialStateCfg(
+            pos=[0.0, 0.55, 0.0], rot=[1.0, 0.0, 0.0, 0.0]
+        ),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/packing_table/packing_table.usd",
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
         ),
     )
-    
+
     # ObstacleFront
     obstacle_front = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleFront",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.67, 1.02]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_front/obstacle_front.usd",
-                         collision_props=sim_utils.CollisionPropertiesCfg(),
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
-                         ),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.64, 1.02]),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_front/obstacle_front.usd",
+            collision_props=sim_utils.CollisionPropertiesCfg(),
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
+        ),
     )
-    
+
     # ObstacleLeft
     obstacle_left = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleLeft",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.48, 1.02]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
-                         collision_props=sim_utils.CollisionPropertiesCfg(),
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
-                         ),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.45, 1.02]),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
+            collision_props=sim_utils.CollisionPropertiesCfg(),
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
+        ),
     )
-    
+
     # ObstacleRight
     obstacle_right = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleRight",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.48, 1.02]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
-                         collision_props=sim_utils.CollisionPropertiesCfg(),
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
-                         ),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.45, 1.02]),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
+            collision_props=sim_utils.CollisionPropertiesCfg(),
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
+        ),
+    )
+
+    # FrontLeftLeg
+    chair_leg1 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/FrontLeftLeg",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.273, 0.26, 1.03]),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_leg1.usd",
+            scale=ASSET_SCALE,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
+        ),
+    )
+
+    # FrontRightLeg
+    chair_leg2 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/FrontRightLeg",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.219, 0.26, 1.03]),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_leg2.usd",
+            scale=ASSET_SCALE,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
+        ),
+    )
+
+    # LeftNut
+    chair_nut1 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/LeftNut",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.273, 0.51, 1.03]),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_nut1.usd",
+            scale=ASSET_SCALE,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
+        ),
     )
     
-    # LampBase
-    lamp_base = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/LampBase",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.065, 0.37, 1.03], rot=[0.0, 0.0, -0.7071, 0.7071]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/lamp/lamp_base/lamp_base.usd",
-                         scale=(2.0, 2.0, 2.0),
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                        #  articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
-                        mass_props=sim_utils.MassPropertiesCfg(mass=5),
-                         ),
+    # RightNut
+    chair_nut2 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/RightNut",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.219, 0.51, 1.03]),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_nut2.usd",
+            scale=ASSET_SCALE,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
+        ),
+    )
+    
+    # Back
+    chair_back = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/Back",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.13, 0.31, 1.03], rot=[0.0, 0.0, -0.7071068, -0.7071068]),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_back.usd",
+            scale=ASSET_SCALE,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            mass_props=sim_utils.MassPropertiesCfg(mass=3),
+        ),
+    )
+    
+    # Seat
+    chair_seat = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/Seat",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.13, 0.41, 1.03], rot=[0.0, 0.0, -0.7071068, -0.7071068]),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_seat.usd",
+            scale=ASSET_SCALE,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            mass_props=sim_utils.MassPropertiesCfg(mass=3),
+        ),
     )
 
-    # # LampBulb
-    # lamp_bulb = RigidObjectCfg(
-    #     prim_path="{ENV_REGEX_NS}/LampBulb",
-    #     init_state=RigidObjectCfg.InitialStateCfg(pos=[0.075, 0.4, 1.05]),
-    #     spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/lamp/lamp_bulb/lamp_bulb.usd",
-    #                      scale=(2.0, 2.0, 2.0),
-    #                      rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-    #                     #  articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
-    #                     mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
-    #                      ),
+    # object = RigidObjectCfg(
+    #     prim_path="{ENV_REGEX_NS}/Object",
+    #     init_state=RigidObjectCfg.InitialStateCfg(
+    #         pos=[-0.6, 0.47, 0.9996], rot=[1, 0, 0, 0]
+    #     ),
+    #     spawn=UsdFileCfg(
+    #         usd_path=f"{ISAACLAB_NUCLEUS_DIR}/Mimic/pick_place_task/pick_place_assets/steering_wheel.usd",
+    #         scale=(0.75, 0.75, 0.75),
+    #         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+    #     ),
     # )
 
-    # LampHood
-    lamp_hood = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/LampHood",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.25, 0.50, 1.086], rot=[0.0, 0.0, -0.7071, 0.7071]),
-        spawn=UsdFileCfg(usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/lamp/lamp_hood/lamp_hood.usd",
-                         scale=(2.0, 2.0, 2.0),
-                         rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-                        #  articulation_props=sim_utils.ArticulationRootPropertiesCfg(articulation_enabled=False),
-                        mass_props=sim_utils.MassPropertiesCfg(mass=1),
-                         ),
-    )
-
-    object = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/Object",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.6, 0.47, 0.9996], rot=[1, 0, 0, 0]),
-        spawn=UsdFileCfg(
-            usd_path=f"{ISAACLAB_NUCLEUS_DIR}/Mimic/pick_place_task/pick_place_assets/steering_wheel.usd",
-            scale=(0.75, 0.75, 0.75),
-            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+    head_camera = CameraCfg(
+        prim_path="/World/envs/env_.*/Robot/GR1T2_fourier_hand_6dof/head_yaw_link/HeadCamera",
+        height=720,
+        width=1280,
+        data_types=["rgb", "distance_to_image_plane"],
+        spawn=sim_utils.PinholeCameraCfg(focal_length=6.0),
+        offset=CameraCfg.OffsetCfg(
+            pos=(0.11, 0.0, 0.05),
+            rot=(0.65328, 0.2706, -0.2706, -0.65328),
+            convention="opengl",
         ),
     )
 
@@ -297,26 +359,67 @@ class ObservationsCfg:
             func=base_mdp.joint_pos,
             params={"asset_cfg": SceneEntityCfg("robot")},
         )
-        robot_root_pos = ObsTerm(func=base_mdp.root_pos_w, params={"asset_cfg": SceneEntityCfg("robot")})
-        robot_root_rot = ObsTerm(func=base_mdp.root_quat_w, params={"asset_cfg": SceneEntityCfg("robot")})
-        object_pos = ObsTerm(func=base_mdp.root_pos_w, params={"asset_cfg": SceneEntityCfg("object")})
-        object_rot = ObsTerm(func=base_mdp.root_quat_w, params={"asset_cfg": SceneEntityCfg("object")})
+        robot_root_pos = ObsTerm(
+            func=base_mdp.root_pos_w, params={"asset_cfg": SceneEntityCfg("robot")}
+        )
+        robot_root_rot = ObsTerm(
+            func=base_mdp.root_quat_w, params={"asset_cfg": SceneEntityCfg("robot")}
+        )
+        # object_pos = ObsTerm(
+        #     func=base_mdp.root_pos_w, params={"asset_cfg": SceneEntityCfg("object")}
+        # )
+        # object_rot = ObsTerm(
+        #     func=base_mdp.root_quat_w, params={"asset_cfg": SceneEntityCfg("object")}
+        # )
         robot_links_state = ObsTerm(func=mdp.get_all_robot_link_state)
 
-        left_eef_pos = ObsTerm(func=mdp.get_eef_pos, params={"link_name": "left_hand_roll_link"})
-        left_eef_quat = ObsTerm(func=mdp.get_eef_quat, params={"link_name": "left_hand_roll_link"})
-        right_eef_pos = ObsTerm(func=mdp.get_eef_pos, params={"link_name": "right_hand_roll_link"})
-        right_eef_quat = ObsTerm(func=mdp.get_eef_quat, params={"link_name": "right_hand_roll_link"})
-
-        hand_joint_state = ObsTerm(func=mdp.get_robot_joint_state, params={"joint_names": ["R_.*", "L_.*"]})
-        head_joint_state = ObsTerm(
-            func=mdp.get_robot_joint_state,
-            params={"joint_names": ["head_pitch_joint", "head_roll_joint", "head_yaw_joint"]},
+        left_eef_pos = ObsTerm(
+            func=mdp.get_eef_pos, params={"link_name": "left_hand_roll_link"}
+        )
+        left_eef_quat = ObsTerm(
+            func=mdp.get_eef_quat, params={"link_name": "left_hand_roll_link"}
+        )
+        right_eef_pos = ObsTerm(
+            func=mdp.get_eef_pos, params={"link_name": "right_hand_roll_link"}
+        )
+        right_eef_quat = ObsTerm(
+            func=mdp.get_eef_quat, params={"link_name": "right_hand_roll_link"}
         )
 
-        object = ObsTerm(
-            func=mdp.object_obs,
-            params={"left_eef_link_name": "left_hand_roll_link", "right_eef_link_name": "right_hand_roll_link"},
+        hand_joint_state = ObsTerm(
+            func=mdp.get_robot_joint_state, params={"joint_names": ["R_.*", "L_.*"]}
+        )
+        head_joint_state = ObsTerm(
+            func=mdp.get_robot_joint_state,
+            params={
+                "joint_names": ["head_pitch_joint", "head_roll_joint", "head_yaw_joint"]
+            },
+        )
+
+        # object = ObsTerm(
+        #     func=mdp.object_obs,
+        #     params={
+        #         "left_eef_link_name": "left_hand_roll_link",
+        #         "right_eef_link_name": "right_hand_roll_link",
+        #     },
+        # )
+
+        head_camera_rgb = ObsTerm(
+            func=base_mdp.image,
+            params={
+                "sensor_cfg": SceneEntityCfg("head_camera"),
+                "data_type": "rgb",
+                "normalize": False,
+            },
+        )
+
+        head_camera_depth = ObsTerm(
+            func=base_mdp.image,
+            params={
+                "sensor_cfg": SceneEntityCfg("head_camera"),
+                "data_type": "distance_to_image_plane",
+                "normalize": True,
+            },
         )
 
         def __post_init__(self):
@@ -333,11 +436,14 @@ class TerminationsCfg:
 
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 
-    object_dropping = DoneTerm(
-        func=mdp.root_height_below_minimum, params={"minimum_height": 0.5, "asset_cfg": SceneEntityCfg("object")}
-    )
+    # object_dropping = DoneTerm(
+    #     func=mdp.root_height_below_minimum,
+    #     params={"minimum_height": 0.5, "asset_cfg": SceneEntityCfg("object")},
+    # )
 
-    success = DoneTerm(func=mdp.task_done_pick_place, params={"task_link_name": "right_hand_roll_link"})
+    # success = DoneTerm(
+    #     func=mdp.task_done_pick_place, params={"task_link_name": "right_hand_roll_link"}
+    # )
 
 
 @configclass
@@ -346,26 +452,28 @@ class EventCfg:
 
     reset_all = EventTerm(func=mdp.reset_scene_to_default, mode="reset")
 
-    reset_object = EventTerm(
-        func=mdp.reset_root_state_uniform,
-        mode="reset",
-        params={
-            "pose_range": {
-                "x": [-0.01, 0.01],
-                "y": [-0.01, 0.01],
-            },
-            "velocity_range": {},
-            "asset_cfg": SceneEntityCfg("object"),
-        },
-    )
+    # reset_object = EventTerm(
+    #     func=mdp.reset_root_state_uniform,
+    #     mode="reset",
+    #     params={
+    #         "pose_range": {
+    #             "x": [-0.01, 0.01],
+    #             "y": [-0.01, 0.01],
+    #         },
+    #         "velocity_range": {},
+    #         "asset_cfg": SceneEntityCfg("object"),
+    #     },
+    # )
 
 
 @configclass
-class AssemblyLampGR1T2EnvCfg(ManagerBasedRLEnvCfg):
+class AssemblyChairGR1T2EnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the GR1T2 environment."""
 
     # Scene settings
-    scene: ObjectTableSceneCfg = ObjectTableSceneCfg(num_envs=1, env_spacing=2.5, replicate_physics=True)
+    scene: ObjectTableSceneCfg = ObjectTableSceneCfg(
+        num_envs=1, env_spacing=2.5, replicate_physics=True
+    )
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
@@ -393,77 +501,87 @@ class AssemblyLampGR1T2EnvCfg(ManagerBasedRLEnvCfg):
     # Idle action to hold robot in default pose
     # Action format: [left arm pos (3), left arm quat (4), right arm pos (3), right arm quat (4),
     #                 left hand joint pos (11), right hand joint pos (11)]
-    idle_action = torch.tensor([
-        -0.22878,
-        0.2536,
-        1.0953,
-        0.5,
-        0.5,
-        -0.5,
-        0.5,
-        0.22878,
-        0.2536,
-        1.0953,
-        0.5,
-        0.5,
-        -0.5,
-        0.5,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-    ])
+    idle_action = torch.tensor(
+        [
+            -0.22878,
+            0.2536,
+            1.0953,
+            0.5,
+            0.5,
+            -0.5,
+            0.5,
+            0.22878,
+            0.2536,
+            1.0953,
+            0.5,
+            0.5,
+            -0.5,
+            0.5,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        ]
+    )
 
     sim: sim_utils.SimulationCfg = sim_utils.SimulationCfg(
         physics_material=sim_utils.RigidBodyMaterialCfg(
-            static_friction=.8,
+            static_friction=0.8,
             dynamic_friction=0.7,
             friction_combine_mode="multiply",
         ),
-        # physx=sim_utils.PhysxCfg(
-        #     max_position_iteration_count=192,
-        #     max_velocity_iteration_count=1,
-        #     bounce_threshold_velocity=0.2,
-        #     friction_offset_threshold=0.01,
-        #     friction_correlation_distance=0.00625,
-        #     gpu_max_rigid_contact_count=2**23,
-        #     gpu_max_rigid_patch_count=2**23,
-        #     gpu_max_num_partitions=1, 
-
-        # ),
+        physx=sim_utils.PhysxCfg(
+            solver_type=1,
+            min_position_iteration_count=96,
+            max_position_iteration_count=192,
+            max_velocity_iteration_count=1,
+            bounce_threshold_velocity=0.2,
+            friction_offset_threshold=0.01,
+            friction_correlation_distance=0.00625,
+            gpu_max_rigid_contact_count=2**23,
+            gpu_max_rigid_patch_count=2**23,
+            gpu_max_num_partitions=1,
+        ),
+        render=sim_utils.RenderCfg(enable_translucency=True),
     )
 
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 2 #6
+        self.decimation = 5  # 6
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 160  # 120Hz
-        self.sim.render_interval = 2 #6
-        self.sim.physx.enable_ccd = False #True
+        self.sim.dt = 1 / 200  # 120Hz
+        self.sim.render_interval = 2  # 6
+        self.sim.physx.enable_ccd = False  # True
+        carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)
+        carb.settings.get_settings().set_int("rtx/translucency/worldEps", 0)
 
         # Convert USD to URDF and change revolute joints to fixed
-        temp_urdf_output_path, temp_urdf_meshes_output_path = ControllerUtils.convert_usd_to_urdf(
-            self.scene.robot.spawn.usd_path, self.temp_urdf_dir, force_conversion=True
+        temp_urdf_output_path, temp_urdf_meshes_output_path = (
+            ControllerUtils.convert_usd_to_urdf(
+                self.scene.robot.spawn.usd_path,
+                self.temp_urdf_dir,
+                force_conversion=True,
+            )
         )
 
         # Set the URDF and mesh paths for the IK controller

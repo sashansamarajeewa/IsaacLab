@@ -61,7 +61,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleFront
     obstacle_front = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleFront",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.67, 1.02]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0, 0.64, 1.02]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_front/obstacle_front.usd",
             collision_props=sim_utils.CollisionPropertiesCfg(),
@@ -72,7 +72,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleLeft
     obstacle_left = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleLeft",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.48, 1.02]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.37, 0.45, 1.02]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
             collision_props=sim_utils.CollisionPropertiesCfg(),
@@ -83,7 +83,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ObstacleRight
     obstacle_right = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/ObstacleRight",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.48, 1.02]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.37, 0.45, 1.02]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/obstacle/obstacle_side/obstacle_side.usd",
             collision_props=sim_utils.CollisionPropertiesCfg(),
@@ -95,7 +95,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     drawer_box = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DrawerBox",
         init_state=RigidObjectCfg.InitialStateCfg(
-            pos=[-0.02, 0.44, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]
+            pos=[-0.02, 0.41, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]
         ),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box.usd",
@@ -108,7 +108,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # DrawerBottom
     drawer_container_bottom = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DrawerBottom",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.5, 1.085]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.47, 1.085]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom.usd",
             scale=ASSET_SCALE,
@@ -120,7 +120,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # DrawerTop
     drawer_container_top = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/DrawerTop",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.59, 1.085]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.56, 1.085]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top.usd",
             scale=ASSET_SCALE,

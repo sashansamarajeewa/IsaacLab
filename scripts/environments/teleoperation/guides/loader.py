@@ -1,7 +1,7 @@
 from typing import Optional
 from .base import BaseGuide
 from .drawer import DrawerGuide
-from .lamp import LampGuide
+from .chair import ChairGuide
 from .wedge import WedgeGuide
 from .desk import DeskGuide
 from .motor import MotorGuide
@@ -9,7 +9,7 @@ from .motor import MotorGuide
 # Map task names and --guide flag to guide classes
 _TASK_MAP = {
     "Isaac-Assembly-Drawer-GR1T2-Abs-v0": DrawerGuide,
-    "Isaac-Assembly-Lamp-GR1T2-Abs-v0": LampGuide,
+    "Isaac-Assembly-Lamp-GR1T2-Abs-v0": ChairGuide,
     "Isaac-Assembly-Wedge-GR1T2-Abs-v0": WedgeGuide,
     "Isaac-Assembly-Desk-GR1T2-Abs-v0": DeskGuide,
     "Isaac-Assembly-Motor-GR1T2-Abs-v0": MotorGuide,
@@ -17,7 +17,7 @@ _TASK_MAP = {
 
 _GUIDE_MAP = {
     "drawer": DrawerGuide,
-    "lamp": LampGuide,
+    "lamp": ChairGuide,
     "wedge": WedgeGuide,
     "hexagon": DeskGuide,
     "motor": MotorGuide,
