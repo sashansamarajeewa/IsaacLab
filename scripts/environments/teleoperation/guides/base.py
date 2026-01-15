@@ -33,7 +33,7 @@ class MaterialRegistry:
     visual_cfg = PreviewSurfaceCfg(
         diffuse_color=(0.6, 0.8, 0.1),
     )
-    
+
     # Base white material
     base_white_cfg = PreviewSurfaceCfg(
         diffuse_color=(1.0, 1.0, 1.0),
@@ -56,22 +56,33 @@ class MaterialRegistry:
     # )
 
     ghost_cfg = PreviewSurfaceCfg(
-        diffuse_color=(0.2, 0.9, 1.0),
-        roughness=0.01,
-        opacity = 0.01
+        diffuse_color=(0.2, 0.9, 1.0), roughness=0.01, opacity=0.01
     )
 
     @classmethod
+    def _ensure_preview_surface(
+        cls, stage: Usd.Stage, prim_path: str, cfg: PreviewSurfaceCfg
+    ) -> None:
+        prim = stage.GetPrimAtPath(prim_path)
+        if prim and prim.IsValid():
+            return
+        spawn_preview_surface(prim_path=prim_path, cfg=cfg)
+
+    @classmethod
+    def _ensure_rigid_material(
+        cls, stage: Usd.Stage, prim_path: str, cfg: RigidBodyMaterialCfg
+    ) -> None:
+        prim = stage.GetPrimAtPath(prim_path)
+        if prim and prim.IsValid():
+            return
+        spawn_rigid_body_material(prim_path=prim_path, cfg=cfg)
+
+    @classmethod
     def ensure_all(cls, stage: Usd.Stage) -> None:
-        # Create/update visual material
-        spawn_preview_surface(prim_path=cls.visual_path, cfg=cls.visual_cfg)
-        # Create/update base white material
-        spawn_preview_surface(prim_path=cls.base_white_path, cfg=cls.base_white_cfg)
-        # Create/update physics material
-        spawn_rigid_body_material(prim_path=cls.physics_path, cfg=cls.physics_cfg)
-        # Create/update host preview material
-        # spawn_from_mdl_file(prim_path=cls.ghost_path, cfg=cls.ghost_cfg)
-        spawn_preview_surface(prim_path=cls.ghost_path, cfg=cls.ghost_cfg)
+        cls._ensure_preview_surface(stage, cls.visual_path, cls.visual_cfg)
+        cls._ensure_preview_surface(stage, cls.base_white_path, cls.base_white_cfg)
+        cls._ensure_rigid_material(stage, cls.physics_path, cls.physics_cfg)
+        cls._ensure_preview_surface(stage, cls.ghost_path, cls.ghost_cfg)
 
 
 # Visual highlighter
@@ -79,17 +90,25 @@ class MaterialRegistry:
 
 class VisualSequenceHighlighter:
 
-    def __init__(self, stage: Usd.Stage, sequence: List[str],  highlight_mat_path: str, base_mat_path: str):
+    def __init__(
+        self,
+        stage: Usd.Stage,
+        sequence: List[str],
+        highlight_mat_path: str,
+        base_mat_path: str,
+    ):
         self._stage = stage
         self._seq = sequence[:] if sequence else []
         self._highlight_mat = highlight_mat_path
         self._base_mat = base_mat_path
         self._step = 0
         self._active_visuals_paths: list[str] = []
-        
+
     def _restore_base(self):
         for p in self._active_visuals_paths:
-            sim_utils.bind_visual_material(p, self._base_mat, stronger_than_descendants=True)
+            sim_utils.bind_visual_material(
+                p, self._base_mat, stronger_than_descendants=True
+            )
         self._active_visuals_paths = []
 
     def _unbind_all(self):
@@ -110,7 +129,9 @@ class VisualSequenceHighlighter:
             targets.append(vpath)
 
         for p in targets:
-            sim_utils.bind_visual_material(p, self._highlight_mat, stronger_than_descendants=True)
+            sim_utils.bind_visual_material(
+                p, self._highlight_mat, stronger_than_descendants=True
+            )
 
         self._active_visuals_paths = targets
 
@@ -216,6 +237,7 @@ def find_visuals_path(stage: Usd.Stage, asset_root_path: str) -> Optional[str]:
 
     return None
 
+
 def visual_targets_for_leaf_name(stage: Usd.Stage, leaf_name: str) -> list[str]:
     roots = find_asset_roots_by_leaf_name(leaf_name)
 
@@ -233,7 +255,10 @@ def visual_targets_for_leaf_name(stage: Usd.Stage, leaf_name: str) -> list[str]:
             seen.add(p)
     return uniq
 
-def bind_base_white_for_moving_parts(stage: Usd.Stage, moving_parts: Sequence[str]) -> None:
+
+def bind_base_white_for_moving_parts(
+    stage: Usd.Stage, moving_parts: Sequence[str]
+) -> None:
     MaterialRegistry.ensure_all(stage)
 
     for name in moving_parts:
@@ -243,6 +268,7 @@ def bind_base_white_for_moving_parts(stage: Usd.Stage, moving_parts: Sequence[st
                 MaterialRegistry.base_white_path,
                 stronger_than_descendants=True,
             )
+
 
 def ang_deg(q1: Gf.Quatd, q2: Gf.Quatd) -> float:
     dq = q1 * q2.GetInverse()
