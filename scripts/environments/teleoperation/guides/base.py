@@ -25,12 +25,19 @@ import re
 class MaterialRegistry:
 
     visual_path = "/World/Materials/Highlight"
+    base_white_path = "/World/Materials/BaseWhite"
     physics_path = "/World/Materials/Grasp"
     ghost_path = "/World/Materials/GhostPreview"
 
     # Visual highlighter material
     visual_cfg = PreviewSurfaceCfg(
         diffuse_color=(0.6, 0.8, 0.1),
+    )
+    
+    # Base white material
+    base_white_cfg = PreviewSurfaceCfg(
+        diffuse_color=(1.0, 1.0, 1.0),
+        roughness=1.0,
     )
 
     # Physics material
@@ -58,6 +65,8 @@ class MaterialRegistry:
     def ensure_all(cls, stage: Usd.Stage) -> None:
         # Create/update visual material
         spawn_preview_surface(prim_path=cls.visual_path, cfg=cls.visual_cfg)
+        # Create/update base white material
+        spawn_preview_surface(prim_path=cls.base_white_path, cfg=cls.base_white_cfg)
         # Create/update physics material
         spawn_rigid_body_material(prim_path=cls.physics_path, cfg=cls.physics_cfg)
         # Create/update host preview material
@@ -70,12 +79,18 @@ class MaterialRegistry:
 
 class VisualSequenceHighlighter:
 
-    def __init__(self, stage: Usd.Stage, sequence: List[str], visual_mat_path: str):
+    def __init__(self, stage: Usd.Stage, sequence: List[str],  highlight_mat_path: str, base_mat_path: str):
         self._stage = stage
         self._seq = sequence[:] if sequence else []
-        self._mat_path = visual_mat_path
+        self._highlight_mat = highlight_mat_path
+        self._base_mat = base_mat_path
         self._step = 0
         self._active_visuals_paths: list[str] = []
+        
+    def _restore_base(self):
+        for p in self._active_visuals_paths:
+            sim_utils.bind_visual_material(p, self._base_mat, stronger_than_descendants=True)
+        self._active_visuals_paths = []
 
     def _unbind_all(self):
         for p in self._active_visuals_paths:
@@ -86,32 +101,18 @@ class VisualSequenceHighlighter:
         self._active_visuals_paths = []
 
     def _bind_name(self, leaf_name: Optional[str]):
-        self._unbind_all()
+        self._restore_base()
         if not leaf_name:
             return
 
-        # resolve all asset roots for leaf across envs
-        asset_roots = find_asset_roots_by_leaf_name(leaf_name)
+        targets: list[str] = []
+        for vpath in visual_targets_for_leaf_name(self._stage, leaf_name):
+            targets.append(vpath)
 
-        # map each root to its visuals path; if missing fall back to root
-        targets = []
-        for root_path in asset_roots:
-            vpath = find_visuals_path(self._stage, root_path)
-            targets.append(vpath if vpath else root_path)
-
-        seen, uniq = set(), []
         for p in targets:
-            if p not in seen:
-                uniq.append(p)
-                seen.add(p)
+            sim_utils.bind_visual_material(p, self._highlight_mat, stronger_than_descendants=True)
 
-        # bind only on visuals
-        for p in uniq:
-            sim_utils.bind_visual_material(
-                p, self._mat_path, stronger_than_descendants=True
-            )
-
-        self._active_visuals_paths = uniq
+        self._active_visuals_paths = targets
 
     def set_sequence(self, names: List[str], start_index: int = 0):
         self._seq = names[:]
@@ -124,7 +125,7 @@ class VisualSequenceHighlighter:
         self._step += 1
         if self._step >= len(self._seq):
             self._step = len(self._seq)
-            self._unbind_all()
+            self._restore_base()
         else:
             self._bind_name(self.current_name)
 
@@ -215,6 +216,33 @@ def find_visuals_path(stage: Usd.Stage, asset_root_path: str) -> Optional[str]:
 
     return None
 
+def visual_targets_for_leaf_name(stage: Usd.Stage, leaf_name: str) -> list[str]:
+    roots = find_asset_roots_by_leaf_name(leaf_name)
+
+    targets: list[str] = []
+    for root_path in roots:
+        vpath = find_visuals_path(stage, root_path)
+        if vpath:
+            targets.append(vpath)
+
+    # unique
+    seen, uniq = set(), []
+    for p in targets:
+        if p not in seen:
+            uniq.append(p)
+            seen.add(p)
+    return uniq
+
+def bind_base_white_for_moving_parts(stage: Usd.Stage, moving_parts: Sequence[str]) -> None:
+    MaterialRegistry.ensure_all(stage)
+
+    for name in moving_parts:
+        for vpath in visual_targets_for_leaf_name(stage, name):
+            sim_utils.bind_visual_material(
+                vpath,
+                MaterialRegistry.base_white_path,
+                stronger_than_descendants=True,
+            )
 
 def ang_deg(q1: Gf.Quatd, q2: Gf.Quatd) -> float:
     dq = q1 * q2.GetInverse()
@@ -737,9 +765,12 @@ class BaseGuide:
         return physx_get_pose(p)
 
     def create_highlighter(self, stage: Usd.Stage) -> VisualSequenceHighlighter:
-        MaterialRegistry.ensure_all(stage)  # make sure materials exist
+        MaterialRegistry.ensure_all(stage)
         hl = VisualSequenceHighlighter(
-            stage, self.SEQUENCE, MaterialRegistry.visual_path
+            stage,
+            self.SEQUENCE,
+            MaterialRegistry.visual_path,
+            MaterialRegistry.base_white_path,
         )
         hl.set_sequence(self.SEQUENCE, start_index=0)
         return hl

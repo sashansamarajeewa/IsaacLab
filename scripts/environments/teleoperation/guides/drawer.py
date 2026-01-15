@@ -1,6 +1,7 @@
 from .base import (
     BaseGuide,
     ang_deg,
+    bind_base_white_for_moving_parts,
     first_descendant_with_rigid_body,
     resolve_env_scoped_path,
     spawn_ghost_preview,
@@ -124,6 +125,8 @@ class DrawerGuide(BaseGuide):
                 str(rb_prim.GetPath()) if rb_prim and rb_prim.IsValid() else root_path
             )
 
+        bind_base_white_for_moving_parts(stage, self.MOVING_PARTS)
+        
         # Cache static world poses once
         cache = UsdGeom.XformCache()
         if self._paths.get("Table"):
