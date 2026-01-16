@@ -33,7 +33,7 @@ class ChairGuide(BaseGuide):
     )
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
 
-    tol_z_dbox_t = 1.084  # distance between desk top and table origin along Z
+    tol_z_dbox_t = 1.082  # distance between desk top and table origin along Z
 
     tgt_desk_top_pos = Gf.Vec3d(0.17141205072402954, 0.4924437999725342, 1.0206135511398315)
     tgt_desk_top_quat = Gf.Quatd(

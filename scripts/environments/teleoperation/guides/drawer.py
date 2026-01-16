@@ -19,18 +19,7 @@ class DrawerGuide(BaseGuide):
     MOVING_PARTS = ("DrawerBox", "DrawerBottom", "DrawerTop")
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
 
-    # tol_x_dbox_lo = 0.133 # distance between drawer box and left obstacle origin along X
-    # tol_y_dbox_fo = 0.119 # distance between drawer box and front obstacle origin along Y
-    # tol_ang_dbox_fo = 180 # angle between drawer box and front obstacle origin
-    # tol_x_dbox_dbottom = 0.0019 # distance between drawer box and drawer bottom origin along X
-    # tol_y_dbox_dbottom = 0.0228 # distance between drawer box and drawer bottom origin along Y
-    # tol_z_dbox_dbottom = 0.0218 # distance between drawer box and drawer bottom origin along Z
-    # tol_ang_dbox_dbottom = 0.5 # angle between drawer box and drawer bottom origin
-    # tol_x_dbox_dtop = 0.0010 # distance between drawer box and drawer top origin along X
-    # tol_y_dbox_dtop = 0.0162 # distance between drawer box and drawer top origin along Y
-    # tol_z_dbox_dtop = 0.0689 # distance between drawer box and drawer top origin along Z
-    # tol_ang_dbox_dtop = 0.5 # angle between drawer box and drawer top origin
-    tol_z_dbox_t = 1.084  # distance between drawer box and table origin along Z
+    tol_z_dbox_t = 1.082  # distance between drawer box and table origin along Z
 
     tgt_box_pos = Gf.Vec3d(-0.23737475275993347, 0.5223679852485657, 1.0766514539718628)
     tgt_box_quat = Gf.Quatd(
@@ -126,7 +115,7 @@ class DrawerGuide(BaseGuide):
             )
 
         bind_base_white_for_moving_parts(stage, self.MOVING_PARTS)
-        
+
         # Cache static world poses once
         cache = UsdGeom.XformCache()
         if self._paths.get("Table"):

@@ -33,7 +33,7 @@ class DeskGuide(BaseGuide):
     )
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
 
-    tol_z_dbox_t = 1.084  # distance between desk top and table origin along Z
+    tol_z_dbox_t = 1.082  # distance between desk top and table origin along Z
 
     tgt_desk_top_pos = Gf.Vec3d(0.17141205072402954, 0.4924437999725342, 1.0206135511398315)
     tgt_desk_top_quat = Gf.Quatd(
@@ -223,11 +223,11 @@ class DeskGuide(BaseGuide):
         base_steps = [
             f"Step 1/{total}: Pick up Desk Top",
             f"Step 2/{total}: Brace Desk Top against the front and right corner obstacles",
-            f"Step 3/{total}: Insert Front Right Leg into Desk Top",
-            f"Step 4/{total}: Insert Front Left Leg into Desk Top",
-            f"Step 5/{total}: Rotate Desk Top 180 degrees",
-            f"Step 6/{total}: Insert Back Right Leg into Desk Top",
-            f"Step 7/{total}: Insert Back Left Leg into Desk Top",
+            f"Step 3/{total}: Insert Front Right Leg into Desk Top and screw clockwise until tight",
+            f"Step 4/{total}: Insert Front Left Leg into Desk Top and screw clockwise until tight",
+            f"Step 5/{total}: Rotate Desk Top 180°",
+            f"Step 6/{total}: Insert Back Right Leg into Desk Top and screw clockwise until tight",
+            f"Step 7/{total}: Insert Back Left Leg into Desk Top and screw clockwise until tight",
         ]
         base_steps.append("Assembly complete!")
         return base_steps
