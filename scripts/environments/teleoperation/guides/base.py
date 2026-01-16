@@ -36,7 +36,7 @@ class MaterialRegistry:
 
     # Base white material
     base_white_cfg = PreviewSurfaceCfg(
-        diffuse_color=(1.0, 1.0, 1.0),
+        diffuse_color=(0.9, 0.9, 0.9),
         roughness=1.0,
     )
 
@@ -476,10 +476,10 @@ class HUDManager:
         self,
         widget_cls,
         width: float = 0.6,
-        height: float = 0.8,
+        height: float = 1.0,
         resolution_scale: int = 300,
         unit_to_pixel_scale: int = 30,
-        translation: Gf.Vec3d = Gf.Vec3d(0, 0.9, 1.5),
+        translation: Gf.Vec3d = Gf.Vec3d(0, 0.9, 1.49),
         rotation_deg_xyz: Gf.Vec3d = Gf.Vec3d(90, 0, 0),
     ):
         self._widget = None
