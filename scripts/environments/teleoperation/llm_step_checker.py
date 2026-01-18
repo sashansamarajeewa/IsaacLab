@@ -257,6 +257,7 @@ class LLMStepChecker:
                     resp_json = r.json()
 
                 out_text = _extract_output_text(resp_json)
+                print(out_text)
                 if not out_text:
                     return StepDecision(
                         step_complete=False,
