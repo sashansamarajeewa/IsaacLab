@@ -339,6 +339,7 @@ def main() -> None:
                 guide.maybe_auto_advance(highlighter)
                 
                 # LLM logic (only acts on steps that have targets and are enabled)
+                print(llm_checker)
                 if llm_checker is not None:
                     idx = highlighter.step_index
                     if 0 <= idx < total_real:
