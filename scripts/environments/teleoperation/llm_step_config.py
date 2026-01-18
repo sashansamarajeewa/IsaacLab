@@ -6,7 +6,7 @@ import json
 import numpy as np
 from PIL import Image
 
-from llm_step_checker import LLMStepChecker  # the class we discussed earlier
+from llm_step_checker import LLMStepChecker
 
 
 def build_llm_checker_for_run(
@@ -24,9 +24,9 @@ def build_llm_checker_for_run(
     Steps can be disabled via config.json steps[<i>].enabled=false.
     """
     guide_folder = guide_name or "default"
-    print(guide_folder)
+    print("#####"+guide_folder)
     base_dir = Path(targets_root) / task_name / guide_folder
-    print(base_dir)
+    print(f"{base_dir}$ ********")
     if not base_dir.exists():
         return None
 
