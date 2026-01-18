@@ -25,6 +25,8 @@ def build_llm_checker_for_run(
     """
     guide_folder = guide_name or "default"
     base_dir = Path(targets_root) / task_name / guide_folder
+    print(f"{base_dir}:######")
+    print(base_dir.exists())
     if not base_dir.exists():
         return None
 
