@@ -11,6 +11,7 @@ import argparse
 from collections.abc import Callable
 
 from isaaclab.app import AppLauncher
+from scripts.environments.teleoperation.llm_step_config import build_llm_checker_for_run
 
 # add argparse arguments
 parser = argparse.ArgumentParser(
@@ -173,6 +174,14 @@ def main() -> None:
 
         base.MaterialRegistry.ensure_all(stage)
 
+    total_real = len(getattr(guide, "SEQUENCE", []))
+    llm_checker = build_llm_checker_for_run(
+    task_name=args_cli.task,
+    guide_name=args_cli.guide,
+    num_steps=total_real,
+    targets_root="targets",
+)
+    
     # Physics binder unaffected by highlight flag
     phys_binder = guide.create_physics_binder()
 
@@ -328,6 +337,21 @@ def main() -> None:
                     env.sim.render()
 
                 guide.maybe_auto_advance(highlighter)
+                
+                # LLM logic (only acts on steps that have targets and are enabled)
+                if llm_checker is not None:
+                    idx = highlighter.step_index
+                    if 0 <= idx < total_real:
+                        cam = env.scene["head_camera"]
+                        rgb = cam.data.output["rgb"][0].cpu().numpy()  # HWC uint8 (adjust if needed)
+
+                        step_key = str(idx + 1)
+                        step_text = guide.get_all_instructions()[idx]
+
+                        if llm_checker.update(step_key=step_key, step_text=step_text, current_rgb_uint8_hwc=rgb):
+                            highlighter.advance()
+                            llm_checker.reset_for_new_step()
+                            
                 guide.update_previews_for_step(highlighter)
                 if hud is not None:
                     hud.update(guide, highlighter)

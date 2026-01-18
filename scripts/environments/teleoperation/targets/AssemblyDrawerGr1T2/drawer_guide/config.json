@@ -1,0 +1,25 @@
+{
+  "model": "gpt-5.2",
+  "period_s": 1.0,
+  "consecutive_required": 2,
+  "max_image_side": 512,
+
+  "base_prompt": "Compare CURRENT vs TARGET. Decide if the step is complete. If you cannot judge due to occlusion/ambiguity, return step_complete=false and failure_mode occluded/unknown.",
+
+  "steps": {
+    "1": { "enabled": false },
+
+    "2": {
+      "enabled": true,
+      "prompt": "Brace Drawer Box: it must be seated on the table and aligned with the corner obstacles as in TARGET."
+    },
+    "3": {
+      "enabled": true,
+      "prompt": "Insert Drawer Bottom: it must be fully inserted with no visible gap; orientation matches TARGET."
+    },
+    "4": {
+      "enabled": true,
+      "prompt": "Insert Drawer Top: it must be seated and aligned; edges match TARGET."
+    }
+  }
+}
