@@ -9,7 +9,8 @@ import re
 import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor, Future
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
+import copy  # NEW
 
 import httpx
 import numpy as np
@@ -45,7 +46,6 @@ def _extract_output_text(resp_json: dict) -> str:
     """
     out_chunks: list[str] = []
     for item in resp_json.get("output", []) or []:
-        # item.type often "message"
         content = item.get("content", []) or []
         for c in content:
             if c.get("type") == "output_text":
@@ -69,14 +69,42 @@ def _safe_json_loads(text: str) -> dict:
         return json.loads(m.group(0))
 
 
+# NEW: OpenAI strict json_schema requires additionalProperties=false for object schemas.
+def _make_openai_strict_json_schema(schema: dict) -> dict:
+    """
+    Ensure additionalProperties=false on all object schemas (required by strict json_schema).
+    Also ensures 'required' includes all properties keys (safe for strict mode).
+    """
+    schema = copy.deepcopy(schema)
+
+    def visit(node: Any) -> None:
+        if isinstance(node, dict):
+            # Object schema can be expressed either by type=="object" or by having "properties"
+            if node.get("type") == "object" or "properties" in node:
+                node["additionalProperties"] = False
+
+                props = node.get("properties")
+                if isinstance(props, dict) and props:
+                    req = set(node.get("required", []))
+                    req.update(props.keys())
+                    node["required"] = list(req)
+
+            for v in node.values():
+                visit(v)
+
+        elif isinstance(node, list):
+            for v in node:
+                visit(v)
+
+    visit(schema)
+    return schema
+
+
 class LLMStepChecker:
     """
     Rate-limited, async LLM judge that compares CURRENT vs TARGET for a given step.
 
     Uses Responses API image input (input_image/image_url) and Structured Outputs via text.format.
-    Docs:
-      - Image inputs in Responses API :contentReference[oaicite:1]{index=1}
-      - Structured outputs / json_schema via text.format :contentReference[oaicite:2]{index=2}
     """
 
     def __init__(
@@ -119,7 +147,9 @@ class LLMStepChecker:
         self._target_data_url: Dict[str, str] = {}
 
     def set_target_image(self, step_key: str, target_rgb_uint8_hwc: np.ndarray) -> None:
-        self._target_data_url[step_key] = _rgb_to_data_url(target_rgb_uint8_hwc, max_side=self.max_image_side)
+        self._target_data_url[step_key] = _rgb_to_data_url(
+            target_rgb_uint8_hwc, max_side=self.max_image_side
+        )
 
     def set_target_png_path(self, step_key: str, png_path: str) -> None:
         img = Image.open(png_path).convert("RGB")
@@ -158,18 +188,21 @@ class LLMStepChecker:
                 (f"Additional step criteria: {step_hint}" if step_hint else ""),
                 (f"Global criteria: {self.base_prompt}" if self.base_prompt else ""),
                 "Decide if CURRENT matches TARGET closely enough to count the step as complete.",
+                "Return ONLY JSON that matches the requested schema.",
             ]
             if s
         )
 
         # Structured Outputs config (json_schema) OR fallback JSON mode
         if self.use_json_schema:
+            raw_schema = StepDecision.model_json_schema()
+            strict_schema = _make_openai_strict_json_schema(raw_schema)  # NEW/CHANGED
             text_cfg = {
                 "format": {
                     "type": "json_schema",
                     "name": "step_decision",
                     "strict": True,
-                    "schema": StepDecision.model_json_schema(),
+                    "schema": strict_schema,  # NEW/CHANGED
                 }
             }
         else:
@@ -204,30 +237,22 @@ class LLMStepChecker:
                     r = client.post(self.endpoint, headers=headers, json=payload)
 
                 if r.status_code >= 400:
-                    # If json_schema not supported by the chosen model, try JSON mode once.
                     err_text = r.text
                     print(f"[LLMStepChecker] HTTP {r.status_code}: {err_text}")
 
-                    if self.use_json_schema:
-                        payload["text"] = {"format": {"type": "json_object"}}
-                        with httpx.Client(timeout=self.timeout_s) as client:
-                            r2 = client.post(self.endpoint, headers=headers, json=payload)
-                        if r2.status_code >= 400:
-                            print(f"[LLMStepChecker] Fallback HTTP {r2.status_code}: {r2.text}")
-                            return StepDecision(
-                                step_complete=False,
-                                confidence=0.0,
-                                failure_mode="unknown",
-                                reason=f"http_error:{r2.status_code}",
-                            )
-                        resp_json = r2.json()
-                    else:
+                    # Try JSON mode once if strict schema fails for any reason
+                    payload["text"] = {"format": {"type": "json_object"}}
+                    with httpx.Client(timeout=self.timeout_s) as client:
+                        r2 = client.post(self.endpoint, headers=headers, json=payload)
+                    if r2.status_code >= 400:
+                        print(f"[LLMStepChecker] Fallback HTTP {r2.status_code}: {r2.text}")
                         return StepDecision(
                             step_complete=False,
                             confidence=0.0,
                             failure_mode="unknown",
-                            reason=f"http_error:{r.status_code}",
+                            reason=f"http_error:{r2.status_code}",
                         )
+                    resp_json = r2.json()
                 else:
                     resp_json = r.json()
 
@@ -263,9 +288,7 @@ class LLMStepChecker:
         current_rgb_uint8_hwc: np.ndarray,
         min_confidence: float = 0.75,
     ) -> bool:
-        """
-        Non-blocking. Returns True when you should advance.
-        """
+        """Non-blocking. Returns True when you should advance."""
         if step_key not in self._target_data_url:
             return False
         if not self._is_step_enabled(step_key):
@@ -273,7 +296,6 @@ class LLMStepChecker:
 
         now = time.monotonic()
 
-        # Consume finished request
         if self._inflight is not None and self._inflight.done():
             dec = self._inflight.result()
             self._inflight = None
@@ -285,7 +307,6 @@ class LLMStepChecker:
             self._streak = (self._streak + 1) if ok else 0
             return self._streak >= self.k
 
-        # Rate limit and only one inflight
         if self._inflight is None and (now - self._t_last) >= self.period_s:
             self._t_last = now
             cur_url = _rgb_to_data_url(current_rgb_uint8_hwc, max_side=self.max_image_side)
