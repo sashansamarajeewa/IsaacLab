@@ -25,8 +25,6 @@ def build_llm_checker_for_run(
     """
     guide_folder = guide_name or "default"
     base_dir = Path(targets_root) / task_name / guide_folder
-    print(f"{base_dir}:######")
-    print(base_dir.exists())
     if not base_dir.exists():
         return None
 
@@ -63,8 +61,6 @@ def build_llm_checker_for_run(
         enabled_steps=enabled_steps,
     )
     
-    print(llm)
-
     found_any = False
     for i in range(1, num_steps + 1):
         step_key = str(i)
