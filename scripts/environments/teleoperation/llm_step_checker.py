@@ -3,13 +3,16 @@ from __future__ import annotations
 
 import base64
 import io
+import json
+import os
+import re
 import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor, Future
-from typing import Optional, Dict, Literal
+from typing import Optional, Dict
 
+import httpx
 import numpy as np
-from openai import OpenAI
 from pydantic import BaseModel, Field
 from PIL import Image
 
@@ -17,11 +20,12 @@ from PIL import Image
 class StepDecision(BaseModel):
     step_complete: bool
     confidence: float = Field(ge=0.0, le=1.0)
-    failure_mode: Literal["none", "position", "orientation", "occluded", "unknown"] = "unknown"
-    reason: str = ""
+    failure_mode: str  # "none" | "position" | "orientation" | "occluded" | "unknown"
+    reason: str
 
 
 def _rgb_to_data_url(rgb_uint8_hwc: np.ndarray, max_side: int = 512) -> str:
+    """Encode uint8 RGB image to PNG data URL. (Responses API accepts base64 data URLs.)"""
     img = Image.fromarray(rgb_uint8_hwc.astype(np.uint8), mode="RGB")
     w, h = img.size
     scale = min(1.0, float(max_side) / max(w, h))
@@ -34,29 +38,45 @@ def _rgb_to_data_url(rgb_uint8_hwc: np.ndarray, max_side: int = 512) -> str:
     return f"data:image/png;base64,{b64}"
 
 
-def _pydantic_schema(model_cls: type[BaseModel]) -> dict:
-    # pydantic v2
-    if hasattr(model_cls, "model_json_schema"):
-        return model_cls.model_json_schema()  # type: ignore[attr-defined]
-    # pydantic v1
-    return model_cls.schema()  # type: ignore[attr-defined]
+def _extract_output_text(resp_json: dict) -> str:
+    """
+    Responses API returns output items; text is typically inside:
+      output[*].content[*] where type == 'output_text'
+    """
+    out_chunks: list[str] = []
+    for item in resp_json.get("output", []) or []:
+        # item.type often "message"
+        content = item.get("content", []) or []
+        for c in content:
+            if c.get("type") == "output_text":
+                t = c.get("text")
+                if isinstance(t, str):
+                    out_chunks.append(t)
+    return "\n".join(out_chunks).strip()
 
 
-def _pydantic_parse_json(model_cls: type[BaseModel], s: str) -> BaseModel:
-    s = s.strip()
-    # pydantic v2
-    if hasattr(model_cls, "model_validate_json"):
-        return model_cls.model_validate_json(s)  # type: ignore[attr-defined]
-    # pydantic v1
-    return model_cls.parse_raw(s)  # type: ignore[attr-defined]
+def _safe_json_loads(text: str) -> dict:
+    """
+    Try strict JSON. If model wraps JSON in text, extract first {...} block.
+    (Structured Outputs should already be strict, but keep a guard.)
+    """
+    try:
+        return json.loads(text)
+    except Exception:
+        m = re.search(r"\{.*\}", text, flags=re.DOTALL)
+        if not m:
+            raise
+        return json.loads(m.group(0))
 
 
 class LLMStepChecker:
     """
     Rate-limited, async LLM judge that compares CURRENT vs TARGET for a given step.
 
-    Uses Responses API + Structured Outputs via `text.format` (json_schema). :contentReference[oaicite:2]{index=2}
-    This avoids `responses.parse(...)` helper issues (like your Omit serialization error).
+    Uses Responses API image input (input_image/image_url) and Structured Outputs via text.format.
+    Docs:
+      - Image inputs in Responses API :contentReference[oaicite:1]{index=1}
+      - Structured outputs / json_schema via text.format :contentReference[oaicite:2]{index=2}
     """
 
     def __init__(
@@ -69,39 +89,37 @@ class LLMStepChecker:
         base_prompt: str = "",
         step_prompts: Optional[Dict[str, str]] = None,
         enabled_steps: Optional[Dict[str, bool]] = None,
+        api_key: Optional[str] = None,
+        endpoint: str = "https://api.openai.com/v1/responses",
+        timeout_s: float = 30.0,
+        use_json_schema: bool = True,
     ) -> None:
         self.model = model
         self.period_s = float(period_s)
         self.k = int(consecutive_required)
         self.max_image_side = int(max_image_side)
-
         self.base_prompt = base_prompt.strip()
         self.step_prompts = step_prompts or {}
         self.enabled_steps = enabled_steps or {}
+
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
+        if not self.api_key:
+            raise RuntimeError("OPENAI_API_KEY is not set in the environment (or passed to LLMStepChecker).")
+
+        self.endpoint = endpoint
+        self.timeout_s = float(timeout_s)
+        self.use_json_schema = bool(use_json_schema)
 
         self._t_last = 0.0
         self._streak = 0
         self._executor = ThreadPoolExecutor(max_workers=1)
         self._inflight: Optional[Future[StepDecision]] = None
 
-        # step_key -> target image data URL
+        # step_key -> data URL
         self._target_data_url: Dict[str, str] = {}
 
-        # Build JSON schema once
-        schema = _pydantic_schema(StepDecision)
-        self._text_format = {
-            "format": {
-                "type": "json_schema",
-                "name": "step_decision",
-                "strict": True,
-                "schema": schema,
-            }
-        }
-
     def set_target_image(self, step_key: str, target_rgb_uint8_hwc: np.ndarray) -> None:
-        self._target_data_url[step_key] = _rgb_to_data_url(
-            target_rgb_uint8_hwc, max_side=self.max_image_side
-        )
+        self._target_data_url[step_key] = _rgb_to_data_url(target_rgb_uint8_hwc, max_side=self.max_image_side)
 
     def set_target_png_path(self, step_key: str, png_path: str) -> None:
         img = Image.open(png_path).convert("RGB")
@@ -132,43 +150,89 @@ class LLMStepChecker:
         )
 
         step_hint = self.step_prompts.get(step_key, "").strip()
+
         user_text = "\n".join(
             s
             for s in [
                 f"Step label: {step_text}",
                 (f"Additional step criteria: {step_hint}" if step_hint else ""),
                 (f"Global criteria: {self.base_prompt}" if self.base_prompt else ""),
-                "Return ONLY a JSON object that matches the provided schema.",
+                "Decide if CURRENT matches TARGET closely enough to count the step as complete.",
             ]
             if s
         )
 
+        # Structured Outputs config (json_schema) OR fallback JSON mode
+        if self.use_json_schema:
+            text_cfg = {
+                "format": {
+                    "type": "json_schema",
+                    "name": "step_decision",
+                    "strict": True,
+                    "schema": StepDecision.model_json_schema(),
+                }
+            }
+        else:
+            text_cfg = {"format": {"type": "json_object"}}
+
+        payload = {
+            "model": self.model,
+            "input": [
+                {"role": "system", "content": system},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "input_text", "text": user_text},
+                        {"type": "input_text", "text": "TARGET reference:"},
+                        {"type": "input_image", "image_url": target_url},
+                        {"type": "input_text", "text": "CURRENT frame:"},
+                        {"type": "input_image", "image_url": current_url},
+                    ],
+                },
+            ],
+            "text": text_cfg,
+        }
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
         def _call() -> StepDecision:
             try:
-                client = OpenAI()
+                with httpx.Client(timeout=self.timeout_s) as client:
+                    r = client.post(self.endpoint, headers=headers, json=payload)
 
-                resp = client.responses.create(
-                    model=self.model,
-                    input=[
-                        {"role": "system", "content": system},
-                        {
-                            "role": "user",
-                            "content": [
-                                {"type": "input_text", "text": user_text},
-                                {"type": "input_text", "text": "TARGET reference:"},
-                                {"type": "input_image", "image_url": target_url},
-                                {"type": "input_text", "text": "CURRENT frame:"},
-                                {"type": "input_image", "image_url": current_url},
-                            ],
-                        },
-                    ],
-                    text=self._text_format,
-                    # If your SDK supports it, this helps consistency:
-                    temperature=0,
-                )
+                if r.status_code >= 400:
+                    # If json_schema not supported by the chosen model, try JSON mode once.
+                    err_text = r.text
+                    print(f"[LLMStepChecker] HTTP {r.status_code}: {err_text}")
 
-                json_text = (resp.output_text or "").strip()
-                if not json_text:
+                    if self.use_json_schema:
+                        payload["text"] = {"format": {"type": "json_object"}}
+                        with httpx.Client(timeout=self.timeout_s) as client:
+                            r2 = client.post(self.endpoint, headers=headers, json=payload)
+                        if r2.status_code >= 400:
+                            print(f"[LLMStepChecker] Fallback HTTP {r2.status_code}: {r2.text}")
+                            return StepDecision(
+                                step_complete=False,
+                                confidence=0.0,
+                                failure_mode="unknown",
+                                reason=f"http_error:{r2.status_code}",
+                            )
+                        resp_json = r2.json()
+                    else:
+                        return StepDecision(
+                            step_complete=False,
+                            confidence=0.0,
+                            failure_mode="unknown",
+                            reason=f"http_error:{r.status_code}",
+                        )
+                else:
+                    resp_json = r.json()
+
+                out_text = _extract_output_text(resp_json)
+                if not out_text:
                     return StepDecision(
                         step_complete=False,
                         confidence=0.0,
@@ -176,8 +240,8 @@ class LLMStepChecker:
                         reason="empty_output_text",
                     )
 
-                dec = _pydantic_parse_json(StepDecision, json_text)
-                return dec  # type: ignore[return-value]
+                data = _safe_json_loads(out_text)
+                return StepDecision.model_validate(data)
 
             except Exception as e:
                 print("\n[LLMStepChecker] Exception inside _call():", repr(e))
@@ -194,7 +258,7 @@ class LLMStepChecker:
     def update(
         self,
         *,
-        step_key: str,
+        step_key: str,  # "1", "2", ...
         step_text: str,
         current_rgb_uint8_hwc: np.ndarray,
         min_confidence: float = 0.75,
