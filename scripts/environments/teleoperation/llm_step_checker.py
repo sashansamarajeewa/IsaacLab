@@ -160,6 +160,7 @@ class LLMStepChecker:
         if self._inflight is not None and self._inflight.done():
             try:
                 dec = self._inflight.result()
+                print(dec)
             except Exception:
                 dec = StepDecision(
                     step_complete=False,
@@ -168,7 +169,6 @@ class LLMStepChecker:
                     reason="request_failed",
                 )
             self._inflight = None
-            print(dec)
 
             ok = (
                 bool(dec.step_complete)
