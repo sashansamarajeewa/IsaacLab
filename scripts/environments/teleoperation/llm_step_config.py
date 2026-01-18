@@ -10,7 +10,6 @@ from llm_step_checker import LLMStepChecker  # the class we discussed earlier
 
 
 def build_llm_checker_for_run(
-    *,
     task_name: str,
     guide_name: Optional[str],
     num_steps: int,
@@ -25,6 +24,7 @@ def build_llm_checker_for_run(
     Steps can be disabled via config.json steps[<i>].enabled=false.
     """
     guide_folder = guide_name or "default"
+    print(guide_folder)
     base_dir = Path(targets_root) / task_name / guide_folder
     print(base_dir)
     if not base_dir.exists():
