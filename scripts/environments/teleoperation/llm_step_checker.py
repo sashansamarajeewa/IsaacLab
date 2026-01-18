@@ -114,7 +114,6 @@ class LLMStepChecker:
                 "Return your decision using the JSON schema only.",
             ] if s
         )
-        print(user_text)
 
         def _call() -> StepDecision:
             resp = self.client.responses.parse(
@@ -134,6 +133,7 @@ class LLMStepChecker:
                 ],
                 text_format=StepDecision,
             )
+            print(resp.output_parsed)
             return resp.output_parsed  # type: ignore
 
         return self._executor.submit(_call)
