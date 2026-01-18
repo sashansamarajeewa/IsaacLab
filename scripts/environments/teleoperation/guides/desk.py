@@ -6,6 +6,7 @@ from .base import (
     resolve_env_scoped_path,
     spawn_ghost_preview,
     MaterialRegistry,
+    update_ghost_preview_pose,
 )
 from pxr import UsdGeom, Usd, Gf
 from typing import List, Optional, Tuple
@@ -22,55 +23,71 @@ class DeskGuide(BaseGuide):
         "FrontLeftLeg",
         "DeskTop",
         "BackRightLeg",
-        "BackLeftLeg"
+        "BackLeftLeg",
     ]
     MOVING_PARTS = (
         "DeskTop",
         "FrontRightLeg",
         "FrontLeftLeg",
         "BackRightLeg",
-        "BackLeftLeg"
+        "BackLeftLeg",
     )
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
 
     tol_z_dbox_t = 1.082  # distance between desk top and table origin along Z
 
-    tgt_desk_top_pos = Gf.Vec3d(0.17141205072402954, 0.4924437999725342, 1.0206135511398315)
+    tgt_desk_top_pos = Gf.Vec3d(
+        0.17141205072402954, 0.4924437999725342, 1.0206135511398315
+    )
     tgt_desk_top_quat = Gf.Quatd(
         2.1194635337451473e-05,
         Gf.Vec3d(2.127042898791842e-05, -0.7071068286895752, -0.7071068286895752),
     )
-    tgt_front_right_leg_pos = Gf.Vec3d(0.3075884282588959, 0.4075841009616852, 1.1332392692565918)
+    tgt_front_right_leg_pos = Gf.Vec3d(
+        0.3075884282588959, 0.4075841009616852, 1.1332392692565918
+    )
     tgt_front_right_leg_quat = Gf.Quatd(
         0.7070425748825073,
         Gf.Vec3d(0.7070440649986267, 0.009473255835473537, 0.009473560377955437),
     )
-    tgt_front_left_leg_pos = Gf.Vec3d(0.03558668866753578, 0.40764927864074707, 1.1332330703735352)
+    tgt_front_left_leg_pos = Gf.Vec3d(
+        0.03558668866753578, 0.40764927864074707, 1.1332330703735352
+    )
     tgt_front_left_leg_quat = Gf.Quatd(
         0.7070895433425903,
         Gf.Vec3d(0.7070915699005127, 0.0047986614517867565, 0.0047972965985536575),
     )
-    tgt_desk_top_rot_pos = Gf.Vec3d(0.17150913178920746, 0.49246513843536377, 1.020613670349121)
+    tgt_desk_top_rot_pos = Gf.Vec3d(
+        0.17150913178920746, 0.49246513843536377, 1.020613670349121
+    )
     tgt_desk_top_rot_quat = Gf.Quatd(
         0.7071067690849304,
         Gf.Vec3d(0.7071068286895752, -8.306070230901241e-05, -8.306949166581035e-05),
     )
-    tgt_front_right_leg_rot_pos = Gf.Vec3d(0.3075884282588959, 0.4075841009616852, 1.1332392692565918)
+    tgt_front_right_leg_rot_pos = Gf.Vec3d(
+        0.03558668866753578, 0.40764927864074707, 1.1332330703735352
+    )
     tgt_front_right_leg_rot_quat = Gf.Quatd(
         0.7070425748825073,
         Gf.Vec3d(0.7070440649986267, 0.009473255835473537, 0.009473560377955437),
     )
-    tgt_front_left_leg_rot_pos = Gf.Vec3d(0.03558668866753578, 0.40764927864074707, 1.1332330703735352)
+    tgt_front_left_leg_rot_pos = Gf.Vec3d(
+        0.3075884282588959, 0.4075841009616852, 1.1332392692565918
+    )
     tgt_front_left_leg_rot_quat = Gf.Quatd(
         0.7070895433425903,
         Gf.Vec3d(0.7070915699005127, 0.0047986614517867565, 0.0047972965985536575),
     )
-    tgt_back_right_leg_pos = Gf.Vec3d(0.30747711658477783, 0.4074394404888153, 1.1332495212554932)
+    tgt_back_right_leg_pos = Gf.Vec3d(
+        0.30747711658477783, 0.4074394404888153, 1.1332495212554932
+    )
     tgt_back_right_leg_quat = Gf.Quatd(
         0.005497234873473644,
         Gf.Vec3d(0.005489543080329895, 0.7070087790489197, 0.7071621417999268),
     )
-    tgt_back_left_leg_pos = Gf.Vec3d(0.0355372354388237, 0.4073306620121002, 1.1321991682052612)
+    tgt_back_left_leg_pos = Gf.Vec3d(
+        0.0355372354388237, 0.4073306620121002, 1.1321991682052612
+    )
     tgt_back_left_leg_quat = Gf.Quatd(
         0.0013194879284128547,
         Gf.Vec3d(0.0014797300100326538, 0.7067678570747375, 0.7074429392814636),
@@ -167,7 +184,7 @@ class DeskGuide(BaseGuide):
             self._paths[name] = (
                 str(rb_prim.GetPath()) if rb_prim and rb_prim.IsValid() else root_path
             )
-            
+
         bind_base_white_for_moving_parts(stage, self.MOVING_PARTS)
 
         # Cache static world poses once
@@ -199,20 +216,34 @@ class DeskGuide(BaseGuide):
         ):
 
             # target DeskTop braced in corner
-            self._target_poses["DeskTop"] = (self.tgt_desk_top_pos, self.tgt_desk_top_quat)
+            self._target_poses["DeskTop"] = (
+                self.tgt_desk_top_pos,
+                self.tgt_desk_top_quat,
+            )
 
             # target FrontRightLeg inserted to DeskTop
-            self._target_poses["FrontRightLeg"] = (self.tgt_front_right_leg_pos, self.tgt_front_right_leg_quat)
+            self._target_poses["FrontRightLeg"] = (
+                self.tgt_front_right_leg_pos,
+                self.tgt_front_right_leg_quat,
+            )
 
             # target FrontLeftLeg inserted to DeskTop
-            self._target_poses["FrontLeftLeg"] = (self.tgt_front_left_leg_pos, self.tgt_front_left_leg_quat)
-            
+            self._target_poses["FrontLeftLeg"] = (
+                self.tgt_front_left_leg_pos,
+                self.tgt_front_left_leg_quat,
+            )
+
             # target BackRightLeg inserted to DeskTop
-            self._target_poses["BackRightLeg"] = (self.tgt_back_right_leg_pos, self.tgt_back_right_leg_quat)
+            self._target_poses["BackRightLeg"] = (
+                self.tgt_back_right_leg_pos,
+                self.tgt_back_right_leg_quat,
+            )
 
             # target BackLeftLeg inserted to DeskTop
-            self._target_poses["BackLeftLeg"] = (self.tgt_back_left_leg_pos, self.tgt_back_left_leg_quat)
-
+            self._target_poses["BackLeftLeg"] = (
+                self.tgt_back_left_leg_pos,
+                self.tgt_back_left_leg_quat,
+            )
 
         # --------- Spawn ghosts at target poses ---------
         stage = self._stage
@@ -262,7 +293,7 @@ class DeskGuide(BaseGuide):
             return False
         box_pos, _ = box_pose
         return (box_pos[2] - self._static_table_pos[2]) >= self.tol_z_dbox_t
-        #return True
+        # return True
 
     def _check_braced_desk_top(self) -> bool:
         tgt = self._target_poses.get("DeskTop")
@@ -276,7 +307,7 @@ class DeskGuide(BaseGuide):
         ang_err = ang_deg(live_quat, tgt_quat)
 
         return pos_err <= 0.01 and ang_err <= 3.5
-        #return True
+        # return True
 
     def _check_front_right_leg_insert(self) -> bool:
         tgt = self._target_poses.get("FrontRightLeg")
@@ -290,7 +321,7 @@ class DeskGuide(BaseGuide):
         ang_err = ang_deg(live_quat, tgt_quat)
 
         return pos_err <= 0.01 and ang_err <= 3.5
-        #return True
+        # return True
 
     def _check_front_left_leg_insert(self) -> bool:
         tgt = self._target_poses.get("FrontLeftLeg")
@@ -303,13 +334,28 @@ class DeskGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        result = (pos_err <= 0.01 and ang_err <= 3.5)
-        if(result):
-            self._target_poses["DeskTop"] = (self.tgt_desk_top_rot_pos, self.tgt_desk_top_rot_quat)
+        result = pos_err <= 0.01 and ang_err <= 3.5
+        if result:
+            self._target_poses["DeskTop"] = (
+                self.tgt_desk_top_rot_pos,
+                self.tgt_desk_top_rot_quat,
+            )
+            if (
+                self._stage
+                and self._asset_roots.get("DeskTop")
+                and self._ghost_paths_by_name.get("DeskTop")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["DeskTop"],
+                    self._ghost_paths_by_name["DeskTop"],
+                    self.tgt_desk_top_rot_pos,
+                    self.tgt_desk_top_rot_quat,
+                )
 
         return result
-        #return True
-    
+        # return True
+
     def _check_desk_top_rotation(self) -> bool:
         tgt = self._target_poses.get("DeskTop")
         live = self.get_live_part_pose("DeskTop")
@@ -322,12 +368,44 @@ class DeskGuide(BaseGuide):
         ang_err = ang_deg(live_quat, tgt_quat)
 
         result = pos_err <= 0.01 and ang_err <= 3.5
-        if(result):
-            self._target_poses["FrontRightLeg"] = (self.tgt_front_right_leg_rot_pos, self.tgt_front_right_leg_rot_quat)
-            self._target_poses["FrontLeftLeg"] = (self.tgt_front_left_leg_rot_pos, self.tgt_front_left_leg_rot_quat)
+        if result:
+            self._target_poses["FrontRightLeg"] = (
+                self.tgt_front_right_leg_rot_pos,
+                self.tgt_front_right_leg_rot_quat,
+            )
+            self._target_poses["FrontLeftLeg"] = (
+                self.tgt_front_left_leg_rot_pos,
+                self.tgt_front_left_leg_rot_quat,
+            )
+
+            if (
+                self._stage
+                and self._asset_roots.get("FrontRightLeg")
+                and self._ghost_paths_by_name.get("FrontRightLeg")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["FrontRightLeg"],
+                    self._ghost_paths_by_name["FrontRightLeg"],
+                    self.tgt_front_right_leg_rot_pos,
+                    self.tgt_front_right_leg_rot_quat,
+                )
+
+            if (
+                self._stage
+                and self._asset_roots.get("FrontLeftLeg")
+                and self._ghost_paths_by_name.get("FrontLeftLeg")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["FrontLeftLeg"],
+                    self._ghost_paths_by_name["FrontLeftLeg"],
+                    self.tgt_front_left_leg_rot_pos,
+                    self.tgt_front_left_leg_rot_quat,
+                )
 
         return result
-    
+
     def _check_back_right_leg_insert(self) -> bool:
         tgt = self._target_poses.get("BackRightLeg")
         live = self.get_live_part_pose("BackRightLeg")
@@ -340,7 +418,7 @@ class DeskGuide(BaseGuide):
         ang_err = ang_deg(live_quat, tgt_quat)
 
         return pos_err <= 0.01 and ang_err <= 3.5
-        #return True
+        # return True
 
     def _check_back_left_leg_insert(self) -> bool:
         print("#####################")
@@ -356,7 +434,7 @@ class DeskGuide(BaseGuide):
         ang_err = ang_deg(live_quat, tgt_quat)
 
         return pos_err <= 0.01 and ang_err <= 3.5
-        #return True
+        # return True
 
     def is_final_assembly_valid(self) -> bool:
         return (
@@ -371,9 +449,7 @@ class DeskGuide(BaseGuide):
         issues: List[Tuple[str, str]] = []
 
         if not self._check_desk_top_rotation():
-            issues.append(
-                ("DeskTop", "Desk Top is not aligned in the corner (Step 2)")
-            )
+            issues.append(("DeskTop", "Desk Top is not aligned in the corner (Step 2)"))
         if not self._check_front_right_leg_insert():
             issues.append(("FrontRightLeg", "Front Right Leg is not aligned (Step 3)"))
         if not self._check_front_left_leg_insert():

@@ -25,6 +25,7 @@
 **/*.sif
 docker/cluster/exports/
 docker/.container.cfg
+docker/.env.secrets
 
 # IDE
 **/.idea/

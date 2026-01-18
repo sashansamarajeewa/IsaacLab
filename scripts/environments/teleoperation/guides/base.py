@@ -393,6 +393,41 @@ def spawn_ghost_preview(
     return ghost_root_path
 
 
+def update_ghost_preview_pose(
+    stage: Usd.Stage,
+    source_root_path: Optional[str],
+    ghost_root_path: Optional[str],
+    target_pos: Gf.Vec3d,
+    target_rot: Gf.Quatd,
+) -> None:
+    if stage is None:
+        return
+    prim = stage.GetPrimAtPath(ghost_root_path)
+    if not prim or not prim.IsValid():
+        return
+
+    if source_root_path is not None:
+        scale = get_xform_scale(stage, source_root_path)
+
+    xformable = UsdGeom.Xformable(prim)
+
+    # Reuse an existing TransformOp
+    ops = xformable.GetOrderedXformOps()
+    op = ops[0] if ops else None
+    if op is None or op.GetOpType() != UsdGeom.XformOp.TypeTransform:
+        xformable.ClearXformOpOrder()
+        op = xformable.AddTransformOp()
+
+    sM = Gf.Matrix4d(1.0)
+    sM.SetScale(scale)
+    rM = Gf.Matrix4d(1.0)
+    rM.SetRotate(target_rot)
+    tM = Gf.Matrix4d(1.0)
+    tM.SetTranslate(target_pos)
+
+    op.Set(sM * rM * tM)
+
+
 def isaac_world_to_xr_ui(pos_xyz):
     x = float(pos_xyz[0])  # left/right
     y = float(pos_xyz[1])  # forward
@@ -590,26 +625,6 @@ class HUDManager:
         if hasattr(self._widget, "set_steps"):
             self._widget.set_steps(wrapped_lines, active_idx)
 
-    # def show(self):
-    #     self._widget_component.visible = True
-
-    # def hide(self):
-    #     self._widget_component.visible = False
-
-    # def destroy(self):
-    #     try:
-    #         self.hide()
-    #     except Exception:
-    #         pass
-    #     self._widget = None
-    #     try:
-    #         if hasattr(self._ui_container, "destroy"):
-    #             self._ui_container.destroy()
-    #     except Exception:
-    #         pass
-    #     self._ui_container = None
-    #     self._widget_component = None
-
 
 # NameTag Widget
 
@@ -748,20 +763,6 @@ class NameTagManager:
 
         # Update position every frame
         self._ui_container.manipulator.translation = isaac_world_to_xr_ui(pos_above)  # type: ignore
-
-    # def destroy(self):
-    #     try:
-    #         self.hide()
-    #     except Exception:
-    #         pass
-    #     self._widget = None
-    #     try:
-    #         if hasattr(self._ui_container, "destroy"):
-    #             self._ui_container.destroy()
-    #     except Exception:
-    #         pass
-    #     self._ui_container = None
-    #     self._widget_component = None
 
 
 # Base guide

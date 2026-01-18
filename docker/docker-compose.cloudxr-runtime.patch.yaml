@@ -36,6 +36,7 @@ services:
     environment:
       - XDG_RUNTIME_DIR=/openxr/run
       - XR_RUNTIME_JSON=/openxr/share/openxr/1/openxr_cloudxr.json
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - openxr-volume:/openxr:rw
     depends_on:
