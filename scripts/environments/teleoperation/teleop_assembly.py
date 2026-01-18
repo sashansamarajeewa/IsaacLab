@@ -11,7 +11,7 @@ import argparse
 from collections.abc import Callable
 
 from isaaclab.app import AppLauncher
-from scripts.environments.teleoperation.llm_step_config import build_llm_checker_for_run
+from llm_step_config import build_llm_checker_for_run
 
 # add argparse arguments
 parser = argparse.ArgumentParser(
