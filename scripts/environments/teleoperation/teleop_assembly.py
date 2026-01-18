@@ -9,6 +9,7 @@
 
 import argparse
 from collections.abc import Callable
+from pathlib import Path
 
 from isaaclab.app import AppLauncher
 from llm_step_config import build_llm_checker_for_run
@@ -175,11 +176,13 @@ def main() -> None:
         base.MaterialRegistry.ensure_all(stage)
 
     total_real = len(getattr(guide, "SEQUENCE", []))
+    targets_root = str(Path(__file__).resolve().parent / "targets")
+    print(targets_root)
     llm_checker = build_llm_checker_for_run(
     task_name=args_cli.task,
     guide_name=args_cli.guide,
     num_steps=total_real,
-    targets_root="targets",
+    targets_root=targets_root,
 )
     
     # Physics binder unaffected by highlight flag
