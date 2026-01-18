@@ -6,27 +6,27 @@ import io
 import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor, Future
-from typing import Optional, Dict
+from typing import Optional, Dict, Literal
 
 import numpy as np
-from pydantic import BaseModel
 from openai import OpenAI
+from pydantic import BaseModel, Field
 from PIL import Image
 
 
 class StepDecision(BaseModel):
     step_complete: bool
-    confidence: float
-    failure_mode: str
-    reason: str
+    confidence: float = Field(ge=0.0, le=1.0)
+    failure_mode: Literal["none", "position", "orientation", "occluded", "unknown"] = "unknown"
+    reason: str = ""
 
 
 def _rgb_to_data_url(rgb_uint8_hwc: np.ndarray, max_side: int = 512) -> str:
-    img = Image.fromarray(rgb_uint8_hwc, mode="RGB")
+    img = Image.fromarray(rgb_uint8_hwc.astype(np.uint8), mode="RGB")
     w, h = img.size
     scale = min(1.0, float(max_side) / max(w, h))
     if scale < 1.0:
-        img = img.resize((int(w * scale), int(h * scale)))
+        img = img.resize((max(1, int(w * scale)), max(1, int(h * scale))))
 
     buf = io.BytesIO()
     img.save(buf, format="PNG")
@@ -34,8 +34,30 @@ def _rgb_to_data_url(rgb_uint8_hwc: np.ndarray, max_side: int = 512) -> str:
     return f"data:image/png;base64,{b64}"
 
 
+def _pydantic_schema(model_cls: type[BaseModel]) -> dict:
+    # pydantic v2
+    if hasattr(model_cls, "model_json_schema"):
+        return model_cls.model_json_schema()  # type: ignore[attr-defined]
+    # pydantic v1
+    return model_cls.schema()  # type: ignore[attr-defined]
+
+
+def _pydantic_parse_json(model_cls: type[BaseModel], s: str) -> BaseModel:
+    s = s.strip()
+    # pydantic v2
+    if hasattr(model_cls, "model_validate_json"):
+        return model_cls.model_validate_json(s)  # type: ignore[attr-defined]
+    # pydantic v1
+    return model_cls.parse_raw(s)  # type: ignore[attr-defined]
+
+
 class LLMStepChecker:
-    """Rate-limited, async LLM judge that compares CURRENT vs TARGET for a given step index."""
+    """
+    Rate-limited, async LLM judge that compares CURRENT vs TARGET for a given step.
+
+    Uses Responses API + Structured Outputs via `text.format` (json_schema). :contentReference[oaicite:2]{index=2}
+    This avoids `responses.parse(...)` helper issues (like your Omit serialization error).
+    """
 
     def __init__(
         self,
@@ -62,8 +84,19 @@ class LLMStepChecker:
         self._executor = ThreadPoolExecutor(max_workers=1)
         self._inflight: Optional[Future[StepDecision]] = None
 
-        # step_key -> data URL
+        # step_key -> target image data URL
         self._target_data_url: Dict[str, str] = {}
+
+        # Build JSON schema once
+        schema = _pydantic_schema(StepDecision)
+        self._text_format = {
+            "format": {
+                "type": "json_schema",
+                "name": "step_decision",
+                "strict": True,
+                "schema": schema,
+            }
+        }
 
     def set_target_image(self, step_key: str, target_rgb_uint8_hwc: np.ndarray) -> None:
         self._target_data_url[step_key] = _rgb_to_data_url(
@@ -105,18 +138,16 @@ class LLMStepChecker:
                 f"Step label: {step_text}",
                 (f"Additional step criteria: {step_hint}" if step_hint else ""),
                 (f"Global criteria: {self.base_prompt}" if self.base_prompt else ""),
-                "Output JSON only with keys: step_complete (bool), confidence (0..1), failure_mode, reason.",
-                "Allowed failure_mode: none, position, orientation, occluded, unknown.",
+                "Return ONLY a JSON object that matches the provided schema.",
             ]
             if s
         )
 
         def _call() -> StepDecision:
             try:
-                # Create client inside thread (safer)
                 client = OpenAI()
 
-                resp = client.responses.parse(
+                resp = client.responses.create(
                     model=self.model,
                     input=[
                         {"role": "system", "content": system},
@@ -131,46 +162,26 @@ class LLMStepChecker:
                             ],
                         },
                     ],
-                    text_format=StepDecision,
+                    text=self._text_format,
+                    # If your SDK supports it, this helps consistency:
+                    temperature=0,
                 )
 
-                dec = resp.output_parsed  # type: ignore
-                if dec is None:
+                json_text = (resp.output_text or "").strip()
+                if not json_text:
                     return StepDecision(
                         step_complete=False,
                         confidence=0.0,
                         failure_mode="unknown",
-                        reason="output_parsed_none",
+                        reason="empty_output_text",
                     )
-                return dec
+
+                dec = _pydantic_parse_json(StepDecision, json_text)
+                return dec  # type: ignore[return-value]
 
             except Exception as e:
                 print("\n[LLMStepChecker] Exception inside _call():", repr(e))
                 print(traceback.format_exc())
-
-                # Debug fallback: show raw output_text
-                try:
-                    client = OpenAI()
-                    raw = client.responses.create(
-                        model=self.model,
-                        input=[
-                            {"role": "system", "content": system},
-                            {
-                                "role": "user",
-                                "content": [
-                                    {"type": "input_text", "text": user_text},
-                                    {"type": "input_text", "text": "TARGET reference:"},
-                                    {"type": "input_image", "image_url": target_url},
-                                    {"type": "input_text", "text": "CURRENT frame:"},
-                                    {"type": "input_image", "image_url": current_url},
-                                ],
-                            },
-                        ],
-                    )
-                    print("[LLMStepChecker] Raw output_text:\n", raw.output_text)
-                except Exception as e2:
-                    print("[LLMStepChecker] Raw fallback failed:", repr(e2))
-
                 return StepDecision(
                     step_complete=False,
                     confidence=0.0,
@@ -183,12 +194,14 @@ class LLMStepChecker:
     def update(
         self,
         *,
-        step_key: str,  # "1", "2", ...
+        step_key: str,
         step_text: str,
         current_rgb_uint8_hwc: np.ndarray,
         min_confidence: float = 0.75,
     ) -> bool:
-        """Non-blocking. Returns True when you should advance."""
+        """
+        Non-blocking. Returns True when you should advance.
+        """
         if step_key not in self._target_data_url:
             return False
         if not self._is_step_enabled(step_key):
@@ -198,26 +211,13 @@ class LLMStepChecker:
 
         # Consume finished request
         if self._inflight is not None and self._inflight.done():
-            try:
-                dec = self._inflight.result()
-            except Exception:
-                dec = StepDecision(
-                    step_complete=False,
-                    confidence=0.0,
-                    failure_mode="unknown",
-                    reason="request_failed",
-                )
+            dec = self._inflight.result()
             self._inflight = None
 
-            conf = float(getattr(dec, "confidence", 0.0))
-            if conf > 1.0:  # normalize if it came back as 0..100
-                conf = conf / 100.0
+            conf = float(dec.confidence)
+            fm = str(dec.failure_mode).strip().lower()
 
-            fm = str(getattr(dec, "failure_mode", "unknown")).strip().lower()
-            if fm in ("ok", "success", "complete", "completed"):
-                fm = "none"
-
-            ok = bool(getattr(dec, "step_complete", False)) and conf >= float(min_confidence) and fm == "none"
+            ok = bool(dec.step_complete) and conf >= float(min_confidence) and fm == "none"
             self._streak = (self._streak + 1) if ok else 0
             return self._streak >= self.k
 
