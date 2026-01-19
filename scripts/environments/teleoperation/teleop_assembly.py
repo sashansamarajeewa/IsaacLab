@@ -13,6 +13,7 @@ from pathlib import Path
 
 from isaaclab.app import AppLauncher
 from llm_step_config import build_llm_checker_for_run
+from PIL import Image
 
 # add argparse arguments
 parser = argparse.ArgumentParser(
@@ -57,6 +58,11 @@ parser.add_argument(
     "--disable_nametag",
     action="store_true",
     help="Disable the floating name tag for the current step target",
+)
+parser.add_argument(
+    "--capture_targets",
+    action="store_true",
+    help="Capture and save target PNGs for each step",
 )
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
@@ -179,6 +185,8 @@ def main() -> None:
 
     total_real = len(getattr(guide, "SEQUENCE", []))
     targets_root = str(Path(__file__).resolve().parent / "targets")
+    guide_folder = args_cli.guide or "default"
+    capture_base_dir = Path(targets_root) / args_cli.task / guide_folder
     llm_checker = build_llm_checker_for_run(
         task_name=args_cli.task,
         guide_name=args_cli.guide,
@@ -342,8 +350,20 @@ def main() -> None:
 
                 guide.maybe_auto_advance(highlighter)
 
+                if args_cli.capture_targets:
+                    idx = highlighter.step_index
+                    if 0 <= idx < total_real:
+                        step_key = str(idx + 1)
+                        out_path = capture_base_dir / f"step_{step_key}.png"
+
+                        # Only save once per step (don’t overwrite unless you want to)
+                        if not out_path.exists():
+                            cam = env.scene["head_camera"]
+                            rgb = cam.data.output["rgb"][0].cpu().numpy()
+                            save_rgb_png(rgb, out_path)
+                
                 # LLM logic (only acts on steps that have targets and are enabled)
-                if llm_checker is not None:
+                if (not args_cli.capture_targets) and llm_checker is not None:
                     idx = highlighter.step_index
                     if 0 <= idx < total_real:
                         cam = env.scene["head_camera"]
@@ -454,6 +474,11 @@ def remove_camera_configs_safe(env_cfg: Any) -> Any:
 
     return env_cfg
 
+def save_rgb_png(rgb: np.ndarray, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    img = Image.fromarray(rgb.astype(np.uint8), mode="RGB")
+    img.save(str(path))
+    print(f"[capture_targets] Saved: {path}")
 
 if __name__ == "__main__":
     # run the main function
