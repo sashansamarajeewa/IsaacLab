@@ -193,6 +193,7 @@ def main() -> None:
         num_steps=total_real,
         targets_root=targets_root,
     )
+    llm_checker = None
 
     # Physics binder unaffected by highlight flag
     phys_binder = guide.create_physics_binder()
@@ -352,8 +353,8 @@ def main() -> None:
 
                 if args_cli.capture_targets:
                     idx = highlighter.step_index
-                    if 0 <= idx < total_real:
-                        step_key = str(idx + 1)
+                    if 0 < idx <= total_real:
+                        step_key = str(idx)
                         out_path = capture_base_dir / f"step_{step_key}.png"
 
                         # Only save once per step (don’t overwrite unless you want to)

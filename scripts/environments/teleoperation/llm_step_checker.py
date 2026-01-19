@@ -304,8 +304,9 @@ class LLMStepChecker:
             conf = float(dec.confidence)
             fm = str(dec.failure_mode).strip().lower()
 
-            ok = bool(dec.step_complete) and conf >= float(min_confidence) and fm == "none"
+            ok = bool(dec.step_complete) and conf >= float(min_confidence) and fm == ""
             self._streak = (self._streak + 1) if ok else 0
+            print(f"streak:{self._streak}")
             return self._streak >= self.k
 
         if self._inflight is None and (now - self._t_last) >= self.period_s:

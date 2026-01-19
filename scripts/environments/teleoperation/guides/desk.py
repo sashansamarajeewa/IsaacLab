@@ -65,18 +65,18 @@ class DeskGuide(BaseGuide):
         Gf.Vec3d(0.7071068286895752, -8.306070230901241e-05, -8.306949166581035e-05),
     )
     tgt_front_right_leg_rot_pos = Gf.Vec3d(
-        0.03558668866753578, 0.40764927864074707, 1.1332330703735352
+        0.03551878035068512, 0.5775107145309448, 1.133237600326538
     )
     tgt_front_right_leg_rot_quat = Gf.Quatd(
-        0.7070425748825073,
-        Gf.Vec3d(0.7070440649986267, 0.009473255835473537, 0.009473560377955437),
+        0.011999163776636124,
+        Gf.Vec3d(0.012000218033790588, 0.707004725933075, 0.7070052027702332),
     )
     tgt_front_left_leg_rot_pos = Gf.Vec3d(
-        0.3075884282588959, 0.4075841009616852, 1.1332392692565918
+        0.30748727917671204, 00.5773652791976929, 1.1332449913024902
     )
     tgt_front_left_leg_rot_quat = Gf.Quatd(
-        0.7070895433425903,
-        Gf.Vec3d(0.7070915699005127, 0.0047986614517867565, 0.0047972965985536575),
+        -0.010741693899035454,
+        Gf.Vec3d(-0.010747075080871582, -0.7069439888000488, -0.707106351852417),
     )
     tgt_back_right_leg_pos = Gf.Vec3d(
         0.30747711658477783, 0.4074394404888153, 1.1332495212554932
@@ -421,8 +421,6 @@ class DeskGuide(BaseGuide):
         # return True
 
     def _check_back_left_leg_insert(self) -> bool:
-        print("#####################")
-        print(self.get_live_part_pose("BackLeftLeg"))
         tgt = self._target_poses.get("BackLeftLeg")
         live = self.get_live_part_pose("BackLeftLeg")
         if not (tgt and live):
@@ -454,7 +452,7 @@ class DeskGuide(BaseGuide):
             issues.append(("FrontRightLeg", "Front Right Leg is not aligned (Step 3)"))
         if not self._check_front_left_leg_insert():
             issues.append(("FrontLeftLeg", "Front Left Leg is not aligned (Step 4)"))
-        if not self._check_back_left_leg_insert():
+        if not self._check_back_right_leg_insert():
             issues.append(("BackRightLeg", "Back Right Leg is not aligned (Step 6)"))
         if not self._check_back_left_leg_insert():
             issues.append(("BackLeftLeg", "Back Left Leg is not aligned (Step 7)"))
