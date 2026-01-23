@@ -407,7 +407,6 @@ class ChairGuide(BaseGuide):
     def _check_left_nut_insert(self) -> bool:
         tgt = self._target_poses.get("LeftNut")
         live = self.get_live_part_pose("LeftNut")
-        print(live)
         if not (tgt and live):
             return False
 
