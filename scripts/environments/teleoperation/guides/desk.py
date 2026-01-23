@@ -288,11 +288,11 @@ class DeskGuide(BaseGuide):
     def _check_pickup_desk_top(self) -> bool:
         if self._static_table_pos is None:
             return False
-        box_pose = self.get_live_part_pose("DeskTop")
-        if not box_pose:
+        top_pose = self.get_live_part_pose("DeskTop")
+        if not top_pose:
             return False
-        box_pos, _ = box_pose
-        return (box_pos[2] - self._static_table_pos[2]) >= self.tol_z_dbox_t
+        top_pos, _ = top_pose
+        return (top_pos[2] - self._static_table_pos[2]) >= self.tol_z_dbox_t
         # return True
 
     def _check_braced_desk_top(self) -> bool:

@@ -37,7 +37,7 @@ from . import mdp
 
 from isaaclab_assets.robots.fourier import GR1T2_HIGH_PD_CFG  # isort: skip
 
-ASSET_SCALE = (1.7, 1.7, 1.7)
+ASSET_SCALE = (2.0, 2.0, 2.0)
 
 
 ##
@@ -94,31 +94,31 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # FrontLeftLeg
     chair_leg1 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/FrontLeftLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.273, 0.26, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.103, 0.26, 1.025]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_leg1.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.85),
         ),
     )
 
     # FrontRightLeg
     chair_leg2 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/FrontRightLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.219, 0.26, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.037, 0.26, 1.025]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_leg2.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.85),
         ),
     )
 
     # LeftNut
     chair_nut1 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/LeftNut",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.273, 0.51, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.103, 0.51, 1.025]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_nut1.usd",
             scale=ASSET_SCALE,
@@ -130,7 +130,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # RightNut
     chair_nut2 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/RightNut",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.219, 0.51, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.037, 0.51, 1.025]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_nut2.usd",
             scale=ASSET_SCALE,
@@ -142,24 +142,24 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # Back
     chair_back = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Back",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.13, 0.31, 1.03], rot=[0.0, 0.0, -0.7071068, -0.7071068]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.35, 0.5, 1.09], rot=[0.0, 0.0, 0, -1]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_back.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=3),
+            mass_props=sim_utils.MassPropertiesCfg(mass=2.5),
         ),
     )
     
     # Seat
     chair_seat = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Seat",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.13, 0.41, 1.03], rot=[0.0, 0.0, -0.7071068, -0.7071068]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.182, 0.41, 1.0298], rot=[0.0, 0.0, -0.7071068, -0.7071068]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_seat.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=3),
+            mass_props=sim_utils.MassPropertiesCfg(mass=2.5),
         ),
     )
 
@@ -569,7 +569,7 @@ class AssemblyChairGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         self.decimation = 5  # 6
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 200  # 120Hz
+        self.sim.dt = 1 / 160  # 120Hz
         self.sim.render_interval = 2  # 6
         self.sim.physx.enable_ccd = False  # True
         carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)
