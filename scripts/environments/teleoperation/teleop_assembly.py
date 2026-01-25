@@ -64,6 +64,11 @@ parser.add_argument(
     action="store_true",
     help="Capture and save target PNGs for each step",
 )
+parser.add_argument(
+    "--llm_checker",
+    action="store_true",
+    help="Capture and save target PNGs for each step",
+)
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -187,13 +192,14 @@ def main() -> None:
     targets_root = str(Path(__file__).resolve().parent / "targets")
     guide_folder = args_cli.guide or "default"
     capture_base_dir = Path(targets_root) / args_cli.task / guide_folder
-    llm_checker = build_llm_checker_for_run(
-        task_name=args_cli.task,
-        guide_name=args_cli.guide,
-        num_steps=total_real,
-        targets_root=targets_root,
-    )
     llm_checker = None
+    if args_cli.llm_checker:
+        llm_checker = build_llm_checker_for_run(
+            task_name=args_cli.task,
+            guide_name=args_cli.guide,
+            num_steps=total_real,
+            targets_root=targets_root,
+        )
 
     # Physics binder unaffected by highlight flag
     phys_binder = guide.create_physics_binder()
@@ -363,7 +369,7 @@ def main() -> None:
                             rgb = cam.data.output["rgb"][0].cpu().numpy()
                             save_rgb_png(rgb, out_path)
                 
-                # LLM logic (only acts on steps that have targets and are enabled)
+                # LLM logic
                 if (not args_cli.capture_targets) and llm_checker is not None:
                     idx = highlighter.step_index
                     if 0 <= idx < total_real:
