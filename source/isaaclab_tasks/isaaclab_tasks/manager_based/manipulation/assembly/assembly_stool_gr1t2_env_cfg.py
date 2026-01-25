@@ -108,7 +108,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/SecondLeg",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.219, 0.26, 1.03]),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/stool_leg2.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/stool/stool_leg2.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
             mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
@@ -120,7 +120,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/ThirdLeg",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.273, 0.51, 1.03]),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/stool_leg3.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/stool/stool_leg3.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
             mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
@@ -132,7 +132,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/Seat",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.219, 0.51, 1.03]),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/desk/stool_seat.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/stool/stool_seat.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
             mass_props=sim_utils.MassPropertiesCfg(mass=1),
