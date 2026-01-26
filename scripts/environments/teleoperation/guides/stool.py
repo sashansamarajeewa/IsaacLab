@@ -34,39 +34,21 @@ class StoolGuide(BaseGuide):
     tol_z_dbox_t = 1.082  # distance between stool seat and table origin along Z
 
     tgt_seat_pos = Gf.Vec3d(
-        0.17141205072402954, 0.4924437999725342, 1.0206135511398315
+        0.15217958390712738, 0.47628986835479736, 1.0210511684417725
     )
-    tgt_seat_quat = Gf.Quatd(
-        2.1194635337451473e-05,
-        Gf.Vec3d(2.127042898791842e-05, -0.7071068286895752, -0.7071068286895752),
-    )
-    tgt_first_leg_pos = Gf.Vec3d(
-        0.3075884282588959, 0.4075841009616852, 1.1332392692565918
-    )
-    tgt_first_leg_quat = Gf.Quatd(
-        0.7070425748825073,
-        Gf.Vec3d(0.7070440649986267, 0.009473255835473537, 0.009473560377955437),
-    )
-    tgt_second_leg_pos = Gf.Vec3d(
-        0.03558668866753578, 0.40764927864074707, 1.1332330703735352
-    )
-    tgt_second_leg_quat = Gf.Quatd(
-        0.7070895433425903,
-        Gf.Vec3d(0.7070915699005127, 0.0047986614517867565, 0.0047972965985536575),
-    )
-    tgt_third_leg_pos = Gf.Vec3d(
-        0.03558668866753578, 0.40764927864074707, 1.1332330703735352
-    )
-    tgt_third_leg_quat = Gf.Quatd(
-        0.7070895433425903,
-        Gf.Vec3d(0.7070915699005127, 0.0047986614517867565, 0.0047972965985536575),
-    )
+    tgt_seat_quat = Gf.Quatd(0.7068566083908081, Gf.Vec3d(0.7068567872047424, 0.018804030492901802, 0.01880406215786934))
+    tgt_first_leg_pos = Gf.Vec3d(0.15560699999332428, 0.4026220440864563, 1.1019830703735352)
+    tgt_first_leg_quat = Gf.Quatd(-0.503440797328949, Gf.Vec3d(-0.5042394399642944, -0.496090292930603, -0.4961698055267334))
+    tgt_second_leg_pos = Gf.Vec3d(0.08582456409931183, 0.508266031742096, 1.1020972728729248)
+    tgt_second_leg_quat = Gf.Quatd(-0.6906436085700989, Gf.Vec3d(-0.6918016076087952, 0.14913704991340637, 0.14892998337745667))
+    tgt_third_leg_pos = Gf.Vec3d(0.21428146958351135, 0.5158480405807495, 1.101969599723816)
+    tgt_third_leg_quat = Gf.Quatd(0.17381539940834045, Gf.Vec3d(0.17399808764457703, -0.6853842735290527, -0.6853915452957153))
 
     def __init__(self):
         super().__init__()
         self._checks = [
             self._check_pickup_seat,
-            self._check_braced_seat,
+            self._check_seat_position,
             self._check_first_leg_insert,
             self._check_second_leg_insert,
             self._check_third_leg_insert,
@@ -230,7 +212,7 @@ class StoolGuide(BaseGuide):
         total = len(self.SEQUENCE)
         base_steps = [
             f"Step 1/{total}: Pick up Seat",
-            f"Step 2/{total}: Brace Seat against the front and right corner obstacles",
+            f"Step 2/{total}: Move Seat to the target position",
             f"Step 3/{total}: Insert First Leg and screw clockwise until tight",
             f"Step 4/{total}: Insert Second Leg and screw clockwise until tight",
             f"Step 5/{total}: Insert Third Leg and screw clockwise until tight",
@@ -250,7 +232,7 @@ class StoolGuide(BaseGuide):
         return (top_pos[2] - self._static_table_pos[2]) >= self.tol_z_dbox_t
         # return True
 
-    def _check_braced_seat(self) -> bool:
+    def _check_seat_position(self) -> bool:
         tgt = self._target_poses.get("Seat")
         live = self.get_live_part_pose("Seat")
         if not (tgt and live):
@@ -262,7 +244,7 @@ class StoolGuide(BaseGuide):
         ang_err = ang_deg(live_quat, tgt_quat)
 
         return pos_err <= 0.01 and ang_err <= 3.5
-        # return True
+        #return True
 
     def _check_first_leg_insert(self) -> bool:
         tgt = self._target_poses.get("FirstLeg")
@@ -276,7 +258,7 @@ class StoolGuide(BaseGuide):
         ang_err = ang_deg(live_quat, tgt_quat)
 
         return pos_err <= 0.01 and ang_err <= 3.5
-        # return True
+        #return True
 
     def _check_second_leg_insert(self) -> bool:
         tgt = self._target_poses.get("SecondLeg")
@@ -290,7 +272,7 @@ class StoolGuide(BaseGuide):
         ang_err = ang_deg(live_quat, tgt_quat)
 
         return pos_err <= 0.01 and ang_err <= 3.5
-        # return True
+        #return True
 
     def _check_third_leg_insert(self) -> bool:
         tgt = self._target_poses.get("ThirdLeg")
@@ -307,7 +289,7 @@ class StoolGuide(BaseGuide):
 
     def is_final_assembly_valid(self) -> bool:
         return (
-            self._check_braced_seat()
+            self._check_seat_position()
             and self._check_first_leg_insert()
             and self._check_second_leg_insert()
             and self._check_third_leg_insert()
@@ -316,8 +298,8 @@ class StoolGuide(BaseGuide):
     def final_unmet_constraints(self) -> List[Tuple[str, str]]:
         issues: List[Tuple[str, str]] = []
 
-        if not self._check_braced_seat():
-            issues.append(("Seat", "Seat is not aligned in the corner (Step 2)"))
+        if not self._check_seat_position():
+            issues.append(("Seat", "Seat is not aligned in the target (Step 2)"))
         if not self._check_first_leg_insert():
             issues.append(("FirstLeg", "First Leg is not aligned (Step 3)"))
         if not self._check_second_leg_insert():

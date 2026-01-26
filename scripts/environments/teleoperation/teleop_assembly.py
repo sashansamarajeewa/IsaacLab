@@ -355,9 +355,9 @@ def main() -> None:
                 else:
                     env.sim.render()
 
-                guide.maybe_auto_advance(highlighter)
+                #guide.maybe_auto_advance(highlighter)
 
-                if args_cli.capture_targets:
+                if args_cli.capture_targets and args_cli.enable_cameras:
                     idx = highlighter.step_index
                     if 0 < idx <= total_real:
                         step_key = str(idx)
@@ -370,9 +370,9 @@ def main() -> None:
                             save_rgb_png(rgb, out_path)
                 
                 # LLM logic
-                if (not args_cli.capture_targets) and llm_checker is not None:
+                if (not args_cli.capture_targets) and args_cli.enable_cameras and llm_checker is not None:
                     idx = highlighter.step_index
-                    if 0 <= idx < total_real:
+                    if 0 <= idx <= total_real:
                         cam = env.scene["head_camera"]
                         rgb = (
                             cam.data.output["rgb"][0].cpu().numpy()

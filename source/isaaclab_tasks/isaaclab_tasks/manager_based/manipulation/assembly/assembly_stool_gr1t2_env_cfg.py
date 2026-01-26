@@ -37,7 +37,7 @@ from . import mdp
 
 from isaaclab_assets.robots.fourier import GR1T2_HIGH_PD_CFG  # isort: skip
 
-ASSET_SCALE = (1.7, 1.7, 1.7)
+ASSET_SCALE = (1.8, 1.8, 1.8)
 
 
 ##
@@ -94,7 +94,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # FirstLeg
     stool_leg1 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/FirstLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.273, 0.26, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.0513, 0.29, 1.03]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/stool/stool_leg1.usd",
             scale=ASSET_SCALE,
@@ -106,7 +106,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # SecondLeg
     stool_leg2 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/SecondLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.219, 0.26, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.219, 0.29, 1.03]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/stool/stool_leg2.usd",
             scale=ASSET_SCALE,
@@ -118,7 +118,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # ThirdLeg
     stool_leg3 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/ThirdLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.273, 0.51, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.219, 0.51, 1.03]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/stool/stool_leg3.usd",
             scale=ASSET_SCALE,
@@ -130,7 +130,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # Seat
     seat = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Seat",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.219, 0.51, 1.03]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.06, 0.45, 1.03], rot=[0.7071068, 0.7071068, 0, 0]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/stool/stool_seat.usd",
             scale=ASSET_SCALE,
