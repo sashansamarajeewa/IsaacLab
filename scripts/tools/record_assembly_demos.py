@@ -191,6 +191,7 @@ def annotate_hdf5_demo(
     dataset_path: str,
     demo_index: int,
     completion_time_sec: float,
+    reset_count_total: int,
     participant_id: str,
     task: str,
 ):
@@ -211,6 +212,7 @@ def annotate_hdf5_demo(
                 "No '/data' group found in dataset. Writing file-level attrs instead."
             )
             f.attrs["completion_time_sec"] = float(completion_time_sec)
+            f.attrs["reset_count_total"] = int(reset_count_total)
             f.attrs["participant_id"] = str(participant_id)
             f.attrs["task"] = str(task)
             f.attrs["demo_index"] = int(demo_index)
@@ -224,6 +226,7 @@ def annotate_hdf5_demo(
             )
             # fallback to writing file-level attrs
             f.attrs["completion_time_sec"] = float(completion_time_sec)
+            f.attrs["reset_count_total"] = int(reset_count_total)
             f.attrs["participant_id"] = str(participant_id)
             f.attrs["task"] = str(task)
             f.attrs["demo_index"] = int(demo_index)
@@ -231,6 +234,7 @@ def annotate_hdf5_demo(
 
         demo_grp = data_grp[demo_key]
         demo_grp.attrs["completion_time_sec"] = float(completion_time_sec)
+        demo_grp.attrs["reset_count_total"] = int(reset_count_total)
         demo_grp.attrs["participant_id"] = str(participant_id)
         demo_grp.attrs["task"] = str(task)
 
@@ -333,6 +337,7 @@ def main():
 
     # Teleop flow flags and timing
     should_reset = False
+    reset_count_total = 0
     teleoperation_active = not getattr(args_cli, "xr", False)  # XR starts inactive
     demo_started = False
     start_time = None
@@ -499,6 +504,7 @@ def main():
                         dataset_path=dataset_path,
                         demo_index=prev_count,  # newly exported demo index
                         completion_time_sec=completion_time_sec,
+                        reset_count_total=reset_count_total,
                         participant_id=args_cli.participant_id,
                         task=args_cli.task,
                     )
@@ -519,6 +525,7 @@ def main():
 
                         # Reset per demo
                         success_step_count = 0
+                        reset_count_total = 0
                         demo_started = False
                         start_time = None
 
@@ -530,6 +537,7 @@ def main():
 
             # Manual reset handling
             if should_reset:
+                reset_count_total += 1
                 reset_all(env, guide, highlighter, phys_binder, hud, teleop_interface)
 
                 should_reset = False
