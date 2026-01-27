@@ -14,6 +14,8 @@ import argparse
 import contextlib
 import os
 import time
+import csv
+from datetime import datetime, timezone
 from collections.abc import Callable
 
 from isaaclab.app import AppLauncher
@@ -254,6 +256,26 @@ def reset_all(env, guide, highlighter, phys_binder, hud, teleop_interface):
 
     teleop_interface.reset()
 
+def default_step_csv_path() -> str:
+    task_short = args_cli.task.split(":")[-1].replace("/", "_")
+    fname = f"{args_cli.participant_id}_{task_short}_step_stats.csv"
+    return os.path.join(args_cli.out_dir, fname)
+
+
+def append_rows_to_csv(csv_path: str, rows: list[dict]) -> None:
+    if not rows:
+        return
+    ensure_dir(os.path.dirname(csv_path))
+
+    fieldnames = list(rows[0].keys())
+    file_exists = os.path.exists(csv_path)
+
+    with open(csv_path, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        if not file_exists:
+            writer.writeheader()
+        writer.writerows(rows)
+
 
 def main():
     # Output paths
@@ -262,6 +284,7 @@ def main():
     dataset_dir = os.path.dirname(dataset_path)
     dataset_name_wo_ext = os.path.splitext(os.path.basename(dataset_path))[0]
     ensure_dir(dataset_dir)
+    step_csv_path = default_step_csv_path()
 
     # Parse env cfg
     env_cfg = parse_env_cfg(
@@ -335,6 +358,19 @@ def main():
     if not args_cli.disable_nametag:
         name_tag = base.NameTagManager()
 
+    # Per-step logging
+    total_steps = len(getattr(guide, "SEQUENCE", []))
+    demo_step_done: dict[int, bool] = {}
+    demo_step_failed: dict[int, bool] = {}
+    demo_step_time_sec: dict[int, float] = {}
+    demo_step_reset_count: dict[int, int] = {}
+    demo_step_first_reset_reason: dict[int, str] = {}
+
+    current_step_idx: int = 0
+    step_start_time: float = time.time()
+
+    pending_reset_reason: str = "unknown"
+    
     # Teleop flow flags and timing
     should_reset = False
     reset_count_total = 0
@@ -347,8 +383,9 @@ def main():
     finished = False
 
     def reset_trial():
-        nonlocal should_reset
+        nonlocal should_reset, pending_reset_reason
         should_reset = True
+        pending_reset_reason = "manual"
         print("Reset requested")
 
     def start_teleop():
@@ -412,6 +449,8 @@ def main():
     highlighter.refresh_after_reset()
     phys_binder.refresh_after_reset()
     guide.update_previews_for_step(highlighter)
+    current_step_idx = int(highlighter.step_index)
+    step_start_time = time.time()
     last_step_idx = None
     last_final_sig = None
     need_hud_update = False
@@ -457,6 +496,35 @@ def main():
 
             # Interface updates
             guide.maybe_auto_advance(highlighter)
+            
+            # Step transition logging
+            new_step_idx = int(highlighter.step_index)
+
+            # If step index increased, previous step has completed
+            if new_step_idx > current_step_idx:
+                prev_step = current_step_idx
+
+                # Only finalize the step once per demo
+                if not demo_step_done.get(prev_step, False):
+                    elapsed = time.time() - step_start_time
+
+                    # If step never had a reset while active
+                    if not demo_step_failed.get(prev_step, False):
+                        demo_step_time_sec[prev_step] = float(elapsed)
+                        demo_step_done[prev_step] = True
+                    else:
+                        # It was already marked failed earlier so do not overwrite time
+                        demo_step_done[prev_step] = True
+
+                # Move to next step
+                current_step_idx = new_step_idx
+                step_start_time = time.time()
+
+            # If step index decreased due to reset, restart timing for the current step
+            elif new_step_idx < current_step_idx:
+                current_step_idx = new_step_idx
+                step_start_time = time.time()
+                
             guide.update_previews_for_step(highlighter)
             if hud is not None:
                 hud.update(guide, highlighter)
@@ -467,6 +535,7 @@ def main():
             if guide.any_part_fallen_below_table(getattr(guide, "MOVING_PARTS", [])):
                 print("An object has fallen below table...resetting")
                 should_reset = True
+                pending_reset_reason = "safety_fall"
 
             # Success detection
             step_complete = highlighter.step_index >= highlighter.total_steps
@@ -481,6 +550,14 @@ def main():
             if is_success:
                 success_step_count += 1
                 if success_step_count >= args_cli.num_success_steps:
+                    s = int(current_step_idx)
+                    if s < total_steps and not demo_step_done.get(s, False):
+                        elapsed = time.time() - step_start_time
+                        if not demo_step_failed.get(s, False):
+                            demo_step_time_sec[s] = float(elapsed)
+                        demo_step_done[s] = True
+                        demo_step_reset_count.setdefault(s, 0)
+
                     # Determine the demo index that will be written
                     prev_count = env.recorder_manager.exported_successful_episode_count
 
@@ -513,6 +590,42 @@ def main():
                     print(
                         f"Demo {demos_recorded} exported. Time: {completion_time_sec:.3f} sec"
                     )
+                    
+                    # Write step stats for this demo to CSV
+                    now_iso = datetime.now(timezone.utc).isoformat()
+
+                    step_rows: list[dict] = []
+                    for s in range(total_steps):
+                        step_name = ""
+                        if hasattr(guide, "SEQUENCE") and s < len(guide.SEQUENCE):
+                            step_name = str(guide.SEQUENCE[s])
+
+                        failed = bool(demo_step_failed.get(s, False))
+                        outcome = "fail" if failed else "success"
+
+                        # If a step was never finalized use NaN
+                        t = demo_step_time_sec.get(s, float("nan"))
+                        resets = int(demo_step_reset_count.get(s, 0))
+                        reason = demo_step_first_reset_reason.get(s, "")
+
+                        step_rows.append(
+                            {
+                                "timestamp_utc": now_iso,
+                                "participant_id": args_cli.participant_id,
+                                "task": args_cli.task,
+                                "demo_index": int(prev_count),
+                                "step_index": int(s),
+                                "step_name": step_name,
+                                "outcome": outcome,
+                                "time_sec": float(t),
+                                "reset_count_step": resets,
+                                "first_reset_reason": reason,
+                                "reset_count_total_demo": int(reset_count_total),
+                            }
+                        )
+
+                    append_rows_to_csv(step_csv_path, step_rows)
+                    print(f"Wrote step stats to: {step_csv_path}")
 
                     # Check stop condition
                     if args_cli.num_demos > 0 and demos_recorded >= args_cli.num_demos:
@@ -522,6 +635,15 @@ def main():
                         reset_all(
                             env, guide, highlighter, phys_binder, hud, teleop_interface
                         )
+                        
+                        demo_step_done.clear()
+                        demo_step_failed.clear()
+                        demo_step_time_sec.clear()
+                        demo_step_reset_count.clear()
+                        demo_step_first_reset_reason.clear()
+
+                        current_step_idx = int(highlighter.step_index)
+                        step_start_time = time.time()
 
                         # Reset per demo
                         success_step_count = 0
@@ -538,12 +660,29 @@ def main():
             # Manual reset handling
             if should_reset:
                 reset_count_total += 1
+
+                s = int(current_step_idx)
+                demo_step_reset_count[s] = demo_step_reset_count.get(s, 0) + 1
+
+                # First time this step gets reset mark failure
+                if not demo_step_failed.get(s, False):
+                    demo_step_failed[s] = True
+                    demo_step_first_reset_reason[s] = str(pending_reset_reason)
+                    demo_step_time_sec[s] = float(time.time() - step_start_time)
+
+                # Reset env
                 reset_all(env, guide, highlighter, phys_binder, hud, teleop_interface)
 
+                # After reset restart timing
                 should_reset = False
+                pending_reset_reason = "unknown"
                 success_step_count = 0
                 demo_started = False
                 start_time = None
+
+                current_step_idx = int(highlighter.step_index)
+                step_start_time = time.time()
+
                 if getattr(args_cli, "xr", False):
                     teleoperation_active = False
 
