@@ -59,8 +59,8 @@ RUN ln -sf ${ISAACSIM_ROOT_PATH} ${ISAACLAB_PATH}/_isaac_sim
 
 # Install toml dependency
 RUN ${ISAACLAB_PATH}/isaaclab.sh -p -m pip install toml
-# Install openai pydantic pillow dependencies
-RUN ${ISAACLAB_PATH}/isaaclab.sh -p -m pip install --upgrade openai pydantic pillow
+# Install openai pillow dependencies
+RUN ${ISAACLAB_PATH}/isaaclab.sh -p -m pip install --upgrade openai pillow
 
 # Install apt dependencies for extensions that declare them in their extension.toml
 RUN --mount=type=cache,target=/var/cache/apt \

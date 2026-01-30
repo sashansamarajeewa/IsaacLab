@@ -367,7 +367,7 @@ def main():
     demo_step_first_reset_reason: dict[int, str] = {}
 
     current_step_idx: int = 0
-    step_start_time: float = time.time()
+    step_start_time: float = 0.0
 
     pending_reset_reason: str = "unknown"
     
@@ -389,10 +389,11 @@ def main():
         print("Reset requested")
 
     def start_teleop():
-        nonlocal teleoperation_active, demo_started, start_time
+        nonlocal teleoperation_active, demo_started, start_time, step_start_time
         teleoperation_active = True
         if not demo_started:
             demo_started = True
+            step_start_time = time.time()
             start_time = time.time()
         print("Teleoperation activated")
 
@@ -450,7 +451,7 @@ def main():
     phys_binder.refresh_after_reset()
     guide.update_previews_for_step(highlighter)
     current_step_idx = int(highlighter.step_index)
-    step_start_time = time.time()
+    #step_start_time = time.time()
     last_step_idx = None
     last_final_sig = None
     need_hud_update = False
