@@ -540,11 +540,13 @@ def main():
 
             # Success detection
             step_complete = highlighter.step_index >= highlighter.total_steps
-            global_ok = (
-                guide.is_final_assembly_valid()
-                if hasattr(guide, "is_final_assembly_valid")
-                else step_complete
-            )
+            global_ok = False
+            if step_complete:
+                global_ok = (
+                    guide.is_final_assembly_valid()
+                    if hasattr(guide, "is_final_assembly_valid")
+                    else step_complete
+                )
             is_success = step_complete and global_ok
 
             # If success stable long enough, export one demo
@@ -562,6 +564,12 @@ def main():
                     # Determine the demo index that will be written
                     prev_count = env.recorder_manager.exported_successful_episode_count
 
+                    # Compute time per demo
+                    if start_time is not None:
+                        completion_time_sec = time.time() - start_time
+                    else:
+                        completion_time_sec = float("nan")
+
                     # Export demo
                     env.recorder_manager.record_pre_reset(
                         [0], force_export_or_skip=False
@@ -570,12 +578,6 @@ def main():
                         [0], torch.tensor([[True]], dtype=torch.bool, device=env.device)
                     )
                     env.recorder_manager.export_episodes([0])
-
-                    # Compute time per demo
-                    if start_time is not None:
-                        completion_time_sec = time.time() - start_time
-                    else:
-                        completion_time_sec = float("nan")
 
                     # Annotate the demo group exported
                     annotate_hdf5_demo(

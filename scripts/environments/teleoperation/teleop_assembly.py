@@ -355,7 +355,7 @@ def main() -> None:
                 else:
                     env.sim.render()
 
-                #guide.maybe_auto_advance(highlighter)
+                guide.maybe_auto_advance(highlighter)
 
                 if args_cli.capture_targets and args_cli.enable_cameras:
                     idx = highlighter.step_index
