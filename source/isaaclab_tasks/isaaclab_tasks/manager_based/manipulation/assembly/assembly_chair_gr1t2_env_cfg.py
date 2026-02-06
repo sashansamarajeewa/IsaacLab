@@ -142,7 +142,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # Back
     chair_back = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Back",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.35, 0.5, 1.09], rot=[0.0, 0.0, 0, -1]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.35, 0.5, 1.09], rot=[0.0, -1, 0.0, 0.0]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_back.usd",
             scale=ASSET_SCALE,

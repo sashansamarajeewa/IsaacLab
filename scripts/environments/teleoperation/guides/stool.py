@@ -243,7 +243,7 @@ class StoolGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 and ang_err <= 3.5
+        return pos_err <= 0.05 and ang_err <= 10
         #return True
 
     def _check_first_leg_insert(self) -> bool:
@@ -257,7 +257,7 @@ class StoolGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 and ang_err <= 3.5
+        return pos_err <= 0.05 and ang_err <= 5
         #return True
 
     def _check_second_leg_insert(self) -> bool:
@@ -271,7 +271,7 @@ class StoolGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 and ang_err <= 3.5
+        return pos_err <= 0.05 and ang_err <= 5
         #return True
 
     def _check_third_leg_insert(self) -> bool:
@@ -285,7 +285,7 @@ class StoolGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 and ang_err <= 3.5
+        return pos_err <= 0.05 and ang_err <= 5
 
     def is_final_assembly_valid(self) -> bool:
         return (

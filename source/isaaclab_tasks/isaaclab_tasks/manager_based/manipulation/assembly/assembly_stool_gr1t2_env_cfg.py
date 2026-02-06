@@ -522,12 +522,12 @@ class AssemblyStoolGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         physics_material=sim_utils.RigidBodyMaterialCfg(
             static_friction=0.8,
             dynamic_friction=0.7,
-            friction_combine_mode="multiply",
+            friction_combine_mode="min",
         ),
         physx=sim_utils.PhysxCfg(
             solver_type=1,
-            min_position_iteration_count=96,
-            max_position_iteration_count=192,
+            #min_position_iteration_count=96,
+            #max_position_iteration_count=192,
             max_velocity_iteration_count=1,
             bounce_threshold_velocity=0.2,
             friction_offset_threshold=0.01,
@@ -545,7 +545,7 @@ class AssemblyStoolGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         self.decimation = 5  # 6
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 200  # 120Hz
+        self.sim.dt = 1 / 160  # 120Hz
         self.sim.render_interval = 2  # 6
         self.sim.physx.enable_ccd = False  # True
         carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)
