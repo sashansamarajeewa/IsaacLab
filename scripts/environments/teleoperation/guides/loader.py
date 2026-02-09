@@ -4,6 +4,10 @@ from .drawer import DrawerGuide
 from .chair import ChairGuide
 from .stool import StoolGuide
 from .desk import DeskGuide
+from .lamp import LampGuide
+from .cabinet import CabinetGuide
+from .rtable import RtableGuide
+from .stable import StableGuide
 
 # Map task names and --guide flag to guide classes
 _TASK_MAP = {
@@ -11,6 +15,10 @@ _TASK_MAP = {
     "Isaac-Assembly-Chair-GR1T2-Abs-v0": ChairGuide,
     "Isaac-Assembly-Stool-GR1T2-Abs-v0": StoolGuide,
     "Isaac-Assembly-Desk-GR1T2-Abs-v0": DeskGuide,
+    "Isaac-Assembly-Lamp-GR1T2-Abs-v0": LampGuide,
+    "Isaac-Assembly-Lamp-GR1T2-Abs-v0": CabinetGuide,
+    "Isaac-Assembly-Lamp-GR1T2-Abs-v0": RtableGuide,
+    "Isaac-Assembly-Lamp-GR1T2-Abs-v0": StableGuide,
 }
 
 _GUIDE_MAP = {
@@ -18,6 +26,10 @@ _GUIDE_MAP = {
     "chair": ChairGuide,
     "stool": StoolGuide,
     "desk": DeskGuide,
+    "lamp": LampGuide,
+    "cabinet": CabinetGuide,
+    "rtable": RtableGuide,
+    "stable": StableGuide,
 }
 
 

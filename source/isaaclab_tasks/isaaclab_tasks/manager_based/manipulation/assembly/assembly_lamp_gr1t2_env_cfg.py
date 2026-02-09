@@ -91,75 +91,41 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         ),
     )
 
-    # FrontLeftLeg
-    chair_leg1 = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/FrontLeftLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.103, 0.26, 1.025]),
+    # DrawerBox
+    drawer_box = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/DrawerBox",
+        init_state=RigidObjectCfg.InitialStateCfg(
+            pos=[-0.02, 0.41, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]
+        ),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_leg1.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=0.85),
+            mass_props=sim_utils.MassPropertiesCfg(mass=8),
         ),
     )
 
-    # FrontRightLeg
-    chair_leg2 = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/FrontRightLeg",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.037, 0.26, 1.025]),
+    # DrawerBottom
+    drawer_container_bottom = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/DrawerBottom",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.47, 1.085]),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_leg2.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=0.85),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
         ),
     )
 
-    # LeftNut
-    chair_nut1 = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/LeftNut",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.103, 0.51, 1.025]),
+    # DrawerTop
+    drawer_container_top = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/DrawerTop",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.56, 1.085]),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_nut1.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
-        ),
-    )
-    
-    # RightNut
-    chair_nut2 = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/RightNut",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.037, 0.51, 1.025]),
-        spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_nut2.usd",
-            scale=ASSET_SCALE,
-            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
-        ),
-    )
-    
-    # Back
-    chair_back = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/Back",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.35, 0.5, 1.09], rot=[0.0, -1, 0.0, 0.0]),
-        spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_back.usd",
-            scale=ASSET_SCALE,
-            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=2.5),
-        ),
-    )
-    
-    # Seat
-    chair_seat = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/Seat",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.182, 0.41, 1.0298], rot=[0.0, 0.0, -0.7071068, -0.7071068]),
-        spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_seat.usd",
-            scale=ASSET_SCALE,
-            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=2.5),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
         ),
     )
 
@@ -177,8 +143,8 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
 
     head_camera = CameraCfg(
         prim_path="/World/envs/env_.*/Robot/GR1T2_fourier_hand_6dof/head_yaw_link/HeadCamera",
-        height=480,
-        width=640,
+        height=720,
+        width=1280,
         data_types=["rgb", "distance_to_image_plane"],
         spawn=sim_utils.PinholeCameraCfg(focal_length=6.0),
         offset=CameraCfg.OffsetCfg(
@@ -467,7 +433,7 @@ class EventCfg:
 
 
 @configclass
-class AssemblyChairGR1T2EnvCfg(ManagerBasedRLEnvCfg):
+class AssemblyLampGR1T2EnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the GR1T2 environment."""
 
     # Scene settings
@@ -544,14 +510,14 @@ class AssemblyChairGR1T2EnvCfg(ManagerBasedRLEnvCfg):
 
     sim: sim_utils.SimulationCfg = sim_utils.SimulationCfg(
         physics_material=sim_utils.RigidBodyMaterialCfg(
-            static_friction=0.7,
+            static_friction=0.8,
             dynamic_friction=0.7,
-            friction_combine_mode="average",
+            friction_combine_mode="multiply",
         ),
         physx=sim_utils.PhysxCfg(
             solver_type=1,
-            #min_position_iteration_count=96,
-            #max_position_iteration_count=192,
+            min_position_iteration_count=96,
+            max_position_iteration_count=192,
             max_velocity_iteration_count=1,
             bounce_threshold_velocity=0.2,
             friction_offset_threshold=0.01,
@@ -566,10 +532,10 @@ class AssemblyChairGR1T2EnvCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 6  # 6
+        self.decimation = 5  # 6
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 120  # 120Hz
+        self.sim.dt = 1 / 200  # 120Hz
         self.sim.render_interval = 2  # 6
         self.sim.physx.enable_ccd = False  # True
         carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)
