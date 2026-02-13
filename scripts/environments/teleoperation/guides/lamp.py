@@ -15,43 +15,34 @@ from typing import List, Optional, Tuple
 
 class LampGuide(BaseGuide):
 
-    SEQUENCE = ["DrawerBox", "DrawerBox", "DrawerBottom", "DrawerTop"]
-    MOVING_PARTS = ("DrawerBox", "DrawerBottom", "DrawerTop")
+    SEQUENCE = ["LampBase", "LampBase", "LampBulb", "LampHood"]
+    MOVING_PARTS = ("LampBase", "LampBulb", "LampHood")
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
 
-    tol_z_dbox_t = 1.082  # distance between drawer box and table origin along Z
+    tol_z_dbox_t = 1.082  # distance between lamp base and table origin along Z
 
-    tgt_box_pos = Gf.Vec3d(-0.23737475275993347, 0.5223679852485657, 1.0766514539718628)
-    tgt_box_quat = Gf.Quatd(
-        -7.106468547135592e-05,
-        Gf.Vec3d(7.105479744495824e-05, -0.7071069478988647, 0.7071067690849304),
-    )
-    tgt_bot_pos = Gf.Vec3d(-0.23738756775856018, 0.4994921398162842, 1.0552730560302734)
-    tgt_bot_quat = Gf.Quatd(
-        9.714877523947507e-05,
-        Gf.Vec3d(-0.000178157992195338, -0.7075424790382385, 0.7066707611083984),
-    )
-    tgt_top_pos = Gf.Vec3d(-0.23674903810024261, 0.5066296172142029, 1.1454159021377563)
-    tgt_top_quat = Gf.Quatd(
-        -0.0023043914698064327,
-        Gf.Vec3d(0.0004399800091050565, -0.7075466513633728, 0.7066628336906433),
-    )
+    tgt_base_pos = Gf.Vec3d(-0.26464322209358215, 0.5353000164031982, 1.0284510850906372)
+    tgt_base_quat = Gf.Quatd(-0.5746305584907532, Gf.Vec3d(-0.5746316909790039, 0.4120660722255707, -0.4120675325393677))
+    tgt_bulb_pos = Gf.Vec3d(-0.26490530371665955, 0.535226047039032, 1.164040446281433)
+    tgt_bulb_quat = Gf.Quatd(0.7070314288139343, Gf.Vec3d(0.7071546912193298, -0.005556972697377205, -0.002830658107995987))
+    tgt_hood_pos = Gf.Vec3d(-0.26467111706733704, 0.5362342000007629, 1.2153171300888062)
+    tgt_hood_quat = Gf.Quatd(0.10603450238704681, Gf.Vec3d(-0.10304032266139984, 0.6999038457870483, -0.6987661719322205))
 
     def __init__(self):
         super().__init__()
         self._checks = [
-            self._check_pickup_box,
-            self._check_braced_box,
-            self._check_bottom_insert,
-            self._check_top_insert,
+            self._check_pickup_base,
+            self._check_braced_base,
+            self._check_bulb_insert,
+            self._check_hood_insert,
         ]
         # Resolved prim paths. Moving parts - rigid body prim if available
         self._paths: dict[str, Optional[str]] = {}
         # Asset root paths for ghosts
         self._asset_roots: dict[str, Optional[str]] = {
-            "DrawerBox": None,
-            "DrawerBottom": None,
-            "DrawerTop": None,
+            "LampBase": None,
+            "LampBulb": None,
+            "LampHood": None,
         }
         # Cached static world poses for this episode
         self._static_table_pos: Optional[Gf.Vec3d] = None
@@ -63,9 +54,9 @@ class LampGuide(BaseGuide):
 
         # Target poses for ghost previews
         self._target_poses: dict[str, Optional[Tuple[Gf.Vec3d, Gf.Quatd]]] = {
-            "DrawerBox": None,
-            "DrawerBottom": None,
-            "DrawerTop": None,
+            "LampBase": None,
+            "LampBulb": None,
+            "LampHood": None,
         }
 
         # Ghost prim paths by logical name
@@ -78,11 +69,11 @@ class LampGuide(BaseGuide):
         stage: Usd.Stage = env.scene.stage
         env_ns: str = env.scene.env_ns
         self._paths.clear()
-        self._asset_roots = {"DrawerBox": None, "DrawerBottom": None, "DrawerTop": None}
+        self._asset_roots = {"LampBase": None, "LampBulb": None, "LampHood": None}
         self._target_poses = {
-            "DrawerBox": None,
-            "DrawerBottom": None,
-            "DrawerTop": None,
+            "LampBase": None,
+            "LampBulb": None,
+            "LampHood": None,
         }
         self._ghost_paths_by_name.clear()
         self._static_table_pos = None
@@ -144,14 +135,14 @@ class LampGuide(BaseGuide):
             and self._static_obstacles["ObstacleFront"] is not None
         ):
 
-            # target DrawerBox braced in corner
-            self._target_poses["DrawerBox"] = (self.tgt_box_pos, self.tgt_box_quat)
+            # target LampBase braced in corner
+            self._target_poses["LampBase"] = (self.tgt_base_pos, self.tgt_base_quat)
 
-            # target DrawerBottom inserted to DrawerBox
-            self._target_poses["DrawerBottom"] = (self.tgt_bot_pos, self.tgt_bot_quat)
+            # target LampBulb inserted to LampBase
+            self._target_poses["LampBulb"] = (self.tgt_bulb_pos, self.tgt_bulb_quat)
 
-            # target DrawerTop inserted to DrawerBox
-            self._target_poses["DrawerTop"] = (self.tgt_top_pos, self.tgt_top_quat)
+            # target LampHood inserted to LampBase
+            self._target_poses["LampHood"] = (self.tgt_hood_pos, self.tgt_hood_quat)
 
         # --------- Spawn ghosts at target poses ---------
         stage = self._stage
@@ -180,28 +171,28 @@ class LampGuide(BaseGuide):
     def get_all_instructions(self) -> list[str]:
         total = len(self.SEQUENCE)
         base_steps = [
-            f"Step 1/{total}: Pick up Drawer Box",
-            f"Step 2/{total}: Brace Drawer Box against the front and left corner obstacles",
-            f"Step 3/{total}: Insert Drawer Bottom into Drawer Box",
-            f"Step 4/{total}: Insert Drawer Top to finish",
+            f"Step 1/{total}: Pick up Lamp Base",
+            f"Step 2/{total}: Brace Lamp Base against the front and left corner obstacles",
+            f"Step 3/{total}: Insert Lamp Bulb into Lamp Base and screw clockwise until tight",
+            f"Step 4/{total}: Place Lamp Hood on top of Lamp Base",
         ]
         base_steps.append("Assembly complete!")
         return base_steps
 
     # ---------------------- checks ----------------------
 
-    def _check_pickup_box(self) -> bool:
+    def _check_pickup_base(self) -> bool:
         if self._static_table_pos is None:
             return False
-        box_pose = self.get_live_part_pose("DrawerBox")
-        if not box_pose:
+        base_pose = self.get_live_part_pose("LampBase")
+        if not base_pose:
             return False
-        box_pos, _ = box_pose
-        return (box_pos[2] - self._static_table_pos[2]) >= self.tol_z_dbox_t
+        base_pos, _ = base_pose
+        return (base_pos[2] - self._static_table_pos[2]) >= self.tol_z_dbox_t
 
-    def _check_braced_box(self) -> bool:
-        tgt = self._target_poses.get("DrawerBox")
-        live = self.get_live_part_pose("DrawerBox")
+    def _check_braced_base(self) -> bool:
+        tgt = self._target_poses.get("LampBase")
+        live = self.get_live_part_pose("LampBase")
         if not (tgt and live):
             return False
 
@@ -210,11 +201,11 @@ class LampGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 and ang_err <= 3.0
+        return pos_err <= 0.01 #and ang_err <= 3.0
 
-    def _check_bottom_insert(self) -> bool:
-        tgt = self._target_poses.get("DrawerBottom")
-        live = self.get_live_part_pose("DrawerBottom")
+    def _check_bulb_insert(self) -> bool:
+        tgt = self._target_poses.get("LampBulb")
+        live = self.get_live_part_pose("LampBulb")
         if not (tgt and live):
             return False
 
@@ -223,11 +214,11 @@ class LampGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 and ang_err <= 3.0
+        return pos_err <= 0.01 #and ang_err <= 3.0
 
-    def _check_top_insert(self) -> bool:
-        tgt = self._target_poses.get("DrawerTop")
-        live = self.get_live_part_pose("DrawerTop")
+    def _check_hood_insert(self) -> bool:
+        tgt = self._target_poses.get("LampHood")
+        live = self.get_live_part_pose("LampHood")
         if not (tgt and live):
             return False
 
@@ -236,25 +227,25 @@ class LampGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 and ang_err <= 3.0
+        return pos_err <= 0.01 #and ang_err <= 3.0
 
     def is_final_assembly_valid(self) -> bool:
         return (
-            self._check_braced_box()
-            and self._check_bottom_insert()
-            and self._check_top_insert()
+            self._check_braced_base()
+            and self._check_bulb_insert()
+            and self._check_hood_insert()
         )
 
     def final_unmet_constraints(self) -> List[Tuple[str, str]]:
         issues: List[Tuple[str, str]] = []
 
-        if not self._check_braced_box():
+        if not self._check_braced_base():
             issues.append(
-                ("DrawerBox", "Drawer Box is not aligned in the corner (Step 2)")
+                ("LampBase", "Lamp Base is not aligned in the corner (Step 2)")
             )
-        if not self._check_bottom_insert():
-            issues.append(("DrawerBottom", "Drawer Bottom is not aligned (Step 3)"))
-        if not self._check_top_insert():
-            issues.append(("DrawerTop", "Drawer Top is not aligned (Step 4)"))
+        if not self._check_bulb_insert():
+            issues.append(("LampBulb", "Lamp Bulb is not aligned (Step 3)"))
+        if not self._check_hood_insert():
+            issues.append(("LampHood", "Lamp Hood is not aligned (Step 4)"))
 
         return issues

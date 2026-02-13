@@ -91,38 +91,38 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         ),
     )
 
-    # DrawerBox
-    drawer_box = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerBox",
+    # LampBase
+    lamp_base = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/LampBase",
         init_state=RigidObjectCfg.InitialStateCfg(
-            pos=[-0.02, 0.41, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]
+            pos=[-0.1, 0.4, 1.029], rot=[0.412099, -0.412034, -0.57465, -0.574607]
         ),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/lamp/lamp_base.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=8),
+            mass_props=sim_utils.MassPropertiesCfg(mass=1),
         ),
     )
 
-    # DrawerBottom
-    drawer_container_bottom = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerBottom",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.47, 1.085]),
+    # LampBulb
+    lamp_bulb = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/LampBulb",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.062, 0.47, 1.066]),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/lamp/lamp_bulb.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
             mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
         ),
     )
 
-    # DrawerTop
-    drawer_container_top = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerTop",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.56, 1.085]),
+    # LampHood
+    lamp_hood = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/LampHood",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.525, 1.085], rot=[0.70711, -0.70711, 0.0, 0.0]),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/lamp/lamp_hood.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
             mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
@@ -158,7 +158,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     robot: ArticulationCfg = GR1T2_HIGH_PD_CFG.replace(
         prim_path="/World/envs/env_.*/Robot",
         init_state=ArticulationCfg.InitialStateCfg(
-            pos=(0, 0, 0.93),
+            pos=(0, 0.0, 0.93),
             rot=(0.7071, 0, 0, 0.7071),
             joint_pos={
                 # right-arm
@@ -532,10 +532,10 @@ class AssemblyLampGR1T2EnvCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 5  # 6
+        self.decimation = 6  # 6
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 200  # 120Hz
+        self.sim.dt = 1 / 160  # 120Hz
         self.sim.render_interval = 2  # 6
         self.sim.physx.enable_ccd = False  # True
         carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)
