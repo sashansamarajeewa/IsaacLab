@@ -15,7 +15,7 @@ from typing import List, Optional, Tuple
 
 class CabinetGuide(BaseGuide):
 
-    SEQUENCE = ["CabinetBody", "CabinetBody", "CabinetDoorLeft", "CabinetDoorRight", "CabinetTop"]
+    SEQUENCE = ["CabinetDoorLeft", "CabinetDoorRight", "CabinetBody", "CabinetTop"]
     MOVING_PARTS = ("CabinetBody", "CabinetDoorLeft", "CabinetDoorRight", "CabinetTop")
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
 
@@ -40,9 +40,9 @@ class CabinetGuide(BaseGuide):
     def __init__(self):
         super().__init__()
         self._checks = [
-            self._check_pickup_box,
-            self._check_braced_box,
-            self._check_bottom_insert,
+            self._check_insert_left_door,
+            self._check_insert_right_door,
+            self._check_body_rotation,
             self._check_top_insert,
         ]
         # Resolved prim paths. Moving parts - rigid body prim if available
@@ -186,28 +186,19 @@ class CabinetGuide(BaseGuide):
     def get_all_instructions(self) -> list[str]:
         total = len(self.SEQUENCE)
         base_steps = [
-            f"Step 1/{total}: Pick up Drawer Box",
-            f"Step 2/{total}: Brace Drawer Box against the front and left corner obstacles",
-            f"Step 3/{total}: Insert Drawer Bottom into Drawer Box",
-            f"Step 4/{total}: Insert Drawer Top to finish",
+            f"Step 1/{total}: Pick and insert Cabinet Door Left into Cabinet Body",
+            f"Step 2/{total}: Pick and insert Cabinet Door Right into Cabinet Body",
+            f"Step 3/{total}: Rotate Cabinet Body by 90° to face threads up",
+            f"Step 4/{total}: Insert Cabinet Top and screw clockwise until tight",
         ]
         base_steps.append("Assembly complete!")
         return base_steps
 
     # ---------------------- checks ----------------------
 
-    def _check_pickup_box(self) -> bool:
-        if self._static_table_pos is None:
-            return False
-        box_pose = self.get_live_part_pose("DrawerBox")
-        if not box_pose:
-            return False
-        box_pos, _ = box_pose
-        return (box_pos[2] - self._static_table_pos[2]) >= self.tol_z_dbox_t
-
-    def _check_braced_box(self) -> bool:
-        tgt = self._target_poses.get("DrawerBox")
-        live = self.get_live_part_pose("DrawerBox")
+    def _check_insert_left_door(self) -> bool:
+        tgt = self._target_poses.get("CabinetDoorLeft")
+        live = self.get_live_part_pose("CabinetDoorLeft")
         if not (tgt and live):
             return False
 
@@ -218,9 +209,22 @@ class CabinetGuide(BaseGuide):
 
         return pos_err <= 0.01 and ang_err <= 3.0
 
-    def _check_bottom_insert(self) -> bool:
-        tgt = self._target_poses.get("DrawerBottom")
-        live = self.get_live_part_pose("DrawerBottom")
+    def _check_insert_right_door(self) -> bool:
+        tgt = self._target_poses.get("CabinetDoorRight")
+        live = self.get_live_part_pose("CabinetDoorRight")
+        if not (tgt and live):
+            return False
+
+        live_pos, live_quat = live
+        tgt_pos, tgt_quat = tgt
+        pos_err = (live_pos - tgt_pos).GetLength()
+        ang_err = ang_deg(live_quat, tgt_quat)
+
+        return pos_err <= 0.01 and ang_err <= 3.0
+
+    def _check_body_rotation(self) -> bool:
+        tgt = self._target_poses.get("CabinetBody")
+        live = self.get_live_part_pose("CabinetBody")
         if not (tgt and live):
             return False
 
@@ -232,8 +236,8 @@ class CabinetGuide(BaseGuide):
         return pos_err <= 0.01 and ang_err <= 3.0
 
     def _check_top_insert(self) -> bool:
-        tgt = self._target_poses.get("DrawerTop")
-        live = self.get_live_part_pose("DrawerTop")
+        tgt = self._target_poses.get("CabinetTop")
+        live = self.get_live_part_pose("CabinetTop")
         if not (tgt and live):
             return False
 
@@ -246,21 +250,26 @@ class CabinetGuide(BaseGuide):
 
     def is_final_assembly_valid(self) -> bool:
         return (
-            self._check_braced_box()
-            and self._check_bottom_insert()
+            self._check_insert_left_door()
+            and self._check_insert_right_door()
+            and self._check_body_rotation()
             and self._check_top_insert()
         )
 
     def final_unmet_constraints(self) -> List[Tuple[str, str]]:
         issues: List[Tuple[str, str]] = []
 
-        if not self._check_braced_box():
+        if not self._check_insert_right_door():
             issues.append(
-                ("DrawerBox", "Drawer Box is not aligned in the corner (Step 2)")
+                ("CabinetDoorLeft", "Cabinet Door Left is not aligned in the corner (Step 1)")
             )
-        if not self._check_bottom_insert():
-            issues.append(("DrawerBottom", "Drawer Bottom is not aligned (Step 3)"))
+        if not self._check_insert_right_door():
+            issues.append(
+                ("CabinetDoorRight", "Cabinet Door Right is not aligned in the corner (Step 2)")
+            )
+        if not self._check_body_rotation():
+            issues.append(("CabinetBody", "Cabinet Body is not aligned (Step 3)"))
         if not self._check_top_insert():
-            issues.append(("DrawerTop", "Drawer Top is not aligned (Step 4)"))
+            issues.append(("CabinetTop", "Cabinet Top is not aligned (Step 4)"))
 
         return issues

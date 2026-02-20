@@ -95,7 +95,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     cabinet_body = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/CabinetBody",
         init_state=RigidObjectCfg.InitialStateCfg(
-            pos=[-0.02, 0.41, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]
+            pos=[-0.02, 0.4582, 1.054], rot=[0.7071068, 0, 0.7071068, 0]
         ),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/cabinet/cabinet_body.usd",
@@ -108,7 +108,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # CabinetDoorLeft
     cabinet_door_left = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/CabinetDoorLeft",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.47, 1.085]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.283, 0.28, 1.013], rot=[0, 0, -1, 0]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/cabinet/cabinet_door_left.usd",
             scale=ASSET_SCALE,
@@ -120,7 +120,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # CabinetDoorRight
     cabinet_door_right = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/CabinetDoorRight",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.56, 1.085]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.161, 0.28, 1.013], rot=[0, 0, -1, 0]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/cabinet/cabinet_door_right.usd",
             scale=ASSET_SCALE,
@@ -132,7 +132,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # CabinetTop
     cabinet_top = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/CabinetTop",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.56, 1.085]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.22, 0.5652, 1.0564], rot=[0.5087054, 0.2291509, 0.1157829, -0.8217682]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/cabinet/cabinet_top.usd",
             scale=ASSET_SCALE,
