@@ -15,8 +15,8 @@ from typing import List, Optional, Tuple
 
 class CabinetGuide(BaseGuide):
 
-    SEQUENCE = ["DrawerBox", "DrawerBox", "DrawerBottom", "DrawerTop"]
-    MOVING_PARTS = ("DrawerBox", "DrawerBottom", "DrawerTop")
+    SEQUENCE = ["CabinetBody", "CabinetBody", "CabinetDoorLeft", "CabinetDoorRight", "CabinetTop"]
+    MOVING_PARTS = ("CabinetBody", "CabinetDoorLeft", "CabinetDoorRight", "CabinetTop")
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
 
     tol_z_dbox_t = 1.082  # distance between drawer box and table origin along Z
@@ -49,9 +49,10 @@ class CabinetGuide(BaseGuide):
         self._paths: dict[str, Optional[str]] = {}
         # Asset root paths for ghosts
         self._asset_roots: dict[str, Optional[str]] = {
-            "DrawerBox": None,
-            "DrawerBottom": None,
-            "DrawerTop": None,
+            "CabinetBody": None,
+            "CabinetDoorLeft": None,
+            "CabinetDoorRight": None,
+            "CabinetTop": None,
         }
         # Cached static world poses for this episode
         self._static_table_pos: Optional[Gf.Vec3d] = None
@@ -63,9 +64,10 @@ class CabinetGuide(BaseGuide):
 
         # Target poses for ghost previews
         self._target_poses: dict[str, Optional[Tuple[Gf.Vec3d, Gf.Quatd]]] = {
-            "DrawerBox": None,
-            "DrawerBottom": None,
-            "DrawerTop": None,
+            "CabinetBody": None,
+            "CabinetDoorLeft": None,
+            "CabinetDoorRight": None,
+            "CabinetTop": None,
         }
 
         # Ghost prim paths by logical name
@@ -78,11 +80,12 @@ class CabinetGuide(BaseGuide):
         stage: Usd.Stage = env.scene.stage
         env_ns: str = env.scene.env_ns
         self._paths.clear()
-        self._asset_roots = {"DrawerBox": None, "DrawerBottom": None, "DrawerTop": None}
+        self._asset_roots = {"CabinetBody": None, "CabinetDoorLeft": None, "CabinetDoorRight": None, "CabinetTop": None}
         self._target_poses = {
-            "DrawerBox": None,
-            "DrawerBottom": None,
-            "DrawerTop": None,
+            "CabinetBody": None,
+            "CabinetDoorLeft": None,
+            "CabinetDoorRight": None,
+            "CabinetTop": None,
         }
         self._ghost_paths_by_name.clear()
         self._static_table_pos = None
@@ -144,14 +147,17 @@ class CabinetGuide(BaseGuide):
             and self._static_obstacles["ObstacleFront"] is not None
         ):
 
-            # target DrawerBox braced in corner
-            self._target_poses["DrawerBox"] = (self.tgt_box_pos, self.tgt_box_quat)
+            # target CabinetBody braced in corner
+            self._target_poses["CabinetBody"] = (self.tgt_box_pos, self.tgt_box_quat)
 
-            # target DrawerBottom inserted to DrawerBox
-            self._target_poses["DrawerBottom"] = (self.tgt_bot_pos, self.tgt_bot_quat)
+            # target CabinetDoorLeft inserted to DrawerBox
+            self._target_poses["CabinetDoorLeft"] = (self.tgt_bot_pos, self.tgt_bot_quat)
 
-            # target DrawerTop inserted to DrawerBox
-            self._target_poses["DrawerTop"] = (self.tgt_top_pos, self.tgt_top_quat)
+            # target CabinetDoorRight inserted to DrawerBox
+            self._target_poses["CabinetDoorRight"] = (self.tgt_top_pos, self.tgt_top_quat)
+
+            # target CabinetTop inserted to DrawerBox
+            self._target_poses["CabinetTop"] = (self.tgt_top_pos, self.tgt_top_quat)
 
         # --------- Spawn ghosts at target poses ---------
         stage = self._stage
