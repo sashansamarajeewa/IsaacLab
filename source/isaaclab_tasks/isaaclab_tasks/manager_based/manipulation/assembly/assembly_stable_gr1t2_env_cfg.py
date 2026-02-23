@@ -91,41 +91,63 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         ),
     )
 
-    # DrawerBox
-    drawer_box = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerBox",
-        init_state=RigidObjectCfg.InitialStateCfg(
-            pos=[-0.02, 0.41, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]
-        ),
+    # FrontLeftLeg
+    square_leg1 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/FrontLeftLeg",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.28, 0.26, 1.03]),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/stable/square_leg1.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=8),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
         ),
     )
 
-    # DrawerBottom
-    drawer_container_bottom = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerBottom",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.47, 1.085]),
+    # FrontRightLeg
+    square_leg2 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/FrontRightLeg",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.21, 0.26, 1.03]),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/stable/square_leg2.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
         ),
     )
 
-    # DrawerTop
-    drawer_container_top = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerTop",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.56, 1.085]),
+    # BackLeftLeg
+    square_leg3 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/BackLeftLeg",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.28, 0.51, 1.03]),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/stable/square_leg3.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
+        ),
+    )
+    
+    # BackRightLeg
+    square_leg4 = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/BackRightLeg",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.21, 0.51, 1.03]),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/stable/square_leg4.usd",
+            scale=ASSET_SCALE,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.6),
+        ),
+    )
+    
+    # TableTop
+    square_top = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/TableTop",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.13, 0.31, 1.03], rot=[0.0, 0.0, -0.7071068, -0.7071068]),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/stable/square_top.usd",
+            scale=ASSET_SCALE,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            mass_props=sim_utils.MassPropertiesCfg(mass=3),
         ),
     )
 
