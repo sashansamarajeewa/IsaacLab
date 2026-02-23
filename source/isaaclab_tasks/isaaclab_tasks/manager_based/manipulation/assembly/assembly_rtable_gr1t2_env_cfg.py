@@ -91,41 +91,41 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         ),
     )
 
-    # DrawerBox
-    drawer_box = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerBox",
+    # RoundLeg
+    round_leg = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/RoundLeg",
         init_state=RigidObjectCfg.InitialStateCfg(
-            pos=[-0.02, 0.41, 1.08], rot=[0.0, 0.0, -0.7071, 0.7071]
+            pos=[0.0626, 0.5425, 1.099], rot=[0.7071068, -0.7071068, 0, 0]
         ),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_box.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/rtable/round_leg.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=8),
-        ),
-    )
-
-    # DrawerBottom
-    drawer_container_bottom = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerBottom",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.47, 1.085]),
-        spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_bottom.usd",
-            scale=ASSET_SCALE,
-            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
+            mass_props=sim_utils.MassPropertiesCfg(mass=1),
         ),
     )
 
-    # DrawerTop
-    drawer_container_top = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/DrawerTop",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.245, 0.56, 1.085]),
+    # RoundSupport
+    round_support = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/RoundSupport",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.195, 0.3831, 1.018], rot=[0, -1, 0, 0]),
         spawn=UsdFileCfg(
-            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/drawer/drawer_container_top.usd",
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/rtable/round_support.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
+            mass_props=sim_utils.MassPropertiesCfg(mass=1),
+        ),
+    )
+
+    # RoundTableTop
+    round_table_top = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/RoundTableTop",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.141, 0.3965, 1.003]),
+        spawn=UsdFileCfg(
+            usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/rtable/round_table_top.usd",
+            scale=ASSET_SCALE,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            mass_props=sim_utils.MassPropertiesCfg(mass=2),
         ),
     )
 

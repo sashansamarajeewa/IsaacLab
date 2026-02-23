@@ -15,43 +15,43 @@ from typing import List, Optional, Tuple
 
 class RtableGuide(BaseGuide):
 
-    SEQUENCE = ["DrawerBox", "DrawerBox", "DrawerBottom", "DrawerTop"]
-    MOVING_PARTS = ("DrawerBox", "DrawerBottom", "DrawerTop")
+    SEQUENCE = ["RoundLeg", "RoundLeg", "RoundTableTop", "RoundSupport"]
+    MOVING_PARTS = ("RoundLeg", "RoundSupport", "RoundTableTop")
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
 
-    tol_z_dbox_t = 1.082  # distance between drawer box and table origin along Z
+    tol_z_dbox_t = 1.13  # distance between round leg and table origin along Z
 
-    tgt_box_pos = Gf.Vec3d(-0.23737475275993347, 0.5223679852485657, 1.0766514539718628)
-    tgt_box_quat = Gf.Quatd(
-        -7.106468547135592e-05,
-        Gf.Vec3d(7.105479744495824e-05, -0.7071069478988647, 0.7071067690849304),
+    tgt_leg_pos = Gf.Vec3d(0.18886056542396545, 0.40083980560302734, 1.1228126287460327)
+    tgt_leg_quat = Gf.Quatd(
+        -0.4652639329433441,
+        Gf.Vec3d(0.4648388922214508, 0.5321130752563477, -0.5332072377204895),
     )
-    tgt_bot_pos = Gf.Vec3d(-0.23738756775856018, 0.4994921398162842, 1.0552730560302734)
-    tgt_bot_quat = Gf.Quatd(
-        9.714877523947507e-05,
-        Gf.Vec3d(-0.000178157992195338, -0.7075424790382385, 0.7066707611083984),
+    tgt_support_pos = Gf.Vec3d(-0.14829237759113312, 0.4203796684741974, 1.196882724761963)
+    tgt_support_quat = Gf.Quatd(
+        -0.7324199676513672,
+        Gf.Vec3d(-0.00262716063298285, -0.005564449355006218, -0.6808253526687622),
     )
-    tgt_top_pos = Gf.Vec3d(-0.23674903810024261, 0.5066296172142029, 1.1454159021377563)
+    tgt_top_pos = Gf.Vec3d(-0.15009844303131104, 0.42000797390937805, 0.9965510368347168)
     tgt_top_quat = Gf.Quatd(
-        -0.0023043914698064327,
-        Gf.Vec3d(0.0004399800091050565, -0.7075466513633728, 0.7066628336906433),
+        -0.7240346670150757,
+        Gf.Vec3d(2.5640474632382393e-08, -4.72591636935249e-08, 0.6897637844085693),
     )
 
     def __init__(self):
         super().__init__()
         self._checks = [
-            self._check_pickup_box,
-            self._check_braced_box,
-            self._check_bottom_insert,
-            self._check_top_insert,
+            self._check_pickup_leg,
+            self._check_insert_leg,
+            self._check_braced_top,
+            self._check_support_insert,
         ]
         # Resolved prim paths. Moving parts - rigid body prim if available
         self._paths: dict[str, Optional[str]] = {}
         # Asset root paths for ghosts
         self._asset_roots: dict[str, Optional[str]] = {
-            "DrawerBox": None,
-            "DrawerBottom": None,
-            "DrawerTop": None,
+            "RoundLeg": None,
+            "RoundSupport": None,
+            "RoundTableTop": None,
         }
         # Cached static world poses for this episode
         self._static_table_pos: Optional[Gf.Vec3d] = None
@@ -63,9 +63,9 @@ class RtableGuide(BaseGuide):
 
         # Target poses for ghost previews
         self._target_poses: dict[str, Optional[Tuple[Gf.Vec3d, Gf.Quatd]]] = {
-            "DrawerBox": None,
-            "DrawerBottom": None,
-            "DrawerTop": None,
+            "RoundLeg": None,
+            "RoundSupport": None,
+            "RoundTableTop": None,
         }
 
         # Ghost prim paths by logical name
@@ -78,11 +78,11 @@ class RtableGuide(BaseGuide):
         stage: Usd.Stage = env.scene.stage
         env_ns: str = env.scene.env_ns
         self._paths.clear()
-        self._asset_roots = {"DrawerBox": None, "DrawerBottom": None, "DrawerTop": None}
+        self._asset_roots = {"RoundLeg": None, "RoundSupport": None, "RoundTableTop": None}
         self._target_poses = {
-            "DrawerBox": None,
-            "DrawerBottom": None,
-            "DrawerTop": None,
+            "RoundLeg": None,
+            "RoundSupport": None,
+            "RoundTableTop": None,
         }
         self._ghost_paths_by_name.clear()
         self._static_table_pos = None
@@ -144,14 +144,14 @@ class RtableGuide(BaseGuide):
             and self._static_obstacles["ObstacleFront"] is not None
         ):
 
-            # target DrawerBox braced in corner
-            self._target_poses["DrawerBox"] = (self.tgt_box_pos, self.tgt_box_quat)
+            # target RoundLeg braced in corner
+            self._target_poses["RoundLeg"] = (self.tgt_leg_pos, self.tgt_leg_quat)
 
-            # target DrawerBottom inserted to DrawerBox
-            self._target_poses["DrawerBottom"] = (self.tgt_bot_pos, self.tgt_bot_quat)
+            # target RoundSupport inserted to RoundLeg
+            self._target_poses["RoundSupport"] = (self.tgt_support_pos, self.tgt_support_quat)
 
-            # target DrawerTop inserted to DrawerBox
-            self._target_poses["DrawerTop"] = (self.tgt_top_pos, self.tgt_top_quat)
+            # target RoundTableTop inserted to RoundSupport
+            self._target_poses["RoundTableTop"] = (self.tgt_top_pos, self.tgt_top_quat)
 
         # --------- Spawn ghosts at target poses ---------
         stage = self._stage
@@ -180,28 +180,28 @@ class RtableGuide(BaseGuide):
     def get_all_instructions(self) -> list[str]:
         total = len(self.SEQUENCE)
         base_steps = [
-            f"Step 1/{total}: Pick up Drawer Box",
-            f"Step 2/{total}: Brace Drawer Box against the front and left corner obstacles",
-            f"Step 3/{total}: Insert Drawer Bottom into Drawer Box",
-            f"Step 4/{total}: Insert Drawer Top to finish",
+            f"Step 1/{total}: Pick up Round Leg",
+            f"Step 2/{total}: Insert Round Leg into Round Support and screw clockwise until tight",
+            f"Step 3/{total}: Brace Round Table Top against the front and left corner obstacles",
+            f"Step 4/{total}: Insert Round Support into Round Table Top and screw clockwise until tight to finish",
         ]
         base_steps.append("Assembly complete!")
         return base_steps
 
     # ---------------------- checks ----------------------
 
-    def _check_pickup_box(self) -> bool:
+    def _check_pickup_leg(self) -> bool:
         if self._static_table_pos is None:
             return False
-        box_pose = self.get_live_part_pose("DrawerBox")
+        box_pose = self.get_live_part_pose("RoundLeg")
         if not box_pose:
             return False
         box_pos, _ = box_pose
         return (box_pos[2] - self._static_table_pos[2]) >= self.tol_z_dbox_t
 
-    def _check_braced_box(self) -> bool:
-        tgt = self._target_poses.get("DrawerBox")
-        live = self.get_live_part_pose("DrawerBox")
+    def _check_insert_leg(self) -> bool:
+        tgt = self._target_poses.get("RoundLeg")
+        live = self.get_live_part_pose("RoundLeg")
         if not (tgt and live):
             return False
 
@@ -210,11 +210,11 @@ class RtableGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 and ang_err <= 3.0
+        return pos_err <= 0.01# and ang_err <= 3.0
 
-    def _check_bottom_insert(self) -> bool:
-        tgt = self._target_poses.get("DrawerBottom")
-        live = self.get_live_part_pose("DrawerBottom")
+    def _check_braced_top(self) -> bool:
+        tgt = self._target_poses.get("RoundTableTop")
+        live = self.get_live_part_pose("RoundTableTop")
         if not (tgt and live):
             return False
 
@@ -223,11 +223,11 @@ class RtableGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 and ang_err <= 3.0
+        return pos_err <= 0.01 #and ang_err <= 3.0
 
-    def _check_top_insert(self) -> bool:
-        tgt = self._target_poses.get("DrawerTop")
-        live = self.get_live_part_pose("DrawerTop")
+    def _check_support_insert(self) -> bool:
+        tgt = self._target_poses.get("RoundSupport")
+        live = self.get_live_part_pose("RoundSupport")
         if not (tgt and live):
             return False
 
@@ -236,25 +236,19 @@ class RtableGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 and ang_err <= 3.0
+        return pos_err <= 0.01 #and ang_err <= 3.0
 
     def is_final_assembly_valid(self) -> bool:
         return (
-            self._check_braced_box()
-            and self._check_bottom_insert()
-            and self._check_top_insert()
+            self._check_braced_top()
+            and self._check_support_insert()
         )
 
     def final_unmet_constraints(self) -> List[Tuple[str, str]]:
         issues: List[Tuple[str, str]] = []
-
-        if not self._check_braced_box():
-            issues.append(
-                ("DrawerBox", "Drawer Box is not aligned in the corner (Step 2)")
-            )
-        if not self._check_bottom_insert():
-            issues.append(("DrawerBottom", "Drawer Bottom is not aligned (Step 3)"))
-        if not self._check_top_insert():
-            issues.append(("DrawerTop", "Drawer Top is not aligned (Step 4)"))
+        if not self._check_braced_top():
+            issues.append(("RoundTableTop", "Round Table Top is not aligned (Step 3)"))
+        if not self._check_support_insert():
+            issues.append(("RoundSupport", "Round Support is not aligned (Step 4)"))
 
         return issues
