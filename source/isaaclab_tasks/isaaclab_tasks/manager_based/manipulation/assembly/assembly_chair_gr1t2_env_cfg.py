@@ -544,9 +544,9 @@ class AssemblyChairGR1T2EnvCfg(ManagerBasedRLEnvCfg):
 
     sim: sim_utils.SimulationCfg = sim_utils.SimulationCfg(
         physics_material=sim_utils.RigidBodyMaterialCfg(
-            static_friction=0.7,
+            static_friction=0.8,
             dynamic_friction=0.7,
-            friction_combine_mode="average",
+            friction_combine_mode="multiply",
         ),
         physx=sim_utils.PhysxCfg(
             solver_type=1,
@@ -569,7 +569,7 @@ class AssemblyChairGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         self.decimation = 6  # 6
         self.episode_length_s = 20.0
         # simulation settings
-        self.sim.dt = 1 / 120  # 120Hz
+        self.sim.dt = 1 / 160  # 120Hz
         self.sim.render_interval = 2  # 6
         self.sim.physx.enable_ccd = False  # True
         carb.settings.get_settings().set_int("rtx/translucency/maxRefractionBounces", 2)

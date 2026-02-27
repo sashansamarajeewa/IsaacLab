@@ -11,7 +11,7 @@ from .base import (
 from pxr import UsdGeom, Usd, Gf
 from typing import List, Optional, Tuple
 
-# ------------------- Desk Guide -------------------
+# ------------------- Stable Guide -------------------
 
 
 class StableGuide(BaseGuide):
@@ -79,18 +79,18 @@ class StableGuide(BaseGuide):
         Gf.Vec3d(0.03950197994709015, -0.706062912940979, -0.7059540748596191),
     )
     tgt_back_right_leg_pos = Gf.Vec3d(
-        0.3001917004585266, 0.5691114664077759, 1.119033932685852
+        0.29954004287719727, 0.3438337445259094, 1.119034767150879
     )
     tgt_back_right_leg_quat = Gf.Quatd(
-        0.10513295233249664,
-        Gf.Vec3d(0.10518713295459747, -0.69953852891922, -0.6989482641220093),
+        0.7061378359794617,
+        Gf.Vec3d(0.705807626247406, 0.039946526288986206, 0.04011766240000725),
     )
     tgt_back_left_leg_pos = Gf.Vec3d(
-        0.07489629089832306, 0.3463853597640991, 1.1190142631530762
+        0.07426538318395615, 0.3463539183139801, 1.1190378665924072
     )
     tgt_back_left_leg_quat = Gf.Quatd(
-        -0.706780195236206,
-        Gf.Vec3d(-0.7070118188858032, -0.01728672906756401, -0.017242537811398506),
+        0.7065831422805786,
+        Gf.Vec3d(0.7067301869392395, 0.025240086019039154, 0.025214826688170433),
     )
 
     def __init__(self):
@@ -306,8 +306,8 @@ class StableGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        #return pos_err <= 0.01 and ang_err <= 3.5
-        return True
+        return pos_err <= 0.01 and ang_err <= 3.5
+        #return True
 
     def _check_front_right_leg_insert(self) -> bool:
         tgt = self._target_poses.get("FrontRightLeg")
@@ -320,8 +320,8 @@ class StableGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        #return pos_err <= 0.01 and ang_err <= 3.5
-        return True
+        return pos_err <= 0.01 and ang_err <= 3.5
+        #return True
 
     def _check_front_left_leg_insert(self) -> bool:
         tgt = self._target_poses.get("FrontLeftLeg")
@@ -409,9 +409,6 @@ class StableGuide(BaseGuide):
     def _check_back_right_leg_insert(self) -> bool:
         tgt = self._target_poses.get("BackRightLeg")
         live = self.get_live_part_pose("BackRightLeg")
-        print(self.get_live_part_pose("BackLeftLeg"))
-        print("####################")
-        print(self.get_live_part_pose("FrontLeftLeg"))
         if not (tgt and live):
             return False
 

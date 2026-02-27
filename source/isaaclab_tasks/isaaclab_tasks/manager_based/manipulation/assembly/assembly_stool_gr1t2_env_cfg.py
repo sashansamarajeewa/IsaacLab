@@ -522,7 +522,7 @@ class AssemblyStoolGR1T2EnvCfg(ManagerBasedRLEnvCfg):
         physics_material=sim_utils.RigidBodyMaterialCfg(
             static_friction=0.8,
             dynamic_friction=0.7,
-            friction_combine_mode="min",
+            friction_combine_mode="multiply",
         ),
         physx=sim_utils.PhysxCfg(
             solver_type=1,
