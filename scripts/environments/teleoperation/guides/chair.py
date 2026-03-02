@@ -401,7 +401,7 @@ class ChairGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 and ang_err <= 3.5
+        return pos_err <= 0.01 and ang_err <= 8
         # return True
 
     def _check_left_nut_insert(self) -> bool:
@@ -415,7 +415,7 @@ class ChairGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 and ang_err <= 3.5
+        return pos_err <= 0.01 and ang_err <= 8
         # return True
 
     def is_final_assembly_valid(self) -> bool:

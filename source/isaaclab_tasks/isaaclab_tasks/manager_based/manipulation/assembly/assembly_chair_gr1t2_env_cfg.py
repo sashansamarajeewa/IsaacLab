@@ -147,7 +147,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_back.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=2.5),
+            mass_props=sim_utils.MassPropertiesCfg(mass=1.5),
         ),
     )
     
@@ -159,7 +159,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_seat.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=2.5),
+            mass_props=sim_utils.MassPropertiesCfg(mass=1.5),
         ),
     )
 

@@ -95,13 +95,13 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     cabinet_body = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/CabinetBody",
         init_state=RigidObjectCfg.InitialStateCfg(
-            pos=[-0.02, 0.4582, 1.054], rot=[0.7071068, 0, 0.7071068, 0]
+            pos=[-0.07244517654180527, 0.4748646020889282, 1.0516512393951416], rot=[0.7071068, 0, 0.7071068, 0]
         ),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/cabinet/cabinet_body.usd",
             scale=ASSET_SCALE,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=5),
+            mass_props=sim_utils.MassPropertiesCfg(mass=3),
         ),
     )
 
@@ -155,8 +155,8 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
 
     head_camera = CameraCfg(
         prim_path="/World/envs/env_.*/Robot/GR1T2_fourier_hand_6dof/head_yaw_link/HeadCamera",
-        height=720,
-        width=1280,
+        height=480,
+        width=640,
         data_types=["rgb", "distance_to_image_plane"],
         spawn=sim_utils.PinholeCameraCfg(focal_length=6.0),
         offset=CameraCfg.OffsetCfg(

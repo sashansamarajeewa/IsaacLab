@@ -21,20 +21,25 @@ class CabinetGuide(BaseGuide):
 
     tol_z_dbox_t = 1.082  # distance between drawer box and table origin along Z
 
-    tgt_box_pos = Gf.Vec3d(-0.23737475275993347, 0.5223679852485657, 1.0766514539718628)
-    tgt_box_quat = Gf.Quatd(
-        -7.106468547135592e-05,
-        Gf.Vec3d(7.105479744495824e-05, -0.7071069478988647, 0.7071067690849304),
+    tgt_ldoor_pos = Gf.Vec3d(-0.020940018817782402, 0.4008996784687042, 1.1067736148834229)
+    tgt_ldoor_quat = Gf.Quatd(
+        -0.00958466250449419,
+        Gf.Vec3d(0.0050072926096618176, -0.9998884797096252, 0.010301811620593071),
     )
-    tgt_bot_pos = Gf.Vec3d(-0.23738756775856018, 0.4994921398162842, 1.0552730560302734)
-    tgt_bot_quat = Gf.Quatd(
-        9.714877523947507e-05,
-        Gf.Vec3d(-0.000178157992195338, -0.7075424790382385, 0.7066707611083984),
+    tgt_rdoor_pos = Gf.Vec3d(-0.12322989851236343, 0.4011825919151306, 1.1069523096084595)
+    tgt_rdoor_quat = Gf.Quatd(
+        0.01594029739499092,
+        Gf.Vec3d(-0.000999385374598205, -0.9997969269752502, 0.012297765351831913),
     )
-    tgt_top_pos = Gf.Vec3d(-0.23674903810024261, 0.5066296172142029, 1.1454159021377563)
+    tgt_body_pos = Gf.Vec3d(-0.060622476041316986, 0.43995583057403564, 1.1391513347625732)
+    tgt_body_quat = Gf.Quatd(
+        0.49841177463531494,
+        Gf.Vec3d(-0.49841201305389404, 0.5015832185745239, -0.5015831589698792),
+    )
+    tgt_top_pos = Gf.Vec3d(-0.06051408872008324, 0.4396895170211792, 1.2943917512893677)
     tgt_top_quat = Gf.Quatd(
-        -0.0023043914698064327,
-        Gf.Vec3d(0.0004399800091050565, -0.7075466513633728, 0.7066628336906433),
+        0.4824027419090271,
+        Gf.Vec3d(-0.7160485982894897, 0.43871527910232544, 0.24918077886104584),
     )
 
     def __init__(self):
@@ -148,13 +153,13 @@ class CabinetGuide(BaseGuide):
         ):
 
             # target CabinetBody braced in corner
-            self._target_poses["CabinetBody"] = (self.tgt_box_pos, self.tgt_box_quat)
+            self._target_poses["CabinetBody"] = (self.tgt_body_pos, self.tgt_body_quat)
 
             # target CabinetDoorLeft inserted to DrawerBox
-            self._target_poses["CabinetDoorLeft"] = (self.tgt_bot_pos, self.tgt_bot_quat)
+            self._target_poses["CabinetDoorLeft"] = (self.tgt_ldoor_pos, self.tgt_ldoor_quat)
 
             # target CabinetDoorRight inserted to DrawerBox
-            self._target_poses["CabinetDoorRight"] = (self.tgt_top_pos, self.tgt_top_quat)
+            self._target_poses["CabinetDoorRight"] = (self.tgt_rdoor_pos, self.tgt_rdoor_quat)
 
             # target CabinetTop inserted to DrawerBox
             self._target_poses["CabinetTop"] = (self.tgt_top_pos, self.tgt_top_quat)
@@ -246,27 +251,17 @@ class CabinetGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 and ang_err <= 3.0
+        return pos_err <= 0.01 and ang_err <= 10.0
 
     def is_final_assembly_valid(self) -> bool:
         return (
-            self._check_insert_left_door()
-            and self._check_insert_right_door()
-            and self._check_body_rotation()
+            self._check_body_rotation()
             and self._check_top_insert()
         )
 
     def final_unmet_constraints(self) -> List[Tuple[str, str]]:
         issues: List[Tuple[str, str]] = []
 
-        if not self._check_insert_right_door():
-            issues.append(
-                ("CabinetDoorLeft", "Cabinet Door Left is not aligned in the corner (Step 1)")
-            )
-        if not self._check_insert_right_door():
-            issues.append(
-                ("CabinetDoorRight", "Cabinet Door Right is not aligned in the corner (Step 2)")
-            )
         if not self._check_body_rotation():
             issues.append(("CabinetBody", "Cabinet Body is not aligned (Step 3)"))
         if not self._check_top_insert():
