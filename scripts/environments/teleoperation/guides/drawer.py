@@ -300,7 +300,9 @@ def snap_step_to_target(self, env, step_index: int) -> bool:
         "DrawerTop": "DrawerTop",
     }
     scene_key = scene_key_map.get(name)
+    print(scene_key)
     if not scene_key or scene_key not in env.scene:
+        print("not in env.scene")
         return False
 
     _snap_rigid_object(env, scene_key, pos, quat)
