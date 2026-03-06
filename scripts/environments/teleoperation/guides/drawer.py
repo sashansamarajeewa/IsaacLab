@@ -260,13 +260,31 @@ class DrawerGuide(BaseGuide):
 
         return issues
 
+def _snap_rigid_object(env, scene_key: str, pos, quat) -> None:
+    obj = env.scene[scene_key]
+
+    # pose: [x, y, z, qw, qx, qy, qz]  (wxyz)
+    pose = torch.tensor(
+        [[
+            float(pos[0]), float(pos[1]), float(pos[2]),
+            float(quat.GetReal()),
+            float(quat.GetImaginary()[0]), float(quat.GetImaginary()[1]), float(quat.GetImaginary()[2]),
+        ]],
+        device=obj.device,
+        dtype=torch.float32,
+    )
+
+    # velocities: [vx, vy, vz, wx, wy, wz]
+    vel = torch.zeros((1, 6), device=obj.device, dtype=torch.float32)
+
+    # root_state: [pose(7), vel(6)] => shape (1, 13)
+    root_state = torch.cat([pose, vel], dim=1)
+
+    # IMPORTANT: env_ids=None -> uses internal tensor indices (_ALL_INDICES), most robust :contentReference[oaicite:2]{index=2}
+    obj.write_root_state_to_sim(root_state, env_ids=None)
+    
 def snap_step_to_target(self, env, step_index: int) -> bool:
-    # Only snap for the steps that have target poses (0-based indices)
-    snap_map = {
-        1: "DrawerBox",      # Step 2: braced box
-        2: "DrawerBottom",   # Step 3: bottom inserted
-        3: "DrawerTop",      # Step 4: top inserted
-    }
+    snap_map = {1: "DrawerBox", 2: "DrawerBottom", 3: "DrawerTop"}  # 0-based steps
     name = snap_map.get(step_index)
     if not name:
         return False
@@ -276,31 +294,14 @@ def snap_step_to_target(self, env, step_index: int) -> bool:
         return False
     pos, quat = tgt
 
-    # Map logical names to scene keys (matches your SceneCfg attribute names)
     scene_key_map = {
-        "DrawerBox": "DrawerBox",
-        "DrawerBottom": "DrawerBottom",
-        "DrawerTop": "DrawerTop",
+        "DrawerBox": "drawer_box",
+        "DrawerBottom": "drawer_container_bottom",
+        "DrawerTop": "drawer_container_top",
     }
     scene_key = scene_key_map.get(name)
     if not scene_key or scene_key not in env.scene:
         return False
 
-    obj = env.scene[scene_key]
-
-    # Isaac Lab expects pose as [x, y, z, qw, qx, qy, qz] in sim frame
-    pose = torch.tensor(
-        [[float(pos[0]), float(pos[1]), float(pos[2]),
-          float(quat.GetReal()),
-          float(quat.GetImaginary()[0]), float(quat.GetImaginary()[1]), float(quat.GetImaginary()[2])]],
-        device=obj.device,
-        dtype=torch.float32,
-    )
-
-    obj.write_root_pose_to_sim(pose, env_ids=[0])
-
-    # Zero velocity so it doesn’t “drift” after teleport
-    vel = torch.zeros((1, 6), device=obj.device, dtype=torch.float32)
-    obj.write_root_velocity_to_sim(vel, env_ids=[0])
-
+    _snap_rigid_object(env, scene_key, pos, quat)
     return True

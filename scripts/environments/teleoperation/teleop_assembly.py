@@ -368,12 +368,8 @@ def main() -> None:
                     idx = highlighter.step_index
                     if 0 <= idx < total_real:
                         # Snap current step's target into place if guide supports it
-                        if hasattr(guide, "snap_step_to_target"):
-                            try:
-                                guide.snap_step_to_target(env, idx)
-                            except Exception as e:
-                                omni.log.warn(f"snap_step_to_target failed: {e}")
-
+                        ok = guide.snap_step_to_target(env, idx)
+                        print(f"[NEXT_STEP] idx={idx} snap_ok={ok}")
                         highlighter.advance()
 
                         if llm_checker is not None:
