@@ -261,7 +261,12 @@ class DrawerGuide(BaseGuide):
         return issues
         
     def snap_step_to_target(self, env, step_index: int) -> bool:
-        snap_map = {1: "DrawerBox", 2: "DrawerBottom", 3: "DrawerTop"}  # 0-based steps
+        # step_index is 0-based (same as highlighter.step_index)
+        snap_map = {
+            1: "DrawerBox",      # step 2: brace box
+            2: "DrawerBottom",   # step 3: insert bottom
+            3: "DrawerTop",      # step 4: insert top
+        }
         name = snap_map.get(step_index)
         if not name:
             return False
@@ -277,20 +282,11 @@ class DrawerGuide(BaseGuide):
             "DrawerTop": "drawer_container_top",
         }
         scene_key = scene_key_map.get(name)
-        print(scene_key)
-        if not scene_key or scene_key not in env.scene:
-            print("not in env.scene")
+        if not scene_key:
             return False
 
-        _snap_rigid_object(env, scene_key, pos, quat)
-        return True
-    
-def _snap_rigid_object(env, scene_key: str, pos, quat) -> None:
-    obj = env.scene[scene_key]
-    print(obj)
-
-    # pose: [x, y, z, qw, qx, qy, qz]  (wxyz)
-    pose = torch.tensor(
+        obj = env.scene[scene_key]  # <-- must be these strings, not "0"/"1"/...
+        pose = torch.tensor(
             [[
                 float(pos[0]), float(pos[1]), float(pos[2]),
                 float(quat.GetReal()),
@@ -299,12 +295,9 @@ def _snap_rigid_object(env, scene_key: str, pos, quat) -> None:
             device=obj.device,
             dtype=torch.float32,
         )
+        vel = torch.zeros((1, 6), device=obj.device, dtype=torch.float32)
+        root_state = torch.cat([pose, vel], dim=1)  # (1, 13)
 
-    # velocities: [vx, vy, vz, wx, wy, wz]
-    vel = torch.zeros((1, 6), device=obj.device, dtype=torch.float32)
-
-    # root_state: [pose(7), vel(6)] => shape (1, 13)
-    root_state = torch.cat([pose, vel], dim=1)
-
-    # IMPORTANT: env_ids=None -> uses internal tensor indices (_ALL_INDICES), most robust :contentReference[oaicite:2]{index=2}
-    obj.write_root_state_to_sim(root_state, env_ids=None)
+        # env_ids=None => all envs (fine for num_envs=1). :contentReference[oaicite:2]{index=2}
+        obj.write_root_state_to_sim(root_state, env_ids=None)
+        return True
