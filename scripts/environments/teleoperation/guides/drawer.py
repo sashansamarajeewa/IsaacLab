@@ -264,19 +264,17 @@ class DrawerGuide(BaseGuide):
         snap_map = {1: "DrawerBox", 2: "DrawerBottom", 3: "DrawerTop"}  # 0-based steps
         name = snap_map.get(step_index)
         if not name:
-            print("not name")
             return False
 
         tgt = self._target_poses.get(name)
         if not tgt:
-            print("not tgt")
             return False
         pos, quat = tgt
 
         scene_key_map = {
-            "DrawerBox": "DrawerBox",
-            "DrawerBottom": "DrawerBottom",
-            "DrawerTop": "DrawerTop",
+            "DrawerBox": "drawer_box",
+            "DrawerBottom": "drawer_container_bottom",
+            "DrawerTop": "drawer_container_top",
         }
         scene_key = scene_key_map.get(name)
         print(scene_key)
@@ -289,6 +287,7 @@ class DrawerGuide(BaseGuide):
     
 def _snap_rigid_object(env, scene_key: str, pos, quat) -> None:
     obj = env.scene[scene_key]
+    print(obj)
 
     # pose: [x, y, z, qw, qx, qy, qz]  (wxyz)
     pose = torch.tensor(
