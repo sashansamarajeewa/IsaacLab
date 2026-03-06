@@ -259,20 +259,47 @@ class DrawerGuide(BaseGuide):
             issues.append(("DrawerTop", "Drawer Top is not aligned (Step 4)"))
 
         return issues
+        
+    def snap_step_to_target(self, env, step_index: int) -> bool:
+        snap_map = {1: "DrawerBox", 2: "DrawerBottom", 3: "DrawerTop"}  # 0-based steps
+        name = snap_map.get(step_index)
+        if not name:
+            print("not name")
+            return False
 
+        tgt = self._target_poses.get(name)
+        if not tgt:
+            print("not tgt")
+            return False
+        pos, quat = tgt
+
+        scene_key_map = {
+            "DrawerBox": "DrawerBox",
+            "DrawerBottom": "DrawerBottom",
+            "DrawerTop": "DrawerTop",
+        }
+        scene_key = scene_key_map.get(name)
+        print(scene_key)
+        if not scene_key or scene_key not in env.scene:
+            print("not in env.scene")
+            return False
+
+        _snap_rigid_object(env, scene_key, pos, quat)
+        return True
+    
 def _snap_rigid_object(env, scene_key: str, pos, quat) -> None:
     obj = env.scene[scene_key]
 
     # pose: [x, y, z, qw, qx, qy, qz]  (wxyz)
     pose = torch.tensor(
-        [[
-            float(pos[0]), float(pos[1]), float(pos[2]),
-            float(quat.GetReal()),
-            float(quat.GetImaginary()[0]), float(quat.GetImaginary()[1]), float(quat.GetImaginary()[2]),
-        ]],
-        device=obj.device,
-        dtype=torch.float32,
-    )
+            [[
+                float(pos[0]), float(pos[1]), float(pos[2]),
+                float(quat.GetReal()),
+                float(quat.GetImaginary()[0]), float(quat.GetImaginary()[1]), float(quat.GetImaginary()[2]),
+            ]],
+            device=obj.device,
+            dtype=torch.float32,
+        )
 
     # velocities: [vx, vy, vz, wx, wy, wz]
     vel = torch.zeros((1, 6), device=obj.device, dtype=torch.float32)
@@ -282,30 +309,3 @@ def _snap_rigid_object(env, scene_key: str, pos, quat) -> None:
 
     # IMPORTANT: env_ids=None -> uses internal tensor indices (_ALL_INDICES), most robust :contentReference[oaicite:2]{index=2}
     obj.write_root_state_to_sim(root_state, env_ids=None)
-    
-def snap_step_to_target(self, env, step_index: int) -> bool:
-    snap_map = {1: "DrawerBox", 2: "DrawerBottom", 3: "DrawerTop"}  # 0-based steps
-    name = snap_map.get(step_index)
-    if not name:
-        print("not name")
-        return False
-
-    tgt = self._target_poses.get(name)
-    if not tgt:
-        print("not tgt")
-        return False
-    pos, quat = tgt
-
-    scene_key_map = {
-        "DrawerBox": "DrawerBox",
-        "DrawerBottom": "DrawerBottom",
-        "DrawerTop": "DrawerTop",
-    }
-    scene_key = scene_key_map.get(name)
-    print(scene_key)
-    if not scene_key or scene_key not in env.scene:
-        print("not in env.scene")
-        return False
-
-    _snap_rigid_object(env, scene_key, pos, quat)
-    return True
