@@ -278,9 +278,9 @@ def snap_step_to_target(self, env, step_index: int) -> bool:
 
     # Map logical names to scene keys (matches your SceneCfg attribute names)
     scene_key_map = {
-        "DrawerBox": "drawer_box",
-        "DrawerBottom": "drawer_container_bottom",
-        "DrawerTop": "drawer_container_top",
+        "DrawerBox": "DrawerBox",
+        "DrawerBottom": "DrawerBottom",
+        "DrawerTop": "DrawerTop",
     }
     scene_key = scene_key_map.get(name)
     if not scene_key or scene_key not in env.scene:
