@@ -9,6 +9,7 @@ from .base import (
 )
 from pxr import UsdGeom, Usd, Gf
 from typing import List, Optional, Tuple
+import torch
 
 # ------------------- Drawer Guide -------------------
 
@@ -258,3 +259,48 @@ class DrawerGuide(BaseGuide):
             issues.append(("DrawerTop", "Drawer Top is not aligned (Step 4)"))
 
         return issues
+
+def snap_step_to_target(self, env, step_index: int) -> bool:
+    # Only snap for the steps that have target poses (0-based indices)
+    snap_map = {
+        1: "DrawerBox",      # Step 2: braced box
+        2: "DrawerBottom",   # Step 3: bottom inserted
+        3: "DrawerTop",      # Step 4: top inserted
+    }
+    name = snap_map.get(step_index)
+    if not name:
+        return False
+
+    tgt = self._target_poses.get(name)
+    if not tgt:
+        return False
+    pos, quat = tgt
+
+    # Map logical names to scene keys (matches your SceneCfg attribute names)
+    scene_key_map = {
+        "DrawerBox": "drawer_box",
+        "DrawerBottom": "drawer_container_bottom",
+        "DrawerTop": "drawer_container_top",
+    }
+    scene_key = scene_key_map.get(name)
+    if not scene_key or scene_key not in env.scene:
+        return False
+
+    obj = env.scene[scene_key]
+
+    # Isaac Lab expects pose as [x, y, z, qw, qx, qy, qz] in sim frame
+    pose = torch.tensor(
+        [[float(pos[0]), float(pos[1]), float(pos[2]),
+          float(quat.GetReal()),
+          float(quat.GetImaginary()[0]), float(quat.GetImaginary()[1]), float(quat.GetImaginary()[2])]],
+        device=obj.device,
+        dtype=torch.float32,
+    )
+
+    obj.write_root_pose_to_sim(pose, env_ids=[0])
+
+    # Zero velocity so it doesn’t “drift” after teleport
+    vel = torch.zeros((1, 6), device=obj.device, dtype=torch.float32)
+    obj.write_root_velocity_to_sim(vel, env_ids=[0])
+
+    return True

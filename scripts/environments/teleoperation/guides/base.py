@@ -890,3 +890,6 @@ class BaseGuide:
 
     def final_unmet_constraints(self) -> list[tuple[str, str]]:
         return []
+    
+    def snap_step_to_target(self, env, step_index: int) -> bool:
+        return False

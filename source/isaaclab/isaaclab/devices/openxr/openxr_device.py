@@ -497,6 +497,9 @@ class OpenXRDevice(DeviceBase):
             if "RESET" in self._additional_callbacks:
                 self._additional_callbacks["RESET"]()
             self.reset()
+        elif "next" in msg:
+            if "NEXT" in self._additional_callbacks:
+                self._additional_callbacks["NEXT"]()
 
 
 @dataclass

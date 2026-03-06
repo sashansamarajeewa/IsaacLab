@@ -150,6 +150,7 @@ def main() -> None:
     # Flags for controlling teleoperation flow
     should_reset_recording_instance = False
     teleoperation_active = True
+    manual_next_step_requested = False
 
     # USD stage + highlight material
     stage = omni.usd.get_context().get_stage()
@@ -253,6 +254,11 @@ def main() -> None:
         nonlocal teleoperation_active
         teleoperation_active = False
         print("Teleoperation deactivated")
+        
+    def manual_next_step() -> None:
+        nonlocal manual_next_step_requested
+        manual_next_step_requested = True
+        print("Manual NEXT requested from XR UI")
 
     # Create device config if not already in env_cfg
     teleoperation_callbacks: dict[str, Callable[[], None]] = {
@@ -260,6 +266,7 @@ def main() -> None:
         "START": start_teleoperation,
         "STOP": stop_teleoperation,
         "RESET": reset_recording_instance,
+        "NEXT": manual_next_step,
     }
 
     # For hand tracking devices, add additional callbacks
@@ -355,6 +362,23 @@ def main() -> None:
                 else:
                     env.sim.render()
 
+                if manual_next_step_requested:
+                    manual_next_step_requested = False
+
+                    idx = highlighter.step_index
+                    if 0 <= idx < total_real:
+                        # Snap current step's target into place if guide supports it
+                        if hasattr(guide, "snap_step_to_target"):
+                            try:
+                                guide.snap_step_to_target(env, idx)
+                            except Exception as e:
+                                omni.log.warn(f"snap_step_to_target failed: {e}")
+
+                        highlighter.advance()
+
+                        if llm_checker is not None:
+                            llm_checker.reset_for_new_step()
+                
                 guide.maybe_auto_advance(highlighter)
 
                 if args_cli.capture_targets and args_cli.enable_cameras:
