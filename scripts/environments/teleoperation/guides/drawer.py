@@ -287,10 +287,12 @@ def snap_step_to_target(self, env, step_index: int) -> bool:
     snap_map = {1: "DrawerBox", 2: "DrawerBottom", 3: "DrawerTop"}  # 0-based steps
     name = snap_map.get(step_index)
     if not name:
+        print("not name")
         return False
 
     tgt = self._target_poses.get(name)
     if not tgt:
+        print("not tgt")
         return False
     pos, quat = tgt
 
