@@ -18,6 +18,7 @@ from omni.physx import get_physx_interface
 import math
 import carb
 import re
+import torch
 
 # Material registry
 
@@ -770,6 +771,8 @@ class NameTagManager:
 
 class BaseGuide:
     SEQUENCE: List[str] = []  # override in subclasses
+    SCENE_KEY_MAP: dict[str, str] = {}          # logical -> env.scene key
+    SNAP_PLAN: dict[int, list[str]] = {}    
 
     def __init__(self):
         self._stage: Optional[Usd.Stage] = None
@@ -891,5 +894,49 @@ class BaseGuide:
     def final_unmet_constraints(self) -> list[tuple[str, str]]:
         return []
     
+    # def snap_step_to_target(self, env, step_index: int) -> bool:
+    #     return False
+    
+    def get_target_pose(self, name: str):
+        # Default: guides that already fill self._target_poses can use this
+        poses = getattr(self, "_target_poses", {})
+        return poses.get(name)
+
+    def snap_parts_to_targets(self, env, part_names: list[str]) -> bool:
+        """Snap multiple parts to their target poses. Returns True if anything snapped."""
+        snapped_any = False
+        for name in part_names:
+            tgt = self.get_target_pose(name)
+            scene_key = self.SCENE_KEY_MAP.get(name)
+            if not tgt or not scene_key:
+                continue
+
+            obj = env.scene[scene_key]
+            pos, quat = tgt
+
+            pose = torch.tensor(
+                [[
+                    float(pos[0]), float(pos[1]), float(pos[2]),
+                    float(quat.GetReal()),
+                    float(quat.GetImaginary()[0]), float(quat.GetImaginary()[1]), float(quat.GetImaginary()[2]),
+                ]],
+                device=obj.device,
+                dtype=torch.float32,
+            )
+            vel = torch.zeros((1, 6), device=obj.device, dtype=torch.float32)
+            root_state = torch.cat([pose, vel], dim=1)  # (1, 13)
+
+            obj.write_root_state_to_sim(root_state, env_ids=None)
+            snapped_any = True
+
+        return snapped_any
+
     def snap_step_to_target(self, env, step_index: int) -> bool:
-        return False
+        """
+        Default behavior: snap prerequisites for this step using SNAP_PLAN.
+        Guides can override, but usually they just set SNAP_PLAN + SCENE_KEY_MAP.
+        """
+        parts = self.SNAP_PLAN.get(step_index, [])
+        if not parts:
+            return False
+        return self.snap_parts_to_targets(env, parts)
