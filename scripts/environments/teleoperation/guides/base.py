@@ -909,7 +909,6 @@ class BaseGuide:
             tgt = self.get_target_pose(name)
             scene_key = self.SCENE_KEY_MAP.get(name)
             if not tgt or not scene_key:
-                print("continue")
                 continue
 
             obj = env.scene[scene_key]
@@ -938,7 +937,6 @@ class BaseGuide:
         Guides can override, but usually they just set SNAP_PLAN + SCENE_KEY_MAP.
         """
         parts = self.SNAP_PLAN.get(step_index, [])
-        print(parts)
         if not parts:
             return False
         return self.snap_parts_to_targets(env, parts)
