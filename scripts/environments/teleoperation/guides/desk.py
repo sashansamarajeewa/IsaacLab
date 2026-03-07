@@ -46,9 +46,9 @@ class DeskGuide(BaseGuide):
         1: ["DeskTop"],
         2: ["DeskTop", "FrontRightLeg"],
         3: ["DeskTop", "FrontRightLeg", "FrontLeftLeg"],
-        4: ["DeskTop", "FrontRightLeg", "FrontLeftLeg", "DeskTop"],
-        5: ["DeskTop", "FrontRightLeg", "FrontLeftLeg", "DeskTop", "BackRightLeg"],
-        6: ["DeskTop", "FrontRightLeg", "FrontLeftLeg", "DeskTop", "BackRightLeg", "BackLeftLeg"],
+        4: ["DeskTop"],
+        5: ["DeskTop", "BackRightLeg"],
+        6: ["DeskTop", "BackRightLeg", "BackLeftLeg"],
     }
 
     tol_z_dbox_t = 1.082  # distance between desk top and table origin along Z
