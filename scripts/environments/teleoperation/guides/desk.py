@@ -46,7 +46,7 @@ class DeskGuide(BaseGuide):
         1: ["DeskTop"],
         2: ["DeskTop", "FrontRightLeg"],
         3: ["DeskTop", "FrontRightLeg", "FrontLeftLeg"],
-        4: ["FrontRightLeg", "FrontLeftLeg", "DeskTop"],
+        4: ["DeskTop"],
         5: ["DeskTop", "FrontRightLeg", "FrontLeftLeg", "BackRightLeg"],
         6: ["DeskTop", "FrontRightLeg", "FrontLeftLeg", "BackRightLeg", "BackLeftLeg"],
     }
@@ -475,3 +475,10 @@ class DeskGuide(BaseGuide):
             issues.append(("BackLeftLeg", "Back Left Leg is not aligned (Step 7)"))
 
         return issues
+    
+    def on_step_completed(self, env, step_index: int) -> None:
+        # step_index 4 = "Rotate Desk Top by 180°"
+        if step_index == 4:
+            # Now targets for the front legs have been updated to the rotated targets
+            # Snap legs to those updated targets so step 6 starts consistent.
+            self.snap_parts_to_targets(env, ["FrontRightLeg", "FrontLeftLeg"])

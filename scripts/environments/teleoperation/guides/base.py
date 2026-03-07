@@ -808,7 +808,10 @@ class BaseGuide:
     def create_physics_binder(self) -> PhysicsSequenceBinder:
         return PhysicsSequenceBinder(self.SEQUENCE, MaterialRegistry.physics_path)
 
-    def maybe_auto_advance(self, highlighter: StepHighlighter):
+    def on_step_completed(self, env, step_index: int) -> None:
+        return
+    
+    def maybe_auto_advance(self, highlighter: StepHighlighter, env=None):
         idx = highlighter.step_index
         checks: Sequence[Callable[[], bool]] | None = getattr(self, "_checks", None)
         if not checks:
@@ -818,6 +821,11 @@ class BaseGuide:
             return
 
         if checks[idx]():
+            if env is not None:
+                try:
+                    self.on_step_completed(env, idx)
+                except Exception:
+                    pass
             highlighter.advance()
 
     def any_part_fallen_below_table(
