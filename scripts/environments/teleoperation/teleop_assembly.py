@@ -362,6 +362,7 @@ def main() -> None:
                 else:
                     env.sim.render()
 
+                manual_advanced = False
                 if manual_next_step_requested:
                     manual_next_step_requested = False
                     manual_advanced = True
