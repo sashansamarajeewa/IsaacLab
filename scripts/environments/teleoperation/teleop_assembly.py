@@ -151,7 +151,8 @@ def main() -> None:
     should_reset_recording_instance = False
     teleoperation_active = True
     manual_next_step_requested = False
-    manual_advanced = False
+    auto_advance_block_frames = 0
+    AUTO_ADVANCE_COOLDOWN_FRAMES = 10  # ~10 frames; tweak (5–20)
 
     # USD stage + highlight material
     stage = omni.usd.get_context().get_stage()
@@ -363,25 +364,33 @@ def main() -> None:
                 else:
                     env.sim.render()
 
+                manual_advanced = False
+
                 if manual_next_step_requested:
                     manual_next_step_requested = False
                     manual_advanced = True
 
-                    # 1) advance to the NEW step first
-                    highlighter.advance()
+                    # snap CURRENT step (completes only this step)
                     idx = highlighter.step_index
-
-                    # 2) snap targets/prereqs for the NEW step
                     if 0 <= idx < total_real:
                         ok = guide.snap_step_to_target(env, idx)
                         print(f"[NEXT_STEP] idx={idx} snap_ok={ok}")
 
+                    # advance exactly one step
+                    highlighter.advance()
+
+                    # block auto-advance briefly so we don't "double jump"
+                    auto_advance_block_frames = AUTO_ADVANCE_COOLDOWN_FRAMES
+
                     if llm_checker is not None:
                         llm_checker.reset_for_new_step()
 
-                # Only auto-advance if user didn't manually advance this frame
+                # Auto-advance only when not blocked and not manual on this frame
                 if not manual_advanced:
-                    guide.maybe_auto_advance(highlighter)
+                    if auto_advance_block_frames > 0:
+                        auto_advance_block_frames -= 1
+                    else:
+                        guide.maybe_auto_advance(highlighter)
 
                 if args_cli.capture_targets and args_cli.enable_cameras:
                     idx = highlighter.step_index
