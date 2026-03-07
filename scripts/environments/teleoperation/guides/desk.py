@@ -46,7 +46,7 @@ class DeskGuide(BaseGuide):
         1: ["DeskTop"],
         2: ["DeskTop", "FrontRightLeg"],
         3: ["DeskTop", "FrontRightLeg", "FrontLeftLeg"],
-        4: ["DeskTop"],
+        4: ["FrontRightLeg", "FrontLeftLeg", "DeskTop"],
         5: ["DeskTop", "FrontRightLeg", "FrontLeftLeg", "BackRightLeg"],
         6: ["DeskTop", "FrontRightLeg", "FrontLeftLeg", "BackRightLeg", "BackLeftLeg"],
     }
