@@ -209,6 +209,7 @@ class DrawerGuide(BaseGuide):
         if not box_pose:
             return False
         box_pos, _ = box_pose
+        print("_check_pickup_box")
         return (box_pos[2] - self._static_table_pos[2]) >= self.tol_z_dbox_t
 
     def _check_braced_box(self) -> bool:
@@ -221,7 +222,7 @@ class DrawerGuide(BaseGuide):
         tgt_pos, tgt_quat = tgt
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
-
+        print("_check_braced_box")
         return pos_err <= 0.01 and ang_err <= 3.0
 
     def _check_bottom_insert(self) -> bool:
@@ -234,7 +235,7 @@ class DrawerGuide(BaseGuide):
         tgt_pos, tgt_quat = tgt
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
-
+        print("_check_bottom_insert")
         return pos_err <= 0.01 and ang_err <= 3.0
 
     def _check_top_insert(self) -> bool:
@@ -247,10 +248,11 @@ class DrawerGuide(BaseGuide):
         tgt_pos, tgt_quat = tgt
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
-
+        print("_check_top_insert")
         return pos_err <= 0.01 and ang_err <= 3.0
 
     def is_final_assembly_valid(self) -> bool:
+        print("is_final_assembly_valid")
         return (
             self._check_braced_box()
             and self._check_bottom_insert()
