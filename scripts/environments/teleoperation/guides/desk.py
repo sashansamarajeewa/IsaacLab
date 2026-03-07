@@ -478,7 +478,7 @@ class DeskGuide(BaseGuide):
     
     def on_step_completed(self, env, step_index: int) -> None:
         # step_index 4 = "Rotate Desk Top by 180°"
-        if step_index == 4:
+        if step_index == 5:
             # Now targets for the front legs have been updated to the rotated targets
             # Snap legs to those updated targets so step 6 starts consistent.
             self.snap_parts_to_targets(env, ["FrontRightLeg", "FrontLeftLeg"])
