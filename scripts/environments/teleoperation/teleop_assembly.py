@@ -151,6 +151,7 @@ def main() -> None:
     should_reset_recording_instance = False
     teleoperation_active = True
     manual_next_step_requested = False
+    manual_advanced = False
 
     # USD stage + highlight material
     stage = omni.usd.get_context().get_stage()
@@ -362,7 +363,6 @@ def main() -> None:
                 else:
                     env.sim.render()
 
-                manual_advanced = False
                 if manual_next_step_requested:
                     manual_next_step_requested = False
                     manual_advanced = True
