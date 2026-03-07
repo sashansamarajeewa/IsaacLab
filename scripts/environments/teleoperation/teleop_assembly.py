@@ -376,10 +376,15 @@ def main() -> None:
                         ok = guide.snap_step_to_target(env, idx)
                         print(f"[NEXT_STEP] idx={idx} snap_ok={ok}")
 
-                    # advance exactly one step
-                    highlighter.advance()
+                        # NEW: trigger side-effects for this step
+                        checks = getattr(guide, "_checks", None)
+                        if isinstance(checks, (list, tuple)) and 0 <= idx < len(checks):
+                            try:
+                                _ = checks[idx]()
+                            except Exception as e:
+                                omni.log.warn(f"step side-effect check failed at idx={idx}: {e}")
 
-                    # block auto-advance briefly so we don't "double jump"
+                    highlighter.advance()
                     auto_advance_block_frames = AUTO_ADVANCE_COOLDOWN_FRAMES
 
                     if llm_checker is not None:
