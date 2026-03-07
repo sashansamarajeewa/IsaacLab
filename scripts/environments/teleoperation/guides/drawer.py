@@ -18,6 +18,18 @@ class DrawerGuide(BaseGuide):
     SEQUENCE = ["DrawerBox", "DrawerBox", "DrawerBottom", "DrawerTop"]
     MOVING_PARTS = ("DrawerBox", "DrawerBottom", "DrawerTop")
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
+    
+    SCENE_KEY_MAP = {
+        "DrawerBox": "drawer_box",
+        "DrawerBottom": "drawer_container_bottom",
+        "DrawerTop": "drawer_container_top",
+    }
+
+    SNAP_PLAN = {
+        1: ["DrawerBox"],
+        2: ["DrawerBox", "DrawerBottom"],
+        3: ["DrawerBox", "DrawerBottom", "DrawerTop"],
+    }
 
     tol_z_dbox_t = 1.082  # distance between drawer box and table origin along Z
 
@@ -66,19 +78,6 @@ class DrawerGuide(BaseGuide):
             "DrawerBox": None,
             "DrawerBottom": None,
             "DrawerTop": None,
-        }
-
-        SCENE_KEY_MAP = {
-            "DrawerBox": "drawer_box",
-            "DrawerBottom": "drawer_container_bottom",
-            "DrawerTop": "drawer_container_top",
-        }
-
-        # 0-based step index -> snap list (includes prerequisites)
-        SNAP_PLAN = {
-            1: ["DrawerBox"],
-            2: ["DrawerBox", "DrawerBottom"],
-            3: ["DrawerBox", "DrawerBottom", "DrawerTop"],
         }
 
         # Ghost prim paths by logical name
