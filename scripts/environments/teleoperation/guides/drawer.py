@@ -9,7 +9,6 @@ from .base import (
 )
 from pxr import UsdGeom, Usd, Gf
 from typing import List, Optional, Tuple
-import torch
 
 # ------------------- Drawer Guide -------------------
 
