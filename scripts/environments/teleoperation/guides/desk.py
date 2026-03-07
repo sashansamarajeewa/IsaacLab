@@ -35,9 +35,11 @@ class DeskGuide(BaseGuide):
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
     
     SCENE_KEY_MAP = {
-        "DrawerBox": "drawer_box",
-        "DrawerBottom": "drawer_container_bottom",
-        "DrawerTop": "drawer_container_top",
+        "DeskTop": "drawer_box",
+        "FrontRightLeg": "desk_leg2",
+        "FrontLeftLeg": "desk_leg1",
+        "BackRightLeg": "desk_leg4",
+        "BackLeftLeg": "desk_leg3",
     }
 
     SNAP_PLAN = {
