@@ -364,18 +364,23 @@ def main() -> None:
 
                 if manual_next_step_requested:
                     manual_next_step_requested = False
+                    manual_advanced = True
 
+                    # 1) advance to the NEW step first
+                    highlighter.advance()
                     idx = highlighter.step_index
+
+                    # 2) snap targets/prereqs for the NEW step
                     if 0 <= idx < total_real:
-                        # Snap current step's target into place if guide supports it
                         ok = guide.snap_step_to_target(env, idx)
                         print(f"[NEXT_STEP] idx={idx} snap_ok={ok}")
-                        highlighter.advance()
 
-                        if llm_checker is not None:
-                            llm_checker.reset_for_new_step()
-                
-                guide.maybe_auto_advance(highlighter)
+                    if llm_checker is not None:
+                        llm_checker.reset_for_new_step()
+
+                # Only auto-advance if user didn't manually advance this frame
+                if not manual_advanced:
+                    guide.maybe_auto_advance(highlighter)
 
                 if args_cli.capture_targets and args_cli.enable_cameras:
                     idx = highlighter.step_index
