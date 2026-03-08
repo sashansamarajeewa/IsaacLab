@@ -5,6 +5,7 @@ from .base import (
     first_descendant_with_rigid_body,
     resolve_env_scoped_path,
     spawn_ghost_preview,
+    update_ghost_preview_pose,
     MaterialRegistry,
 )
 from pxr import UsdGeom, Usd, Gf
@@ -18,6 +19,20 @@ class CabinetGuide(BaseGuide):
     SEQUENCE = ["CabinetDoorLeft", "CabinetDoorRight", "CabinetBody", "CabinetTop"]
     MOVING_PARTS = ("CabinetBody", "CabinetDoorLeft", "CabinetDoorRight", "CabinetTop")
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
+    
+    SCENE_KEY_MAP = {
+        "CabinetBody": "cabinet_body",
+        "CabinetDoorLeft": "cabinet_door_left",
+        "CabinetDoorRight": "cabinet_door_right",
+        "CabinetTop": "cabinet_top",
+    }
+
+    SNAP_PLAN = {
+        0: ["CabinetBody", "CabinetDoorLeft"],
+        1: ["CabinetBody", "CabinetDoorLeft", "CabinetDoorRight"],
+        2: ["CabinetBody"],
+        3: ["CabinetBody", "CabinetTop"],
+    }
 
     tol_z_dbox_t = 1.082  # distance between drawer box and table origin along Z
 
@@ -30,6 +45,11 @@ class CabinetGuide(BaseGuide):
     tgt_rdoor_quat = Gf.Quatd(
         0.01594029739499092,
         Gf.Vec3d(-0.000999385374598205, -0.9997969269752502, 0.012297765351831913),
+    )
+    tgt_body_pos_initial = Gf.Vec3d(-0.07244517654180527, 0.4748646020889282, 1.0516512393951416)
+    tgt_body_quat_initial = Gf.Quatd(
+        0.7071068,
+        Gf.Vec3d(0, 0.7071068, 0),
     )
     tgt_body_pos = Gf.Vec3d(-0.060622476041316986, 0.43995583057403564, 1.1391513347625732)
     tgt_body_quat = Gf.Quatd(
@@ -153,7 +173,7 @@ class CabinetGuide(BaseGuide):
         ):
 
             # target CabinetBody braced in corner
-            self._target_poses["CabinetBody"] = (self.tgt_body_pos, self.tgt_body_quat)
+            self._target_poses["CabinetBody"] = (self.tgt_body_pos_initial, self.tgt_body_quat_initial)
 
             # target CabinetDoorLeft inserted to DrawerBox
             self._target_poses["CabinetDoorLeft"] = (self.tgt_ldoor_pos, self.tgt_ldoor_quat)
@@ -225,7 +245,26 @@ class CabinetGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 and ang_err <= 3.0
+        result = pos_err <= 0.01 and ang_err <= 3.0
+        if result:
+            self._target_poses["CabinetBody"] = (
+                self.tgt_body_pos,
+                self.tgt_body_quat,
+            )
+            if (
+                self._stage
+                and self._asset_roots.get("CabinetBody")
+                and self._ghost_paths_by_name.get("CabinetBody")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["CabinetBody"],
+                    self._ghost_paths_by_name["CabinetBody"],
+                    self.tgt_body_pos,
+                    self.tgt_body_quat,
+                )
+                
+        return result
 
     def _check_body_rotation(self) -> bool:
         tgt = self._target_poses.get("CabinetBody")
@@ -268,3 +307,7 @@ class CabinetGuide(BaseGuide):
             issues.append(("CabinetTop", "Cabinet Top is not aligned (Step 4)"))
 
         return issues
+    
+    def on_step_completed(self, env, step_index: int) -> None:
+        if step_index == 2:
+            self.snap_parts_to_targets(env, ["CabinetBody"])
