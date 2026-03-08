@@ -18,6 +18,18 @@ class LampGuide(BaseGuide):
     SEQUENCE = ["LampBase", "LampBase", "LampBulb", "LampHood"]
     MOVING_PARTS = ("LampBase", "LampBulb", "LampHood")
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
+    
+    SCENE_KEY_MAP = {
+        "LampBase": "lamp_base",
+        "LampBulb": "lamp_bulb",
+        "LampHood": "lamp_hood",
+    }
+
+    SNAP_PLAN = {
+        1: ["LampBase"],
+        2: ["LampBase", "LampBulb"],
+        3: ["LampBase", "LampBulb", "LampHood"],
+    }
 
     tol_z_dbox_t = 1.082  # distance between lamp base and table origin along Z
 
