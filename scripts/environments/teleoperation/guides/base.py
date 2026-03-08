@@ -908,7 +908,6 @@ class BaseGuide:
         return poses.get(name)
 
     def snap_parts_to_targets(self, env, part_names: list[str]) -> bool:
-        """Snap multiple parts to their target poses. Returns True if anything snapped."""
         snapped_any = False
         for name in part_names:
             tgt = self.get_target_pose(name)
@@ -937,10 +936,6 @@ class BaseGuide:
         return snapped_any
 
     def snap_step_to_target(self, env, step_index: int) -> bool:
-        """
-        Default behavior: snap prerequisites for this step using SNAP_PLAN.
-        Guides can override, but usually they just set SNAP_PLAN + SCENE_KEY_MAP.
-        """
         parts = self.SNAP_PLAN.get(step_index, [])
         if not parts:
             return False

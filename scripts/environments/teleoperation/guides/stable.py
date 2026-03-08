@@ -33,6 +33,23 @@ class StableGuide(BaseGuide):
         "BackLeftLeg",
     )
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
+    
+    SCENE_KEY_MAP = {
+        "TableTop": "square_top",
+        "FrontRightLeg": "square_leg2",
+        "FrontLeftLeg": "square_leg1",
+        "BackRightLeg": "square_leg4",
+        "BackLeftLeg": "square_leg3",
+    }
+
+    SNAP_PLAN = {
+        1: ["TableTop"],
+        2: ["TableTop", "FrontRightLeg"],
+        3: ["TableTop", "FrontRightLeg", "FrontLeftLeg"],
+        4: ["TableTop"],
+        5: ["TableTop", "FrontRightLeg", "FrontLeftLeg", "BackRightLeg"],
+        6: ["TableTop", "FrontRightLeg", "FrontLeftLeg", "BackRightLeg", "BackLeftLeg"],
+    }
 
     tol_z_dbox_t = 1.07  # distance between table top and table origin along Z
 
@@ -458,3 +475,8 @@ class StableGuide(BaseGuide):
             issues.append(("BackLeftLeg", "Back Left Leg is not aligned (Step 7)"))
 
         return issues
+    
+    def on_step_completed(self, env, step_index: int) -> None:
+        # step_index 4
+        if step_index == 4:
+            self.snap_parts_to_targets(env, ["FrontRightLeg", "FrontLeftLeg"])
