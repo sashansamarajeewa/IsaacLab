@@ -35,6 +35,25 @@ class ChairGuide(BaseGuide):
         "LeftNut",
     )
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
+    
+    SCENE_KEY_MAP = {
+        "Seat": "chair_seat",
+        "FrontRightLeg": "chair_leg2",
+        "FrontLeftLeg": "chair_leg1",
+        "Back": "chair_back",
+        "RightNut": "chair_nut2",
+        "LeftNut": "chair_nut1",
+    }
+
+    SNAP_PLAN = {
+        1: ["Seat"],
+        2: ["Seat", "FrontRightLeg"],
+        3: ["Seat", "FrontRightLeg", "FrontLeftLeg"],
+        4: ["Seat"],
+        5: ["Seat", "Back"],
+        6: ["Seat", "Back", "RightNut"],
+        7: ["Seat", "Back", "RightNut", "LeftNut"],
+    }
 
     tol_z_dbox_t = 1.08  # distance between seat and table origin along Z
 
