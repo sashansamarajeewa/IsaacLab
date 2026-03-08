@@ -373,11 +373,11 @@ def main() -> None:
                     idx = highlighter.step_index  # the step we are force-completing
 
                     if 0 <= idx < total_real:
-                        # 1) Snap the CURRENT step's parts (your SNAP_PLAN decides what that means)
+                        # Snap the CURRENT step's parts
                         snap_ok = guide.snap_step_to_target(env, idx)
                         print(f"[NEXT_STEP] idx={idx} snap_ok={snap_ok}")
 
-                        # 2) Run the step check once to trigger any side-effects
+                        # Run the step check once to trigger
                         checks = getattr(guide, "_checks", None)
                         step_ok = False
                         if isinstance(checks, (list, tuple)) and 0 <= idx < len(checks):
@@ -386,14 +386,14 @@ def main() -> None:
                             except Exception as e:
                                 omni.log.warn(f"manual check failed idx={idx}: {e}")
 
-                        # 3) If the step is now complete, run the hook (important for Desk rotation)
+                        # If the step is complete, run the hook
                         if step_ok and hasattr(guide, "on_step_completed"):
                             try:
                                 guide.on_step_completed(env, idx)
                             except Exception as e:
                                 omni.log.warn(f"on_step_completed failed idx={idx}: {e}")
 
-                    # 4) Advance exactly one step
+                    # Advance one step
                     highlighter.advance()
 
                     auto_advance_block_frames = AUTO_ADVANCE_COOLDOWN_FRAMES

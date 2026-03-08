@@ -815,16 +815,12 @@ class BaseGuide:
         idx = highlighter.step_index
         checks: Sequence[Callable[[], bool]] | None = getattr(self, "_checks", None)
         if not checks:
-            print("checks")
             return
 
         if idx >= len(checks):
-            print("idx >= len(checks)")
             return
 
         if checks[idx]():
-            print("env")
-            print(env)
             if env is not None:
                 try:
                     self.on_step_completed(env, idx)
