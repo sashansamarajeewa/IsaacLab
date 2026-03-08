@@ -32,7 +32,7 @@ class StoolGuide(BaseGuide):
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
     
     SCENE_KEY_MAP = {
-        "Seat": "stool",
+        "Seat": "seat",
         "FirstLeg": "stool_leg1",
         "SecondLeg": "stool_leg2",
         "ThirdLeg": "stool_leg3",
