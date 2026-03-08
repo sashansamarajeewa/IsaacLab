@@ -821,6 +821,7 @@ class BaseGuide:
             return
 
         if checks[idx]():
+            print(env)
             if env is not None:
                 try:
                     self.on_step_completed(env, idx)
