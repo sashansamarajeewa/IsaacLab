@@ -118,7 +118,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # LeftNut
     chair_nut1 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/LeftNut",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.108, 0.51, 1.025]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.11, 0.51, 1.025]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_nut1.usd",
             scale=ASSET_SCALE,
@@ -130,7 +130,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # RightNut
     chair_nut2 = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/RightNut",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.042, 0.51, 1.025]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.044, 0.51, 1.025]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/chair/chair_nut2.usd",
             scale=ASSET_SCALE,
