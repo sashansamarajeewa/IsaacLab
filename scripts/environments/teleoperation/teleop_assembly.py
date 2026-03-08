@@ -395,7 +395,7 @@ def main() -> None:
                     if auto_advance_block_frames > 0:
                         auto_advance_block_frames -= 1
                     else:
-                        guide.maybe_auto_advance(highlighter)
+                        guide.maybe_auto_advance(highlighter, env)
 
                 if args_cli.capture_targets and args_cli.enable_cameras:
                     idx = highlighter.step_index

@@ -903,9 +903,6 @@ class BaseGuide:
     def final_unmet_constraints(self) -> list[tuple[str, str]]:
         return []
     
-    # def snap_step_to_target(self, env, step_index: int) -> bool:
-    #     return False
-    
     def get_target_pose(self, name: str):
         # Default: guides that already fill self._target_poses can use this
         poses = getattr(self, "_target_poses", {})
