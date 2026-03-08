@@ -812,6 +812,7 @@ class BaseGuide:
         return
     
     def maybe_auto_advance(self, highlighter: StepHighlighter, env=None):
+        print("maybe_auto_advance")
         idx = highlighter.step_index
         checks: Sequence[Callable[[], bool]] | None = getattr(self, "_checks", None)
         if not checks:
