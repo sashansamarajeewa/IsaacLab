@@ -42,7 +42,7 @@ class StoolGuide(BaseGuide):
         1: ["Seat"],
         2: ["Seat", "FirstLeg"],
         3: ["Seat", "FirstLeg", "SecondLeg"],
-        3: ["Seat", "FirstLeg", "SecondLeg", "ThirdLeg"],
+        4: ["Seat", "FirstLeg", "SecondLeg", "ThirdLeg"],
     }
 
     tol_z_dbox_t = 1.082  # distance between stool seat and table origin along Z
