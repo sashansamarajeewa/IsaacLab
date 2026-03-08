@@ -27,8 +27,8 @@ class RtableGuide(BaseGuide):
 
     SNAP_PLAN = {
         1: ["RoundLeg"],
-        2: ["RoundLeg", "RoundTableTop"],
-        3: ["RoundLeg", "RoundTableTop", "RoundSupport"],
+        2: ["RoundLeg", "RoundSupport"],
+        3: ["RoundLeg", "RoundSupport", "RoundTableTop"],
     }
 
     tol_z_dbox_t = 1.13  # distance between round leg and table origin along Z
