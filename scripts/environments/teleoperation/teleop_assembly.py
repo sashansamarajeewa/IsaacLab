@@ -67,7 +67,7 @@ parser.add_argument(
 parser.add_argument(
     "--llm_checker",
     action="store_true",
-    help="Capture and save target PNGs for each step",
+    help="Use llm for step updates",
 )
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
@@ -152,7 +152,7 @@ def main() -> None:
     teleoperation_active = True
     manual_next_step_requested = False
     auto_advance_block_frames = 0
-    AUTO_ADVANCE_COOLDOWN_FRAMES = 10  # ~10 frames; tweak (5–20)
+    AUTO_ADVANCE_COOLDOWN_FRAMES = 10
 
     # USD stage + highlight material
     stage = omni.usd.get_context().get_stage()
@@ -426,7 +426,7 @@ def main() -> None:
                         cam = env.scene["head_camera"]
                         rgb = (
                             cam.data.output["rgb"][0].cpu().numpy()
-                        )  # HWC uint8 (adjust if needed)
+                        )  # HWC uint8
 
                         step_key = str(idx + 1)
                         step_text = guide.get_all_instructions()[idx]

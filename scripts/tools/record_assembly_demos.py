@@ -17,8 +17,10 @@ import time
 import csv
 from datetime import datetime, timezone
 from collections.abc import Callable
-
+from pathlib import Path
 from isaaclab.app import AppLauncher
+from llm_step_config import build_llm_checker_for_run
+from PIL import Image
 
 # -------------------------- CLI --------------------------
 parser = argparse.ArgumentParser(
@@ -66,6 +68,10 @@ parser.add_argument("--disable_highlight", action="store_true")
 parser.add_argument("--disable_instructions", action="store_true")
 parser.add_argument("--disable_ghosts", action="store_true")
 parser.add_argument("--disable_nametag", action="store_true")
+parser.add_argument("--llm_checker",
+    action="store_true",
+    help="Use llm for step updates",
+)
 
 parser.add_argument("--enable_pinocchio", action="store_true", default=False)
 
@@ -256,6 +262,7 @@ def reset_all(env, guide, highlighter, phys_binder, hud, teleop_interface):
 
     teleop_interface.reset()
 
+
 def default_step_csv_path() -> str:
     task_short = args_cli.task.split(":")[-1].replace("/", "_")
     fname = f"{args_cli.participant_id}_{task_short}_step_stats.csv"
@@ -298,7 +305,9 @@ def main():
         # If cameras are not enabled and XR is enabled, remove camera configs
         if not args_cli.enable_cameras:
             env_cfg = remove_camera_configs_safe(env_cfg)
-            if hasattr(env_cfg.observations, "policy") and hasattr(env_cfg.observations.policy, "head_camera"):
+            if hasattr(env_cfg.observations, "policy") and hasattr(
+                env_cfg.observations.policy, "head_camera"
+            ):
                 env_cfg.observations.policy.head_camera = None
         env_cfg.sim.render.antialiasing_mode = "DLSS"
 
@@ -370,7 +379,7 @@ def main():
     step_start_time: float = 0.0
 
     pending_reset_reason: str = "unknown"
-    
+
     # Teleop flow flags and timing
     should_reset = False
     reset_count_total = 0
@@ -378,6 +387,9 @@ def main():
     demo_started = False
     start_time = None
     success_step_count = 0
+    manual_next_step_requested = False
+    auto_advance_block_frames = 0
+    AUTO_ADVANCE_COOLDOWN_FRAMES = 10
 
     demos_recorded = 0
     finished = False
@@ -401,12 +413,18 @@ def main():
         nonlocal teleoperation_active
         teleoperation_active = False
         print("Teleoperation deactivated")
+        
+    def manual_next_step() -> None:
+        nonlocal manual_next_step_requested
+        manual_next_step_requested = True
+        print("Manual NEXT requested from XR UI")
 
     callbacks: dict[str, Callable[[], None]] = {
         "R": reset_trial,
         "RESET": reset_trial,
         "START": start_teleop,
         "STOP": stop_teleop,
+        "NEXT": manual_next_step,
     }
 
     # Create teleop interface
@@ -451,12 +469,21 @@ def main():
     phys_binder.refresh_after_reset()
     guide.update_previews_for_step(highlighter)
     current_step_idx = int(highlighter.step_index)
-    #step_start_time = time.time()
+    # step_start_time = time.time()
     last_step_idx = None
     last_final_sig = None
     need_hud_update = False
     step_idx = highlighter.step_index
     total_real = len(getattr(guide, "SEQUENCE", []))
+    targets_root = str(Path(__file__).resolve().parent / "targets")
+    llm_checker = None
+    if args_cli.llm_checker:
+        llm_checker = build_llm_checker_for_run(
+            task_name=args_cli.task,
+            guide_name=args_cli.guide,
+            num_steps=total_real,
+            targets_root=targets_root,
+        )
 
     if last_step_idx is None or step_idx != last_step_idx:
         need_hud_update = True
@@ -495,8 +522,68 @@ def main():
             else:
                 env.sim.render()
 
-            # Interface updates
-            guide.maybe_auto_advance(highlighter)
+            manual_advanced = False
+
+            if manual_next_step_requested:
+                manual_next_step_requested = False
+                manual_advanced = True
+
+                idx = highlighter.step_index  # the step we are force-completing
+
+                if 0 <= idx < total_real:
+                    # Snap the CURRENT step's parts
+                    snap_ok = guide.snap_step_to_target(env, idx)
+                    print(f"[NEXT_STEP] idx={idx} snap_ok={snap_ok}")
+
+                     # Run the step check once to trigger
+                    checks = getattr(guide, "_checks", None)
+                    step_ok = False
+                    if isinstance(checks, (list, tuple)) and 0 <= idx < len(checks):
+                        try:
+                            step_ok = bool(checks[idx]())
+                        except Exception as e:
+                            omni.log.warn(f"manual check failed idx={idx}: {e}")
+
+                    # If the step is complete, run the hook
+                    if step_ok and hasattr(guide, "on_step_completed"):
+                        try:
+                            guide.on_step_completed(env, idx)
+                        except Exception as e:
+                            omni.log.warn(f"on_step_completed failed idx={idx}: {e}")
+
+                # Advance one step
+                highlighter.advance()
+
+                auto_advance_block_frames = AUTO_ADVANCE_COOLDOWN_FRAMES
+                if llm_checker is not None:
+                    llm_checker.reset_for_new_step()
+
+            # Auto-advance only when not blocked and not manual on this frame
+            if not manual_advanced:
+                if auto_advance_block_frames > 0:
+                    auto_advance_block_frames -= 1
+                else:
+                    guide.maybe_auto_advance(highlighter, env)
+
+            # LLM logic
+            if (not args_cli.capture_targets) and args_cli.enable_cameras and llm_checker is not None:
+                idx = highlighter.step_index
+                if 0 <= idx <= total_real:
+                    cam = env.scene["head_camera"]
+                    rgb = (
+                        cam.data.output["rgb"][0].cpu().numpy()
+                    )  # HWC uint8
+
+                    step_key = str(idx + 1)
+                    step_text = guide.get_all_instructions()[idx]
+
+                    if llm_checker.update(
+                        step_key=step_key,
+                        step_text=step_text,
+                        current_rgb_uint8_hwc=rgb,
+                    ):
+                        highlighter.advance()
+                        llm_checker.reset_for_new_step()    
             
             # Step transition logging
             new_step_idx = int(highlighter.step_index)
@@ -525,7 +612,7 @@ def main():
             elif new_step_idx < current_step_idx:
                 current_step_idx = new_step_idx
                 step_start_time = time.time()
-                
+
             guide.update_previews_for_step(highlighter)
             if hud is not None:
                 hud.update(guide, highlighter)
@@ -593,7 +680,7 @@ def main():
                     print(
                         f"Demo {demos_recorded} exported. Time: {completion_time_sec:.3f} sec"
                     )
-                    
+
                     # Write step stats for this demo to CSV
                     now_iso = datetime.now(timezone.utc).isoformat()
 
@@ -638,7 +725,7 @@ def main():
                         reset_all(
                             env, guide, highlighter, phys_binder, hud, teleop_interface
                         )
-                        
+
                         demo_step_done.clear()
                         demo_step_failed.clear()
                         demo_step_time_sec.clear()
