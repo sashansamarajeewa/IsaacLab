@@ -370,23 +370,33 @@ def main() -> None:
                     manual_next_step_requested = False
                     manual_advanced = True
 
-                    # snap CURRENT step (completes only this step)
-                    idx = highlighter.step_index
-                    if 0 <= idx < total_real:
-                        ok = guide.snap_step_to_target(env, idx)
-                        print(f"[NEXT_STEP] idx={idx} snap_ok={ok}")
+                    idx = highlighter.step_index  # the step we are force-completing
 
-                        # NEW: trigger side-effects for this step
+                    if 0 <= idx < total_real:
+                        # 1) Snap the CURRENT step's parts (your SNAP_PLAN decides what that means)
+                        snap_ok = guide.snap_step_to_target(env, idx)
+                        print(f"[NEXT_STEP] idx={idx} snap_ok={snap_ok}")
+
+                        # 2) Run the step check once to trigger any side-effects
                         checks = getattr(guide, "_checks", None)
+                        step_ok = False
                         if isinstance(checks, (list, tuple)) and 0 <= idx < len(checks):
                             try:
-                                _ = checks[idx]()
+                                step_ok = bool(checks[idx]())
                             except Exception as e:
-                                omni.log.warn(f"step side-effect check failed at idx={idx}: {e}")
+                                omni.log.warn(f"manual check failed idx={idx}: {e}")
 
+                        # 3) If the step is now complete, run the hook (important for Desk rotation)
+                        if step_ok and hasattr(guide, "on_step_completed"):
+                            try:
+                                guide.on_step_completed(env, idx)
+                            except Exception as e:
+                                omni.log.warn(f"on_step_completed failed idx={idx}: {e}")
+
+                    # 4) Advance exactly one step
                     highlighter.advance()
-                    auto_advance_block_frames = AUTO_ADVANCE_COOLDOWN_FRAMES
 
+                    auto_advance_block_frames = AUTO_ADVANCE_COOLDOWN_FRAMES
                     if llm_checker is not None:
                         llm_checker.reset_for_new_step()
 
