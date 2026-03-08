@@ -30,6 +30,20 @@ class StoolGuide(BaseGuide):
         "ThirdLeg",
     )
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
+    
+    SCENE_KEY_MAP = {
+        "Seat": "stool",
+        "FirstLeg": "stool_leg1",
+        "SecondLeg": "stool_leg2",
+        "ThirdLeg": "stool_leg3",
+    }
+
+    SNAP_PLAN = {
+        1: ["Seat"],
+        2: ["Seat", "FirstLeg"],
+        3: ["Seat", "FirstLeg", "SecondLeg"],
+        3: ["Seat", "FirstLeg", "SecondLeg", "ThirdLeg"],
+    }
 
     tol_z_dbox_t = 1.082  # distance between stool seat and table origin along Z
 
