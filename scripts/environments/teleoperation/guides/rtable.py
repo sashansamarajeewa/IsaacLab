@@ -18,6 +18,18 @@ class RtableGuide(BaseGuide):
     SEQUENCE = ["RoundLeg", "RoundLeg", "RoundTableTop", "RoundSupport"]
     MOVING_PARTS = ("RoundLeg", "RoundSupport", "RoundTableTop")
     STATIC_PARTS = ("ObstacleLeft", "ObstacleFront", "ObstacleRight")
+    
+    SCENE_KEY_MAP = {
+        "RoundLeg": "round_leg",
+        "RoundSupport": "round_support",
+        "RoundTableTop": "round_table_top",
+    }
+
+    SNAP_PLAN = {
+        1: ["RoundLeg"],
+        2: ["RoundLeg", "RoundTableTop"],
+        3: ["RoundLeg", "RoundTableTop", "RoundSupport"],
+    }
 
     tol_z_dbox_t = 1.13  # distance between round leg and table origin along Z
 
