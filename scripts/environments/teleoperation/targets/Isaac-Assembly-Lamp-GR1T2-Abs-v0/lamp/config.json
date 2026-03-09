@@ -1,0 +1,25 @@
+{
+  "model": "gpt-5.4",
+  "period_s": 1.0,
+  "consecutive_required": 1,
+  "max_image_side": 512,
+  "base_prompt": "You are judging progress in a lamp assembly task by comparing a CURRENT robot-camera frame against a TARGET reference image for one specific step. A step is complete only when the task-relevant part is in the same final spatial relationship as in TARGET. Focus on object state and assembly state, not on matching the robot hands exactly. Ignore small differences in camera viewpoint, lighting, hand pose, and minor pixel-level variation. Judge mainly: (1) which part is being evaluated (LampBase, LampBulb, LampHood), (2) whether it is supported by or detached from the table when relevant, (3) whether it is braced/aligned with the front and left corner obstacles when relevant, (4) whether insertion/placement is fully seated (no visible gap, centered, stable), and (5) whether orientation matches TARGET (upright vs tilted, flipped/rotated if visually apparent). On step 3, do NOT try to infer 'clockwise' from motion; judge only the final tightened state using visual cues (fully seated/flush, correct depth, stable). If the relevant part is partly hidden, blurred, or the key contact surfaces / gaps cannot be seen clearly, return step_complete=false with failure_mode='occluded' or 'unknown'. Use failure_mode='position' when the part is visible but not yet in the correct place or not fully seated. Use failure_mode='orientation' when the placement is close but the part faces the wrong way or is tilted/flipped relative to TARGET. Use failure_mode='none' only when step_complete=true. The reason must be brief and mention the decisive visual evidence.",
+  "steps": {
+    "1": {
+      "enabled": true,
+      "prompt": "Step 1 - Pick up Lamp Base. The relevant part is the Lamp Base. Mark complete only if the Lamp Base is clearly lifted above the tabletop and is not touching or resting on the table or corner obstacles. It should be visibly suspended in the air, held by the robot, similar to TARGET. Do not require an exact hand pose match. Return false if any edge of the Lamp Base appears supported by the table, if contact is uncertain, or if it is still essentially sitting on the table."
+    },
+    "2": {
+      "enabled": true,
+      "prompt": "Step 2 - Brace Lamp Base against the front and left corner obstacles. The relevant part is the Lamp Base. Mark complete only if the Lamp Base is resting on the table and pushed into the front-left corner workspace like TARGET, with its outer edges aligned against BOTH the front and left obstacles. The base should be upright/level (not floating), stable, and not significantly rotated away from the TARGET orientation. Small differences in hand pose are irrelevant. Return false if the base is not fully seated on the table, not actually contacting one of the obstacles, visibly offset from the corner, or rotated/tilted compared to TARGET."
+    },
+    "3": {
+      "enabled": true,
+      "prompt": "Step 3 - Insert Lamp Bulb into Lamp Base and tighten. The relevant part is the Lamp Bulb. Assume the Lamp Base should be braced as in Step 2. Mark complete only if the Lamp Bulb is inserted into the Lamp Base socket exactly as in TARGET: fully seated at the correct depth, centered, upright (not leaning), and with no visible gap that suggests it is only partially inserted or just resting on top. Do not require seeing rotation; judge only the final tightened-looking state (flush/fully seated). Return false if the bulb is not in the socket, is only partially inserted, is skewed/tilted, is in the wrong location, or if key seating surfaces are occluded/unclear."
+    },
+    "4": {
+      "enabled": true,
+      "prompt": "Step 4 - Place Lamp Hood on top of Lamp Base. The relevant part is the Lamp Hood. Mark complete only if the Lamp Hood is placed onto the Lamp Base in the same final pose as TARGET: seated down (not hovering), centered, upright, and with its bottom rim flush/fully seated (no visible gap). The hood should cover/align with the assembly similarly to TARGET and not be held in mid-air. Return false if the hood is still in the robot’s grasp, floating above the base, tilted, offset, reversed, or if the seating rim/contact region is occluded or ambiguous."
+    }
+  }
+}
