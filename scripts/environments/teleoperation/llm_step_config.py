@@ -51,7 +51,7 @@ def build_llm_checker_for_run(
                 enabled_steps[step_key] = bool(v["enabled"])
 
     llm = LLMStepChecker(
-        model=str(cfg.get("model", "gpt-5.2")),
+        model=str(cfg.get("model", "gpt-5.4")),
         period_s=float(cfg.get("period_s", 1.0)),
         consecutive_required=int(cfg.get("consecutive_required", 2)),
         max_image_side=int(cfg.get("max_image_side", 512)),

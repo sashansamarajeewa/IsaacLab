@@ -25,7 +25,6 @@ class StepDecision(BaseModel):
 
 
 def _rgb_to_data_url(rgb_uint8_hwc: np.ndarray, max_side: int = 512) -> str:
-    """Encode uint8 RGB image to PNG data URL. (Responses API accepts base64 data URLs.)"""
     img = Image.fromarray(rgb_uint8_hwc.astype(np.uint8), mode="RGB")
     w, h = img.size
     scale = min(1.0, float(max_side) / max(w, h))
@@ -39,10 +38,6 @@ def _rgb_to_data_url(rgb_uint8_hwc: np.ndarray, max_side: int = 512) -> str:
 
 
 def _extract_output_text(resp_json: dict) -> str:
-    """
-    Responses API returns output items; text is typically inside:
-      output[*].content[*] where type == 'output_text'
-    """
     out_chunks: list[str] = []
     for item in resp_json.get("output", []) or []:
         content = item.get("content", []) or []
@@ -55,10 +50,6 @@ def _extract_output_text(resp_json: dict) -> str:
 
 
 def _safe_json_loads(text: str) -> dict:
-    """
-    Try strict JSON. If model wraps JSON in text, extract first {...} block.
-    (Structured Outputs should already be strict, but keep a guard.)
-    """
     try:
         return json.loads(text)
     except Exception:
@@ -70,10 +61,6 @@ def _safe_json_loads(text: str) -> dict:
 
 # NEW: OpenAI strict json_schema requires additionalProperties=false for object schemas.
 def _make_openai_strict_json_schema(schema: dict) -> dict:
-    """
-    Ensure additionalProperties=false on all object schemas (required by strict json_schema).
-    Also ensures 'required' includes all properties keys (safe for strict mode).
-    """
     schema = copy.deepcopy(schema)
 
     def visit(node: Any) -> None:
@@ -100,16 +87,11 @@ def _make_openai_strict_json_schema(schema: dict) -> dict:
 
 
 class LLMStepChecker:
-    """
-    Rate-limited, async LLM judge that compares CURRENT vs TARGET for a given step.
-
-    Uses Responses API image input (input_image/image_url) and Structured Outputs via text.format.
-    """
 
     def __init__(
         self,
         *,
-        model: str = "gpt-5.2",
+        model: str = "gpt-5.4",
         period_s: float = 1.0,
         consecutive_required: int = 2,
         max_image_side: int = 512,
