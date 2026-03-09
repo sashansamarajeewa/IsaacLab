@@ -1,0 +1,37 @@
+{
+  "model": "gpt-5.4",
+  "period_s": 1.0,
+  "consecutive_required": 1,
+  "max_image_side": 512,
+  "base_prompt": "You are judging progress in a desk assembly task by comparing a CURRENT robot-camera frame against a TARGET reference image for one specific step. A step is complete only when the task-relevant part(s) are in the same final spatial relationship as in TARGET. Focus on object state and assembly state, not on matching the robot hands exactly. Ignore small differences in camera viewpoint, lighting, hand pose, and minor pixel-level variation. Judge mainly: (1) which part is being evaluated (DeskTop, FrontRightLeg, FrontLeftLeg, BackRightLeg, BackLeftLeg), (2) whether the DeskTop is supported by or detached from the table when relevant, (3) whether the DeskTop is braced/aligned with the specified corner obstacles when relevant, (4) whether a leg is inserted at the correct corner and fully seated/tightened-looking (flush contact, no visible gap, upright/straight), and (5) for rotation, whether the DeskTop orientation has been rotated ~180° and matches TARGET (corner features/installed legs swap positions accordingly). Do NOT try to infer 'clockwise' from motion; judge only the final tightened-looking state using visual cues (fully seated/flush, correct depth, stable). If the relevant part, insertion interface, or key gaps are partly hidden/blurred/ambiguous, return step_complete=false with failure_mode='occluded' or 'unknown'. Use failure_mode='position' when the part is visible but not yet in the correct place or not fully seated. Use failure_mode='orientation' when the placement is close but the part is rotated/flipped/tilted relative to TARGET. Use failure_mode='none' only when step_complete=true. The reason must be brief and mention decisive visual evidence.",
+  "steps": {
+    "1": {
+      "enabled": true,
+      "prompt": "Step 1 - Pick up Desk Top. The relevant part is the DeskTop. Mark complete only if the DeskTop is clearly lifted above the tabletop and is not touching or resting on the table or any obstacles. It should be visibly suspended in the air, held by the robot, similar to TARGET. Do not require an exact hand pose match. Return false if any edge of the DeskTop appears supported by the table, if contact is uncertain, or if it is still essentially sitting on the table."
+    },
+    "2": {
+      "enabled": true,
+      "prompt": "Step 2 - Brace Desk Top against the front and right corner obstacles. The relevant part is the DeskTop. Mark complete only if the DeskTop is resting on the table and pushed into the FRONT-RIGHT corner workspace like TARGET, with its outer edges aligned against BOTH the front obstacle and the right obstacle. It should be stable (not hovering), and its orientation (including which side faces the camera and any visible corner features/holes) should match TARGET. Return false if it is not fully seated on the table, not actually contacting one of the two obstacles, visibly offset from the corner, or rotated/tilted compared to TARGET."
+    },
+    "3": {
+      "enabled": true,
+      "prompt": "Step 3 - Insert Front Right Leg and tighten. The relevant part is the FrontRightLeg and its connection to the DeskTop at the FRONT-RIGHT corner (as defined by TARGET). Mark complete only if the FrontRightLeg is inserted into the correct corner socket/port on the DeskTop exactly as in TARGET: fully seated, upright/straight, and with no visible gap between leg and DeskTop at the interface. Do not require seeing rotation; judge only the final tightened-looking state (flush/fully seated). Return false if the leg is not at the correct corner, is only partially inserted, skewed/tilted, in the wrong orientation, or if the insertion interface is occluded/unclear."
+    },
+    "4": {
+      "enabled": true,
+      "prompt": "Step 4 - Insert Front Left Leg and tighten. The relevant part is the FrontLeftLeg and its connection to the DeskTop at the FRONT-LEFT corner (as defined by TARGET). Mark complete only if the FrontLeftLeg is inserted into the correct corner socket/port exactly as in TARGET: fully seated, upright/straight, and with no visible gap at the interface. Do not require seeing rotation; judge only the final tightened-looking state (flush/fully seated). Return false if the leg is at the wrong corner, partially inserted, tilted, reversed, or if the key interface/gap is occluded or ambiguous."
+    },
+    "5": {
+      "enabled": true,
+      "prompt": "Step 5 - Rotate Desk Top by 180°. The relevant part is the DeskTop (including any already-installed front legs). Mark complete only if the DeskTop has been rotated approximately 180 degrees (half-turn) around the vertical axis relative to the obstacles/camera compared to the pre-rotation state, and the resulting pose matches TARGET. Visual cue: the two already-installed legs/corner features should appear swapped to the opposite side in the view exactly as in TARGET. The DeskTop should still be resting on the table (not floating) and positioned within/against the obstacles as shown in TARGET. Return false if rotation is incomplete (e.g., ~90°), if the pose still resembles the pre-rotation layout, or if the orientation is ambiguous due to occlusion."
+    },
+    "6": {
+      "enabled": true,
+      "prompt": "Step 6 - Insert Back Right Leg and tighten. The relevant part is the BackRightLeg and its connection to the DeskTop at the BACK-RIGHT corner (as defined by TARGET after the 180° rotation). Mark complete only if the BackRightLeg is inserted into the correct corner socket/port exactly as in TARGET: fully seated, upright/straight, and with no visible gap at the interface. Do not require seeing rotation; judge only the final tightened-looking state (flush/fully seated). Return false if the leg is at the wrong corner, partially inserted, tilted, reversed, or if the insertion interface is occluded/unclear."
+    },
+    "7": {
+      "enabled": true,
+      "prompt": "Step 7 - Insert Back Left Leg and tighten. The relevant part is the BackLeftLeg and its connection to the DeskTop at the BACK-LEFT corner (as defined by TARGET after the 180° rotation). Mark complete only if the BackLeftLeg is inserted into the correct corner socket/port exactly as in TARGET: fully seated, upright/straight, and with no visible gap at the interface. Do not require seeing rotation; judge only the final tightened-looking state (flush/fully seated). Return false if the leg is at the wrong corner, partially inserted, tilted, reversed, or if the key interface/gap is occluded or ambiguous."
+    }
+  }
+}
