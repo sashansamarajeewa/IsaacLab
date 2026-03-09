@@ -74,10 +74,10 @@ class StableGuide(BaseGuide):
         0.7062713503837585,
         Gf.Vec3d(0.7065197825431824, 0.03177633136510849, 0.031638968735933304),
     )
-    tgt_desk_top_rot_pos = Gf.Vec3d(
+    tgt_stable_top_rot_pos = Gf.Vec3d(
         0.18748028576374054, 0.45748019218444824, 1.025420904159546
     )
-    tgt_desk_top_rot_quat = Gf.Quatd(
+    tgt_stable_top_rot_quat = Gf.Quatd(
         -0.7071067094802856,
         Gf.Vec3d(-0.7071069478988647, 4.2297080653952435e-05, 4.223044015816413e-05),
     )
@@ -354,8 +354,8 @@ class StableGuide(BaseGuide):
         result = pos_err <= 0.01 and ang_err <= 3.5
         if result:
             self._target_poses["TableTop"] = (
-                self.tgt_desk_top_rot_pos,
-                self.tgt_desk_top_rot_quat,
+                self.tgt_stable_top_rot_pos,
+                self.tgt_stable_top_rot_quat,
             )
             if (
                 self._stage
@@ -366,8 +366,8 @@ class StableGuide(BaseGuide):
                     self._stage,
                     self._asset_roots["TableTop"],
                     self._ghost_paths_by_name["TableTop"],
-                    self.tgt_desk_top_rot_pos,
-                    self.tgt_desk_top_rot_quat,
+                    self.tgt_stable_top_rot_pos,
+                    self.tgt_stable_top_rot_quat,
                 )
 
         return result
@@ -477,6 +477,55 @@ class StableGuide(BaseGuide):
         return issues
     
     def on_step_completed(self, env, step_index: int) -> None:
-        # step_index 4
+
+        # Step 4 complete
+        if step_index == 3:
+            self._target_poses["TableTop"] = (self.tgt_stable_top_rot_pos, self.tgt_stable_top_rot_quat)
+
+            if (
+                self._stage
+                and self._asset_roots.get("TableTop")
+                and self._ghost_paths_by_name.get("TableTop")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["TableTop"],
+                    self._ghost_paths_by_name["TableTop"],
+                    self.tgt_stable_top_rot_pos,
+                    self.tgt_stable_top_rot_quat,
+                )
+            return
+
+        # Step 5 complete 
         if step_index == 4:
-            self.snap_parts_to_targets(env, ["TableTop", "FrontRightLeg", "FrontLeftLeg"])
+            self._target_poses["FrontRightLeg"] = (self.tgt_front_right_leg_rot_pos, self.tgt_front_right_leg_rot_quat)
+            self._target_poses["FrontLeftLeg"]  = (self.tgt_front_left_leg_rot_pos,  self.tgt_front_left_leg_rot_quat)
+
+            if (
+                self._stage
+                and self._asset_roots.get("FrontRightLeg")
+                and self._ghost_paths_by_name.get("FrontRightLeg")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["FrontRightLeg"],
+                    self._ghost_paths_by_name["FrontRightLeg"],
+                    self.tgt_front_right_leg_rot_pos,
+                    self.tgt_front_right_leg_rot_quat,
+                )
+
+            if (
+                self._stage
+                and self._asset_roots.get("FrontLeftLeg")
+                and self._ghost_paths_by_name.get("FrontLeftLeg")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["FrontLeftLeg"],
+                    self._ghost_paths_by_name["FrontLeftLeg"],
+                    self.tgt_front_left_leg_rot_pos,
+                    self.tgt_front_left_leg_rot_quat,
+                )
+
+            self.snap_parts_to_targets(env, ["FrontRightLeg", "FrontLeftLeg"])
+            return

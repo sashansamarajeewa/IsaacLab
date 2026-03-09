@@ -477,5 +477,58 @@ class DeskGuide(BaseGuide):
         return issues
     
     def on_step_completed(self, env, step_index: int) -> None:
+
+        # Step 4 complete
+        if step_index == 3:
+            # Update DeskTop target to "rotated" pose
+            self._target_poses["DeskTop"] = (self.tgt_desk_top_rot_pos, self.tgt_desk_top_rot_quat)
+
+            # Update the DeskTop ghost preview pose
+            if (
+                self._stage
+                and self._asset_roots.get("DeskTop")
+                and self._ghost_paths_by_name.get("DeskTop")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["DeskTop"],
+                    self._ghost_paths_by_name["DeskTop"],
+                    self.tgt_desk_top_rot_pos,
+                    self.tgt_desk_top_rot_quat,
+                )
+            return
+
+        # Step 5 complete
         if step_index == 4:
-            self.snap_parts_to_targets(env, ["DeskTop", "FrontRightLeg", "FrontLeftLeg"])
+            self._target_poses["FrontRightLeg"] = (self.tgt_front_right_leg_rot_pos, self.tgt_front_right_leg_rot_quat)
+            self._target_poses["FrontLeftLeg"] = (self.tgt_front_left_leg_rot_pos, self.tgt_front_left_leg_rot_quat)
+
+            # Update ghost previews for front legs
+            if (
+                self._stage
+                and self._asset_roots.get("FrontRightLeg")
+                and self._ghost_paths_by_name.get("FrontRightLeg")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["FrontRightLeg"],
+                    self._ghost_paths_by_name["FrontRightLeg"],
+                    self.tgt_front_right_leg_rot_pos,
+                    self.tgt_front_right_leg_rot_quat,
+                )
+
+            if (
+                self._stage
+                and self._asset_roots.get("FrontLeftLeg")
+                and self._ghost_paths_by_name.get("FrontLeftLeg")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["FrontLeftLeg"],
+                    self._ghost_paths_by_name["FrontLeftLeg"],
+                    self.tgt_front_left_leg_rot_pos,
+                    self.tgt_front_left_leg_rot_quat,
+                )
+
+            self.snap_parts_to_targets(env, ["FrontRightLeg", "FrontLeftLeg"])
+            return
