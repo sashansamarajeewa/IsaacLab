@@ -530,5 +530,5 @@ class DeskGuide(BaseGuide):
                     self.tgt_front_left_leg_rot_quat,
                 )
 
-            self.snap_parts_to_targets(env, ["FrontRightLeg", "FrontLeftLeg"])
+            self.snap_parts_to_targets(env, ["DeskTop", "FrontRightLeg", "FrontLeftLeg"])
             return
