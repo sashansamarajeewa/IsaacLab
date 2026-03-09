@@ -3,23 +3,23 @@
   "period_s": 1.0,
   "consecutive_required": 1,
   "max_image_side": 512,
-  "base_prompt": "Compare CURRENT vs TARGET. Decide if the step is complete. If you cannot judge due to occlusion/ambiguity, return step_complete=false and failure_mode occluded/unknown.",
+  "base_prompt": "You are judging progress in a drawer assembly task by comparing a CURRENT robot-camera frame against a TARGET reference image for one specific step. Be strict and conservative. A step is complete only when the task-relevant part is in the same final spatial relationship as in TARGET. Focus on object state and assembly state, not on matching the robot hands exactly. Ignore small differences in camera viewpoint, lighting, hand pose, and minor pixel-level variation. Judge mainly: (1) which part is being evaluated, (2) whether it is supported by or detached from the table when relevant, (3) whether it is aligned with the drawer box and corner obstacles when relevant, (4) whether insertion is complete with no visible remaining gap when relevant, and (5) whether the visible orientation matches TARGET. If the relevant part is partly hidden, blurred, or the key contact surfaces / gaps cannot be seen clearly, return step_complete=false with failure_mode='occluded' or 'unknown'. Use failure_mode='position' when the part is visible but not yet in the correct place or not fully inserted. Use failure_mode='orientation' when the placement is close but the part faces the wrong way or is rotated/flipped relative to TARGET. Use failure_mode='none' only when step_complete=true. The reason must be brief and mention the decisive visual evidence.",
   "steps": {
     "1": {
       "enabled": true,
-      "prompt": "Pick Up Drawer Box: it must be above the table and not touching the table as in TARGET."
+      "prompt": "Step 1 - Pick up Drawer Box. The relevant part is the Drawer Box. Mark complete only if the Drawer Box is clearly lifted above the tabletop and is not touching or resting on the table or side obstacles. It should be visibly suspended in the air, held by the robot, similar to TARGET. Do not require an exact hand pose match. Return false if any bottom edge of the Drawer Box appears supported by the table, if contact is uncertain, or if the box is significantly lower than in TARGET."
     },
     "2": {
       "enabled": true,
-      "prompt": "Brace Drawer Box: it must be seated on the table and aligned with the corner obstacles as in TARGET."
+      "prompt": "Step 2 - Brace Drawer Box against the front and left corner obstacles. The relevant part is the Drawer Box. Mark complete only if the Drawer Box is resting on the table and positioned into the front-left corner workspace like TARGET, with its outer faces aligned against the front and left obstacles. The box should be stably seated, upright, and not floating. Small hand pose differences are irrelevant. Return false if the box is not fully seated on the table, not pushed into the corner, visibly offset from either obstacle, or rotated away from the TARGET orientation."
     },
     "3": {
       "enabled": true,
-      "prompt": "Insert Drawer Bottom: it must be fully inserted with no visible gap; orientation matches TARGET."
+      "prompt": "Step 3 - Insert Drawer Bottom. The relevant part is the Drawer Bottom panel. Assume the Drawer Box should already be braced as in Step 2. Mark complete only if the Drawer Bottom is inserted into the lower slot of the Drawer Box exactly as in TARGET, with the panel fully seated, orientation matching TARGET, and no visible front gap indicating partial insertion. The front knob/handle should appear in the expected front-facing location. Return false if the panel is only partially inserted, skewed, at the wrong height, reversed, or if any visible gap suggests it is not fully seated."
     },
     "4": {
       "enabled": true,
-      "prompt": "Insert Drawer Top: it must be fully inserted with no visible gap; orientation matches TARGET."
+      "prompt": "Step 4 - Insert Drawer Top to finish. The relevant part is the Drawer Top panel. Assume the Drawer Box and Drawer Bottom are already in their correct assembled states. Mark complete only if the Drawer Top is inserted into the upper slot of the Drawer Box exactly as in TARGET, fully seated with matching orientation and no visible remaining gap. The front knob/handle should appear in the expected front-facing location. Return false if the top panel is partially inserted, misaligned, tilted, reversed, or if the final assembled front face does not match TARGET."
     }
   }
 }

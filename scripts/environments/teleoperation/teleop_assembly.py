@@ -203,6 +203,8 @@ def main() -> None:
             num_steps=total_real,
             targets_root=targets_root,
         )
+        
+    use_llm = llm_checker is not None
 
     # Physics binder unaffected by highlight flag
     phys_binder = guide.create_physics_binder()
@@ -366,6 +368,8 @@ def main() -> None:
 
                 manual_advanced = False
 
+
+                # -------------------- Manual NEXT (works in both modes) --------------------
                 if manual_next_step_requested:
                     manual_next_step_requested = False
                     manual_advanced = True
@@ -373,11 +377,10 @@ def main() -> None:
                     idx = highlighter.step_index  # the step we are force-completing
 
                     if 0 <= idx < total_real:
-                        # Snap the CURRENT step's parts
                         snap_ok = guide.snap_step_to_target(env, idx)
                         print(f"[NEXT_STEP] idx={idx} snap_ok={snap_ok}")
 
-                        # Run the step check once to trigger
+                        # Run the step check once to trigger any side-effects (target/ghost updates)
                         checks = getattr(guide, "_checks", None)
                         step_ok = False
                         if isinstance(checks, (list, tuple)) and 0 <= idx < len(checks):
@@ -386,84 +389,107 @@ def main() -> None:
                             except Exception as e:
                                 omni.log.warn(f"manual check failed idx={idx}: {e}")
 
-                        # If the step is complete, run the hook
+                        # If the step is now complete, run completion hook
                         if step_ok and hasattr(guide, "on_step_completed"):
                             try:
                                 guide.on_step_completed(env, idx)
                             except Exception as e:
                                 omni.log.warn(f"on_step_completed failed idx={idx}: {e}")
 
-                    # Advance one step
+                    # Advance exactly one step
                     highlighter.advance()
 
+                    # Block any auto/LLM completion briefly to avoid double-advance
                     auto_advance_block_frames = AUTO_ADVANCE_COOLDOWN_FRAMES
+
                     if llm_checker is not None:
                         llm_checker.reset_for_new_step()
 
-                # Auto-advance only when not blocked and not manual on this frame
-                if not manual_advanced:
-                    if auto_advance_block_frames > 0:
-                        auto_advance_block_frames -= 1
+                # -------------------- Cooldown tick --------------------
+                if auto_advance_block_frames > 0:
+                    auto_advance_block_frames -= 1
+
+                # -------------------- Step completion (exclusive modes) --------------------
+                if (not manual_advanced) and (auto_advance_block_frames == 0):
+                    if use_llm:
+                        # LLM mode ONLY
+                        if (not args_cli.capture_targets) and args_cli.enable_cameras:
+                            idx = highlighter.step_index
+                            if 0 <= idx < total_real:
+                                cam = env.scene["head_camera"]
+                                rgb = cam.data.output["rgb"][0].cpu().numpy()  # HWC
+
+                                step_key = str(idx + 1)
+                                step_text = guide.get_all_instructions()[idx]
+
+                                if llm_checker.update(  # type: ignore[union-attr]
+                                    step_key=step_key,
+                                    step_text=step_text,
+                                    current_rgb_uint8_hwc=rgb,
+                                ):
+                                    # completion hook for LLM completions too
+                                    try:
+                                        guide.on_step_completed(env, idx)
+                                    except Exception as e:
+                                        omni.log.warn(f"on_step_completed failed idx={idx}: {e}")
+
+                                    highlighter.advance()
+                                    llm_checker.reset_for_new_step()  # type: ignore[union-attr]
+                                    auto_advance_block_frames = AUTO_ADVANCE_COOLDOWN_FRAMES
                     else:
+                        # Normal mode ONLY
                         guide.maybe_auto_advance(highlighter, env)
 
+                # -------------------- Capture targets (independent) --------------------
                 if args_cli.capture_targets and args_cli.enable_cameras:
                     idx = highlighter.step_index
                     if 0 < idx <= total_real:
                         step_key = str(idx)
                         out_path = capture_base_dir / f"step_{step_key}.png"
-
-                        # Only save once per step (don’t overwrite unless you want to)
                         if not out_path.exists():
                             cam = env.scene["head_camera"]
                             rgb = cam.data.output["rgb"][0].cpu().numpy()
                             save_rgb_png(rgb, out_path)
-                
-                # LLM logic
-                if (not args_cli.capture_targets) and args_cli.enable_cameras and llm_checker is not None:
-                    idx = highlighter.step_index
-                    if 0 <= idx <= total_real:
-                        cam = env.scene["head_camera"]
-                        rgb = (
-                            cam.data.output["rgb"][0].cpu().numpy()
-                        )  # HWC uint8
 
-                        step_key = str(idx + 1)
-                        step_text = guide.get_all_instructions()[idx]
-
-                        if llm_checker.update(
-                            step_key=step_key,
-                            step_text=step_text,
-                            current_rgb_uint8_hwc=rgb,
-                        ):
-                            highlighter.advance()
-                            llm_checker.reset_for_new_step()
-
+                # -------------------- Visuals / HUD --------------------
                 guide.update_previews_for_step(highlighter)
                 if hud is not None:
                     hud.update(guide, highlighter)
                 if name_tag is not None:
                     name_tag.update(guide, highlighter)
 
-                if guide.any_part_fallen_below_table(
-                    getattr(guide, "MOVING_PARTS", [])
-                ):
+                # -------------------- Safety reset --------------------
+                if guide.any_part_fallen_below_table(getattr(guide, "MOVING_PARTS", [])):
                     print("An object has fallen below table...resetting")
                     should_reset_recording_instance = True
 
                 if should_reset_recording_instance:
                     env.reset()
                     should_reset_recording_instance = False
+
+                    # Reset guide/visuals
                     guide.on_reset(env)
                     highlighter.refresh_after_reset()
                     phys_binder.refresh_after_reset()
                     guide.update_previews_for_step(highlighter)
+
+                    # Reset per-run cooldown / manual flags
+                    manual_next_step_requested = False
+                    auto_advance_block_frames = 0
+                    if llm_checker is not None:
+                        llm_checker.reset_for_new_step()
+
                     if hud is not None:
                         hud.update(guide, highlighter)
+
                     print("Environment reset complete")
+
         except Exception as e:
             omni.log.error(f"Error during simulation step: {e}")
             break
+
+    env.close()
+    print("Environment closed")
 
     # close the simulator
     # if hud is not None:

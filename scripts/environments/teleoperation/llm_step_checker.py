@@ -1,4 +1,3 @@
-# llm_step_checker.py
 from __future__ import annotations
 
 import base64
@@ -10,7 +9,7 @@ import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor, Future
 from typing import Optional, Dict, Any
-import copy  # NEW
+import copy
 
 import httpx
 import numpy as np
@@ -132,7 +131,9 @@ class LLMStepChecker:
 
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
         if not self.api_key:
-            raise RuntimeError("OPENAI_API_KEY is not set in the environment (or passed to LLMStepChecker).")
+            raise RuntimeError(
+                "OPENAI_API_KEY is not set in the environment (or passed to LLMStepChecker)."
+            )
 
         self.endpoint = endpoint
         self.timeout_s = float(timeout_s)
@@ -174,9 +175,10 @@ class LLMStepChecker:
         target_url: str,
     ) -> Future[StepDecision]:
         system = (
-            "You are a strict visual inspector for a robot assembly task. "
-            "Compare CURRENT vs TARGET for the given step and decide whether the step is complete. "
-            "If you cannot judge due to occlusion/ambiguity, mark it as not complete."
+            "You are a strict visual inspector for a robot assembly task."
+            "Compare CURRENT vs TARGET for the given step and decide whether the step is complete."
+            "Judge object-state completion, not exact robot hand pose."
+            "If you cannot judge due to occlusion or ambiguity, mark it as not complete."
         )
 
         step_hint = self.step_prompts.get(step_key, "").strip()
@@ -196,13 +198,13 @@ class LLMStepChecker:
         # Structured Outputs config (json_schema) OR fallback JSON mode
         if self.use_json_schema:
             raw_schema = StepDecision.model_json_schema()
-            strict_schema = _make_openai_strict_json_schema(raw_schema)  # NEW/CHANGED
+            strict_schema = _make_openai_strict_json_schema(raw_schema)
             text_cfg = {
                 "format": {
                     "type": "json_schema",
                     "name": "step_decision",
                     "strict": True,
-                    "schema": strict_schema,  # NEW/CHANGED
+                    "schema": strict_schema,
                 }
             }
         else:
@@ -245,7 +247,9 @@ class LLMStepChecker:
                     with httpx.Client(timeout=self.timeout_s) as client:
                         r2 = client.post(self.endpoint, headers=headers, json=payload)
                     if r2.status_code >= 400:
-                        print(f"[LLMStepChecker] Fallback HTTP {r2.status_code}: {r2.text}")
+                        print(
+                            f"[LLMStepChecker] Fallback HTTP {r2.status_code}: {r2.text}"
+                        )
                         return StepDecision(
                             step_complete=False,
                             confidence=0.0,
@@ -284,7 +288,7 @@ class LLMStepChecker:
     def update(
         self,
         *,
-        step_key: str,  # "1", "2", ...
+        step_key: str,
         step_text: str,
         current_rgb_uint8_hwc: np.ndarray,
         min_confidence: float = 0.75,
@@ -304,14 +308,20 @@ class LLMStepChecker:
             conf = float(dec.confidence)
             fm = str(dec.failure_mode).strip().lower()
 
-            ok = bool(dec.step_complete) and conf >= float(min_confidence) and fm == ""
+            ok = (
+                bool(dec.step_complete)
+                and conf >= float(min_confidence)
+                and fm in ("none", "")
+            )
             self._streak = (self._streak + 1) if ok else 0
             print(f"streak:{self._streak}")
             return self._streak >= self.k
 
         if self._inflight is None and (now - self._t_last) >= self.period_s:
             self._t_last = now
-            cur_url = _rgb_to_data_url(current_rgb_uint8_hwc, max_side=self.max_image_side)
+            cur_url = _rgb_to_data_url(
+                current_rgb_uint8_hwc, max_side=self.max_image_side
+            )
             tgt_url = self._target_data_url[step_key]
             self._inflight = self._submit_request(step_key, step_text, cur_url, tgt_url)
 
