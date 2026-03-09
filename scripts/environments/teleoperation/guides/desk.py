@@ -478,4 +478,4 @@ class DeskGuide(BaseGuide):
     
     def on_step_completed(self, env, step_index: int) -> None:
         if step_index == 4:
-            self.snap_parts_to_targets(env, ["FrontRightLeg", "FrontLeftLeg"])
+            self.snap_parts_to_targets(env, ["DeskTop", "FrontRightLeg", "FrontLeftLeg"])

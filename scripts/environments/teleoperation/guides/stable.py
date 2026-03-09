@@ -479,4 +479,4 @@ class StableGuide(BaseGuide):
     def on_step_completed(self, env, step_index: int) -> None:
         # step_index 4
         if step_index == 4:
-            self.snap_parts_to_targets(env, ["FrontRightLeg", "FrontLeftLeg"])
+            self.snap_parts_to_targets(env, ["TableTop", "FrontRightLeg", "FrontLeftLeg"])
