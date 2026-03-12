@@ -38,7 +38,7 @@ class RtableGuide(BaseGuide):
         -0.4652639329433441,
         Gf.Vec3d(0.4648388922214508, 0.5321130752563477, -0.5332072377204895),
     )
-    tgt_support_pos = Gf.Vec3d(0.195, 0.3831, 1.018)
+    tgt_support_pos = Gf.Vec3d(0.19499999284744263, 0.3831000030040741, 1.0180000066757202)
     tgt_support_quat = Gf.Quatd(
         0,
         Gf.Vec3d(-1, 0, 0),
@@ -224,9 +224,6 @@ class RtableGuide(BaseGuide):
     def _check_insert_leg(self) -> bool:
         tgt = self._target_poses.get("RoundLeg")
         live = self.get_live_part_pose("RoundLeg")
-        print(self.get_live_part_pose("RoundLeg"))
-        print("#########")
-        print(self.get_live_part_pose("RoundSupport"))
         if not (tgt and live):
             return False
 
@@ -253,6 +250,11 @@ class RtableGuide(BaseGuide):
     def _check_support_insert(self) -> bool:
         tgt = self._target_poses.get("RoundSupport")
         live = self.get_live_part_pose("RoundSupport")
+        print(self.get_live_part_pose("RoundLeg"))
+        print("#########")
+        print(self.get_live_part_pose("RoundSupport"))
+        print("#########")
+        print(self.get_live_part_pose("RoundTableTop"))
         if not (tgt and live):
             return False
 
