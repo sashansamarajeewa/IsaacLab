@@ -26,8 +26,8 @@ class RtableGuide(BaseGuide):
     }
 
     SNAP_PLAN = {
-        1: ["RoundLeg"],
-        2: ["RoundLeg", "RoundSupport"],
+        1: ["RoundLeg", "RoundSupport"],
+        2: ["RoundLeg", "RoundSupport", "RoundTableTop"],
         3: ["RoundLeg", "RoundSupport", "RoundTableTop"],
     }
 
@@ -38,15 +38,25 @@ class RtableGuide(BaseGuide):
         -0.4652639329433441,
         Gf.Vec3d(0.4648388922214508, 0.5321130752563477, -0.5332072377204895),
     )
-    tgt_support_pos = Gf.Vec3d(-0.14829237759113312, 0.4203796684741974, 1.196882724761963)
+    tgt_support_pos = Gf.Vec3d(0.195, 0.3831, 1.018)
     tgt_support_quat = Gf.Quatd(
-        -0.7324199676513672,
-        Gf.Vec3d(-0.00262716063298285, -0.005564449355006218, -0.6808253526687622),
+        0,
+        Gf.Vec3d(-1, 0, 0),
     )
     tgt_top_pos = Gf.Vec3d(-0.15009844303131104, 0.42000797390937805, 0.9965510368347168)
     tgt_top_quat = Gf.Quatd(
         -0.7240346670150757,
         Gf.Vec3d(2.5640474632382393e-08, -4.72591636935249e-08, 0.6897637844085693),
+    )
+    tgt_leg_pos_rot = Gf.Vec3d(0.18886056542396545, 0.40083980560302734, 1.1228126287460327)
+    tgt_leg_quat_rot = Gf.Quatd(
+        -0.4652639329433441,
+        Gf.Vec3d(0.4648388922214508, 0.5321130752563477, -0.5332072377204895),
+    )
+    tgt_support_pos_rot = Gf.Vec3d(-0.14829237759113312, 0.4203796684741974, 1.196882724761963)
+    tgt_support_quat_rot = Gf.Quatd(
+        -0.7324199676513672,
+        Gf.Vec3d(-0.00262716063298285, -0.005564449355006218, -0.6808253526687622),
     )
 
     def __init__(self):
@@ -214,6 +224,9 @@ class RtableGuide(BaseGuide):
     def _check_insert_leg(self) -> bool:
         tgt = self._target_poses.get("RoundLeg")
         live = self.get_live_part_pose("RoundLeg")
+        print(self.get_live_part_pose("RoundLeg"))
+        print("#########")
+        print(self.get_live_part_pose("RoundSupport"))
         if not (tgt and live):
             return False
 
