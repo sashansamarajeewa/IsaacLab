@@ -20,7 +20,6 @@ from collections.abc import Callable
 from pathlib import Path
 from isaaclab.app import AppLauncher
 from llm_step_config import build_llm_checker_for_run
-from PIL import Image
 
 # -------------------------- CLI --------------------------
 parser = argparse.ArgumentParser(
@@ -68,7 +67,8 @@ parser.add_argument("--disable_highlight", action="store_true")
 parser.add_argument("--disable_instructions", action="store_true")
 parser.add_argument("--disable_ghosts", action="store_true")
 parser.add_argument("--disable_nametag", action="store_true")
-parser.add_argument("--llm_checker",
+parser.add_argument(
+    "--llm_checker",
     action="store_true",
     help="Use llm for step updates",
 )
@@ -413,7 +413,7 @@ def main():
         nonlocal teleoperation_active
         teleoperation_active = False
         print("Teleoperation deactivated")
-        
+
     def manual_next_step() -> None:
         nonlocal manual_next_step_requested
         manual_next_step_requested = True
@@ -484,6 +484,9 @@ def main():
             num_steps=total_real,
             targets_root=targets_root,
         )
+        
+    use_llm = llm_checker is not None
+
 
     if last_step_idx is None or step_idx != last_step_idx:
         need_hud_update = True
@@ -524,117 +527,115 @@ def main():
 
             manual_advanced = False
 
+            # -------------------- Manual NEXT (works in both modes) --------------------
             if manual_next_step_requested:
                 manual_next_step_requested = False
                 manual_advanced = True
 
-                idx = highlighter.step_index  # the step we are force-completing
-
+                idx = int(highlighter.step_index)  # current step we are force-completing
                 if 0 <= idx < total_real:
-                    # Snap the CURRENT step's parts
-                    snap_ok = guide.snap_step_to_target(env, idx)
+                    # Snap CURRENT step's parts, then treat step as completed.
+                    try:
+                        snap_ok = guide.snap_step_to_target(env, idx)
+                    except Exception as e:
+                        snap_ok = False
+                        omni.log.warn(f"snap_step_to_target failed idx={idx}: {e}")
                     print(f"[NEXT_STEP] idx={idx} snap_ok={snap_ok}")
 
-                     # Run the step check once to trigger
-                    checks = getattr(guide, "_checks", None)
-                    step_ok = False
-                    if isinstance(checks, (list, tuple)) and 0 <= idx < len(checks):
-                        try:
-                            step_ok = bool(checks[idx]())
-                        except Exception as e:
-                            omni.log.warn(f"manual check failed idx={idx}: {e}")
+                    # Always run completion hook for manual override
+                    try:
+                        guide.on_step_completed(env, idx)
+                    except Exception as e:
+                        omni.log.warn(f"on_step_completed failed idx={idx}: {e}")
 
-                    # If the step is complete, run the hook
-                    if step_ok and hasattr(guide, "on_step_completed"):
-                        try:
-                            guide.on_step_completed(env, idx)
-                        except Exception as e:
-                            omni.log.warn(f"on_step_completed failed idx={idx}: {e}")
-
-                # Advance one step
+                # Advance exactly one step
                 highlighter.advance()
 
+                # Cooldown to avoid double advance this frame
                 auto_advance_block_frames = AUTO_ADVANCE_COOLDOWN_FRAMES
                 if llm_checker is not None:
                     llm_checker.reset_for_new_step()
 
-            # Auto-advance only when not blocked and not manual on this frame
-            if not manual_advanced:
-                if auto_advance_block_frames > 0:
-                    auto_advance_block_frames -= 1
+            # -------------------- Cooldown tick --------------------
+            if auto_advance_block_frames > 0:
+                auto_advance_block_frames -= 1
+
+            # -------------------- Step completion (exclusive modes) --------------------
+            if (not manual_advanced) and (auto_advance_block_frames == 0):
+                if use_llm:
+                    # LLM mode ONLY
+                    if getattr(args_cli, "enable_cameras", False):
+                        idx = int(highlighter.step_index)
+                        if 0 <= idx < total_real:
+                            try:
+                                cam = env.scene["head_camera"]
+                                rgb = cam.data.output["rgb"][0].cpu().numpy()  # HWC uint8
+                            except Exception as e:
+                                omni.log.warn(f"camera read failed: {e}")
+                                rgb = None
+
+                            if rgb is not None:
+                                step_key = str(idx + 1)
+                                step_text = guide.get_all_instructions()[idx]
+                                if llm_checker.update(  # type: ignore[union-attr]
+                                    step_key=step_key,
+                                    step_text=step_text,
+                                    current_rgb_uint8_hwc=rgb,
+                                ):
+                                    # completion hook for LLM completions
+                                    try:
+                                        guide.on_step_completed(env, idx)
+                                    except Exception as e:
+                                        omni.log.warn(f"on_step_completed failed idx={idx}: {e}")
+
+                                    highlighter.advance()
+                                    llm_checker.reset_for_new_step()  # type: ignore[union-attr]
+                                    auto_advance_block_frames = AUTO_ADVANCE_COOLDOWN_FRAMES
                 else:
+                    # Normal mode ONLY
                     guide.maybe_auto_advance(highlighter, env)
 
-            # LLM logic
-            if (not args_cli.capture_targets) and args_cli.enable_cameras and llm_checker is not None:
-                idx = highlighter.step_index
-                if 0 <= idx <= total_real:
-                    cam = env.scene["head_camera"]
-                    rgb = (
-                        cam.data.output["rgb"][0].cpu().numpy()
-                    )  # HWC uint8
-
-                    step_key = str(idx + 1)
-                    step_text = guide.get_all_instructions()[idx]
-
-                    if llm_checker.update(
-                        step_key=step_key,
-                        step_text=step_text,
-                        current_rgb_uint8_hwc=rgb,
-                    ):
-                        highlighter.advance()
-                        llm_checker.reset_for_new_step()    
-            
-            # Step transition logging
+            # -------------------- Step transition logging --------------------
             new_step_idx = int(highlighter.step_index)
 
             # If step index increased, previous step has completed
             if new_step_idx > current_step_idx:
                 prev_step = current_step_idx
-
-                # Only finalize the step once per demo
                 if not demo_step_done.get(prev_step, False):
                     elapsed = time.time() - step_start_time
-
-                    # If step never had a reset while active
                     if not demo_step_failed.get(prev_step, False):
                         demo_step_time_sec[prev_step] = float(elapsed)
                         demo_step_done[prev_step] = True
                     else:
-                        # It was already marked failed earlier so do not overwrite time
                         demo_step_done[prev_step] = True
 
-                # Move to next step
                 current_step_idx = new_step_idx
                 step_start_time = time.time()
 
-            # If step index decreased due to reset, restart timing for the current step
+            # If step index decreased (reset), restart timing for the current step
             elif new_step_idx < current_step_idx:
                 current_step_idx = new_step_idx
                 step_start_time = time.time()
 
+            # -------------------- Visuals / HUD --------------------
             guide.update_previews_for_step(highlighter)
             if hud is not None:
                 hud.update(guide, highlighter)
             if name_tag is not None:
                 name_tag.update(guide, highlighter)
 
-            # Safety reset
+            # -------------------- Safety reset --------------------
             if guide.any_part_fallen_below_table(getattr(guide, "MOVING_PARTS", [])):
                 print("An object has fallen below table...resetting")
                 should_reset = True
                 pending_reset_reason = "safety_fall"
 
-            # Success detection
+            # -------------------- Success detection --------------------
             step_complete = highlighter.step_index >= highlighter.total_steps
             global_ok = False
             if step_complete:
-                global_ok = (
-                    guide.is_final_assembly_valid()
-                    if hasattr(guide, "is_final_assembly_valid")
-                    else step_complete
-                )
-            is_success = step_complete and global_ok
+                global_ok = guide.is_final_assembly_valid() if hasattr(guide, "is_final_assembly_valid") else True
+            is_success = bool(step_complete and global_ok)
 
             # If success stable long enough, export one demo
             if is_success:
@@ -648,28 +649,20 @@ def main():
                         demo_step_done[s] = True
                         demo_step_reset_count.setdefault(s, 0)
 
-                    # Determine the demo index that will be written
                     prev_count = env.recorder_manager.exported_successful_episode_count
 
-                    # Compute time per demo
-                    if start_time is not None:
-                        completion_time_sec = time.time() - start_time
-                    else:
-                        completion_time_sec = float("nan")
+                    completion_time_sec = (time.time() - start_time) if start_time is not None else float("nan")
 
                     # Export demo
-                    env.recorder_manager.record_pre_reset(
-                        [0], force_export_or_skip=False
-                    )
+                    env.recorder_manager.record_pre_reset([0], force_export_or_skip=False)
                     env.recorder_manager.set_success_to_episodes(
                         [0], torch.tensor([[True]], dtype=torch.bool, device=env.device)
                     )
                     env.recorder_manager.export_episodes([0])
 
-                    # Annotate the demo group exported
                     annotate_hdf5_demo(
                         dataset_path=dataset_path,
-                        demo_index=prev_count,  # newly exported demo index
+                        demo_index=prev_count,
                         completion_time_sec=completion_time_sec,
                         reset_count_total=reset_count_total,
                         participant_id=args_cli.participant_id,
@@ -677,26 +670,22 @@ def main():
                     )
 
                     demos_recorded += 1
-                    print(
-                        f"Demo {demos_recorded} exported. Time: {completion_time_sec:.3f} sec"
-                    )
+                    print(f"Demo {demos_recorded} exported. Time: {completion_time_sec:.3f} sec")
 
                     # Write step stats for this demo to CSV
                     now_iso = datetime.now(timezone.utc).isoformat()
-
                     step_rows: list[dict] = []
-                    for s in range(total_steps):
+                    for s_idx in range(total_steps):
                         step_name = ""
-                        if hasattr(guide, "SEQUENCE") and s < len(guide.SEQUENCE):
-                            step_name = str(guide.SEQUENCE[s])
+                        if hasattr(guide, "SEQUENCE") and s_idx < len(guide.SEQUENCE):
+                            step_name = str(guide.SEQUENCE[s_idx])
 
-                        failed = bool(demo_step_failed.get(s, False))
+                        failed = bool(demo_step_failed.get(s_idx, False))
                         outcome = "fail" if failed else "success"
 
-                        # If a step was never finalized use NaN
-                        t = demo_step_time_sec.get(s, float("nan"))
-                        resets = int(demo_step_reset_count.get(s, 0))
-                        reason = demo_step_first_reset_reason.get(s, "")
+                        t = demo_step_time_sec.get(s_idx, float("nan"))
+                        resets = int(demo_step_reset_count.get(s_idx, 0))
+                        reason = demo_step_first_reset_reason.get(s_idx, "")
 
                         step_rows.append(
                             {
@@ -704,7 +693,7 @@ def main():
                                 "participant_id": args_cli.participant_id,
                                 "task": args_cli.task,
                                 "demo_index": int(prev_count),
-                                "step_index": int(s),
+                                "step_index": int(s_idx),
                                 "step_name": step_name,
                                 "outcome": outcome,
                                 "time_sec": float(t),
@@ -717,37 +706,40 @@ def main():
                     append_rows_to_csv(step_csv_path, step_rows)
                     print(f"Wrote step stats to: {step_csv_path}")
 
-                    # Check stop condition
+                    # Stop condition
                     if args_cli.num_demos > 0 and demos_recorded >= args_cli.num_demos:
                         finished = True
                     else:
                         # Prepare next demo
-                        reset_all(
-                            env, guide, highlighter, phys_binder, hud, teleop_interface
-                        )
+                        reset_all(env, guide, highlighter, phys_binder, hud, teleop_interface)
 
+                        # Reset per-demo step logs
                         demo_step_done.clear()
                         demo_step_failed.clear()
                         demo_step_time_sec.clear()
                         demo_step_reset_count.clear()
                         demo_step_first_reset_reason.clear()
 
+                        # Reset per-demo timers/state
                         current_step_idx = int(highlighter.step_index)
                         step_start_time = time.time()
-
-                        # Reset per demo
                         success_step_count = 0
                         reset_count_total = 0
                         demo_started = False
                         start_time = None
 
+                        # Reset NEXT / cooldown / LLM state
+                        manual_next_step_requested = False
+                        auto_advance_block_frames = 0
+                        if llm_checker is not None:
+                            llm_checker.reset_for_new_step()
+
                         if getattr(args_cli, "xr", False):
                             teleoperation_active = False
-
             else:
                 success_step_count = 0
 
-            # Manual reset handling
+            # -------------------- Manual reset handling --------------------
             if should_reset:
                 reset_count_total += 1
 
@@ -760,10 +752,8 @@ def main():
                     demo_step_first_reset_reason[s] = str(pending_reset_reason)
                     demo_step_time_sec[s] = float(time.time() - step_start_time)
 
-                # Reset env
                 reset_all(env, guide, highlighter, phys_binder, hud, teleop_interface)
 
-                # After reset restart timing
                 should_reset = False
                 pending_reset_reason = "unknown"
                 success_step_count = 0
@@ -773,20 +763,24 @@ def main():
                 current_step_idx = int(highlighter.step_index)
                 step_start_time = time.time()
 
+                # Reset NEXT / cooldown / LLM state
+                manual_next_step_requested = False
+                auto_advance_block_frames = 0
+                if llm_checker is not None:
+                    llm_checker.reset_for_new_step()
+
                 if getattr(args_cli, "xr", False):
                     teleoperation_active = False
 
-            # Stop when finished
+            # -------------------- Stop when finished --------------------
             if finished:
                 break
-
             if env.sim.is_stopped():
                 break
 
             if rate_limiter:
                 rate_limiter.sleep(env)
 
-    # Cleanup
     env.close()
     print("Done. Closing app.")
 
