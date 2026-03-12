@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 """
-Record furniture-assembly demonstrations using your custom teleop UI
+Record furniture-assembly demonstrations using the custom teleop UI
 (guide, highlighting, HUD) while saving trajectories via Isaac Lab RecorderManager.
 
 Default: one run = one participant + one task = 1 successful demo exported to HDF5.
