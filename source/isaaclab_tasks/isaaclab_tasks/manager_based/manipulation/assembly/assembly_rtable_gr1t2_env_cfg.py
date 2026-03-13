@@ -120,7 +120,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # RoundTableTop
     round_table_top = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/RoundTableTop",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.141, 0.3965, 1.003]),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.141, 0.38, 1.003]),
         spawn=UsdFileCfg(
             usd_path="/workspace/isaaclab/source/isaaclab_assets/isaaclab_assets/assembly/rtable/round_table_top.usd",
             scale=ASSET_SCALE,

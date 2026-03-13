@@ -6,6 +6,7 @@ from .base import (
     resolve_env_scoped_path,
     spawn_ghost_preview,
     MaterialRegistry,
+    update_ghost_preview_pose,
 )
 from pxr import UsdGeom, Usd, Gf
 from typing import List, Optional, Tuple
@@ -33,30 +34,30 @@ class RtableGuide(BaseGuide):
 
     tol_z_dbox_t = 1.13  # distance between round leg and table origin along Z
 
-    tgt_leg_pos = Gf.Vec3d(0.18886056542396545, 0.40083980560302734, 1.1228126287460327)
+    tgt_leg_pos = Gf.Vec3d(0.21071575582027435, 0.347117155790329, 1.1228574514389038)
     tgt_leg_quat = Gf.Quatd(
-        -0.4652639329433441,
-        Gf.Vec3d(0.4648388922214508, 0.5321130752563477, -0.5332072377204895),
+        0.7062255144119263,
+        Gf.Vec3d(-0.7060852646827698, -0.03716788813471794, 0.036162737756967545),
     )
-    tgt_support_pos = Gf.Vec3d(0.19499999284744263, 0.3831000030040741, 1.0180000066757202)
+    tgt_support_pos = Gf.Vec3d(0.21078689396381378, 0.34730324149131775, 1.0165512561798096)
     tgt_support_quat = Gf.Quatd(
-        0,
-        Gf.Vec3d(-1, 0, 0),
+        4.871253622695804e-09,
+        Gf.Vec3d(-0.007517402991652489, -0.9999717473983765, 3.434251993894577e-09),
     )
     tgt_top_pos = Gf.Vec3d(-0.15009844303131104, 0.42000797390937805, 0.9965510368347168)
     tgt_top_quat = Gf.Quatd(
         -0.7240346670150757,
         Gf.Vec3d(2.5640474632382393e-08, -4.72591636935249e-08, 0.6897637844085693),
     )
-    tgt_leg_pos_rot = Gf.Vec3d(0.18886056542396545, 0.40083980560302734, 1.1228126287460327)
+    tgt_leg_pos_rot = Gf.Vec3d(-0.14968684315681458, 0.4193904995918274, 1.091030478477478)
     tgt_leg_quat_rot = Gf.Quatd(
-        -0.4652639329433441,
-        Gf.Vec3d(0.4648388922214508, 0.5321130752563477, -0.5332072377204895),
+        -0.4911705255508423,
+        Gf.Vec3d(-0.49259623885154724, 0.5027142763137817, 0.5132046937942505),
     )
-    tgt_support_pos_rot = Gf.Vec3d(-0.14829237759113312, 0.4203796684741974, 1.196882724761963)
+    tgt_support_pos_rot = Gf.Vec3d(-0.14877615869045258, 0.41815385222435, 1.1972640752792358)
     tgt_support_quat_rot = Gf.Quatd(
-        -0.7324199676513672,
-        Gf.Vec3d(-0.00262716063298285, -0.005564449355006218, -0.6808253526687622),
+        0.9990598559379578,
+        Gf.Vec3d(0.006261101458221674, 0.004303178749978542, 0.04268259555101395),
     )
 
     def __init__(self):
@@ -245,16 +246,49 @@ class RtableGuide(BaseGuide):
         pos_err = (live_pos - tgt_pos).GetLength()
         ang_err = ang_deg(live_quat, tgt_quat)
 
-        return pos_err <= 0.01 #and ang_err <= 3.0
+        result = pos_err <= 0.01 #and ang_err <= 3.5
+
+        if result:
+            self._target_poses["RoundLeg"] = (
+                self.tgt_leg_pos_rot,
+                self.tgt_leg_quat_rot,
+            )
+            self._target_poses["RoundSupport"] = (
+                self.tgt_support_pos_rot,
+                self.tgt_support_quat_rot,
+            )
+
+            if (
+                self._stage
+                and self._asset_roots.get("RoundLeg")
+                and self._ghost_paths_by_name.get("RoundLeg")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["RoundLeg"],
+                    self._ghost_paths_by_name["RoundLeg"],
+                    self.tgt_leg_pos_rot,
+                    self.tgt_leg_quat_rot,
+                )
+
+            if (
+                self._stage
+                and self._asset_roots.get("RoundSupport")
+                and self._ghost_paths_by_name.get("RoundSupport")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["RoundSupport"],
+                    self._ghost_paths_by_name["RoundSupport"],
+                    self.tgt_support_pos_rot,
+                    self.tgt_support_quat_rot,
+                )
+
+        return result
 
     def _check_support_insert(self) -> bool:
         tgt = self._target_poses.get("RoundSupport")
         live = self.get_live_part_pose("RoundSupport")
-        print(self.get_live_part_pose("RoundLeg"))
-        print("#########")
-        print(self.get_live_part_pose("RoundSupport"))
-        print("#########")
-        print(self.get_live_part_pose("RoundTableTop"))
         if not (tgt and live):
             return False
 
@@ -279,3 +313,40 @@ class RtableGuide(BaseGuide):
             issues.append(("RoundSupport", "Round Support is not aligned (Step 4)"))
 
         return issues
+
+    def on_step_completed(self, env, step_index: int) -> None:
+
+        # Step 3 complete
+        if step_index == 2:
+            # Update RoundLeg and RoundSupport target to "rotated" pose
+            self._target_poses["RoundLeg"] = (self.tgt_leg_pos_rot, self.tgt_leg_quat_rot)
+            self._target_poses["RoundSupport"] = (self.tgt_support_pos_rot, self.tgt_support_quat_rot)
+
+            # Update RoundLeg ghost preview pose
+            if (
+                self._stage
+                and self._asset_roots.get("RoundLeg")
+                and self._ghost_paths_by_name.get("RoundLeg")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["RoundLeg"],
+                    self._ghost_paths_by_name["RoundLeg"],
+                    self.tgt_leg_pos_rot,
+                    self.tgt_leg_quat_rot,
+                )
+
+            # Update RoundSupport ghost preview pose
+            if (
+                self._stage
+                and self._asset_roots.get("RoundSupport")
+                and self._ghost_paths_by_name.get("RoundSupport")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["RoundSupport"],
+                    self._ghost_paths_by_name["RoundSupport"],
+                    self.tgt_support_pos_rot,
+                    self.tgt_support_quat_rot,
+                )
+            return
