@@ -204,7 +204,7 @@ class RtableGuide(BaseGuide):
         total = len(self.SEQUENCE)
         base_steps = [
             f"Step 1/{total}: Pick up Round Leg",
-            f"Step 2/{total}: Insert Round Leg into Round Support and screw clockwise until tight",
+            f"Step 2/{total}: Insert Round Leg into Round Support and screw clockwise to tighten",
             f"Step 3/{total}: Brace Round Table Top against the front and left corner obstacles",
             f"Step 4/{total}: Insert Round Support into Round Table Top and screw clockwise until tight to finish",
         ]

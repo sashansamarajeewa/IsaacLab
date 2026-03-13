@@ -551,7 +551,7 @@ class HUDManager:
     def wrap_text(self, text: str) -> str:
         char_width = 0.009 * self._font_size
         usable_width = self._width * 0.9
-        max_chars_per_line = max(10, int(usable_width / char_width))
+        max_chars_per_line = max(1, int(usable_width / char_width))
         wrapped_lines: list[str] = []
         for line in text.splitlines() or [""]:
             chunks = textwrap.wrap(line, width=max_chars_per_line) or [""]
