@@ -1,0 +1,29 @@
+{
+  "model": "gpt-5.4",
+  "period_s": 1.0,
+  "consecutive_required": 1,
+  "max_image_side": 512,
+  "base_prompt": "You are judging progress in a stool assembly task by comparing a CURRENT robot-camera frame against a TARGET reference image for one specific step. A step is complete only when the task-relevant part(s) are in the same final spatial relationship as in TARGET. Focus on object/assembly state, not on matching the robot hands exactly. Ignore small differences in camera viewpoint, lighting, hand pose, and minor pixel-level variation. Judge mainly: (1) which part is being evaluated (Seat, FirstLeg, SecondLeg, ThirdLeg), (2) whether the Seat is detached from the table when relevant, (3) whether the Seat is placed at the correct target position and orientation when relevant, and (4) whether a leg is inserted in the correct socket and fully seated/tightened-looking (flush contact, no visible gap, upright/straight). Do NOT try to infer 'clockwise' from motion; judge only the final tightened-looking state using visual cues (fully seated/flush, correct depth, stable). If the relevant part, socket interface, or key gaps are partly hidden/blurred/ambiguous, return step_complete=false with failure_mode='occluded' or 'unknown'. Use failure_mode='position' when the part is visible but not yet in the correct place or not fully seated. Use failure_mode='orientation' when the placement is close but the part is rotated/flipped/tilted relative to TARGET. Use failure_mode='none' only when step_complete=true. The reason must be brief and mention decisive visual evidence.",
+  "steps": {
+    "1": {
+      "enabled": true,
+      "prompt": "Step 1 - Pick up Seat. The relevant part is the Seat. Mark complete only if the Seat is clearly lifted above the tabletop and is not touching or resting on the table or obstacles. It should be visibly suspended in the air, held by the robot, similar to TARGET. Do not require an exact hand pose match. Return false if any edge of the Seat appears supported by the table, if contact is uncertain, or if it is still essentially sitting on the table."
+    },
+    "2": {
+      "enabled": true,
+      "prompt": "Step 2 - Move Seat to the target position. The relevant part is the Seat. Mark complete only if the Seat is placed down on the table in the same target location and orientation as TARGET (i.e., positioned within/against the obstacle area exactly as shown), stable and not hovering/held. The sockets/holes and overall rotation of the Seat should match TARGET. Return false if the Seat is still being held, is offset from the target area, rotated differently than TARGET, or if the key contact/position is occluded or ambiguous."
+    },
+    "3": {
+      "enabled": true,
+      "prompt": "Step 3 - Insert First Leg and tighten. The relevant part is the FirstLeg and its connection to the Seat. Mark complete only if the FirstLeg is inserted into the correct Seat socket exactly as in TARGET: fully seated, upright/straight, and with no visible gap between the leg and Seat at the interface. Do not require seeing rotation; judge only the final tightened-looking state (flush/fully seated). Return false if the leg is not in a socket, is in the wrong socket, is only partially inserted, tilted/skewed, or if the insertion interface is occluded/unclear."
+    },
+    "4": {
+      "enabled": true,
+      "prompt": "Step 4 - Insert Second Leg and tighten. The relevant part is the SecondLeg and its connection to the Seat. Mark complete only if the SecondLeg is inserted into the correct remaining Seat socket exactly as in TARGET: fully seated, upright/straight, and with no visible gap at the interface. Do not require seeing rotation; judge only the final tightened-looking state (flush/fully seated). Return false if the leg is in the wrong socket, partially inserted, tilted/skewed, or if the key interface/gap is occluded or ambiguous."
+    },
+    "5": {
+      "enabled": true,
+      "prompt": "Step 5 - Insert Third Leg and tighten. The relevant part is the ThirdLeg and its connection to the Seat. Mark complete only if the ThirdLeg is inserted into the final Seat socket exactly as in TARGET: fully seated, upright/straight, and with no visible gap at the interface. The final assembled configuration (Seat + three legs) should match TARGET. Do not require seeing rotation; judge only the final tightened-looking state (flush/fully seated). Return false if the leg is not fully inserted, is tilted/skewed, in the wrong socket, or if the interface is occluded/unclear."
+    }
+  }
+}
