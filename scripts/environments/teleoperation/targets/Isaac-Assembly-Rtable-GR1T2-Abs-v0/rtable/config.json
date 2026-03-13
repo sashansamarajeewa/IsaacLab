@@ -1,0 +1,25 @@
+{
+  "model": "gpt-5.4",
+  "period_s": 1.0,
+  "consecutive_required": 1,
+  "max_image_side": 512,
+  "base_prompt": "You are judging progress in a round-table assembly task by comparing a CURRENT robot-camera frame against a TARGET reference image for one specific step. A step is complete only when the task-relevant part(s) are in the same final spatial relationship as in TARGET. Focus on object/assembly state, not on matching the robot hands exactly. Ignore small differences in camera viewpoint, lighting, hand pose, and minor pixel-level variation. Judge mainly: (1) which part is being evaluated (RoundLeg, RoundSupport, RoundTableTop), (2) whether the relevant part is lifted vs supported when relevant, (3) whether RoundTableTop is braced/aligned with the specified corner obstacles when relevant, and (4) whether insertions are fully seated/tightened-looking (flush contact, correct depth, upright/straight, no visible gap). Do NOT try to infer 'clockwise' from motion; judge only the final tightened-looking state using visual cues (fully seated/flush, correct depth, stable). If the relevant part, insertion interface, or key gaps are partly hidden/blurred/ambiguous, return step_complete=false with failure_mode='occluded' or 'unknown'. Use failure_mode='position' when the part is visible but not yet in the correct place or not fully seated. Use failure_mode='orientation' when the placement is close but the part is rotated/flipped/tilted relative to TARGET. Use failure_mode='none' only when step_complete=true. The reason must be brief and mention decisive visual evidence.",
+  "steps": {
+    "1": {
+      "enabled": true,
+      "prompt": "Step 1 - Pick up Round Leg. The relevant part is the RoundLeg (the cylindrical/vertical leg piece). Mark complete only if the RoundLeg is clearly lifted above the tabletop and is not touching or resting on the table or obstacles. It should be visibly suspended in the air, held by the robot, similar to TARGET. Do not require an exact hand pose match. Return false if any part of the RoundLeg appears supported by the table, if contact is uncertain, or if it is still essentially sitting on the table."
+    },
+    "2": {
+      "enabled": true,
+      "prompt": "Step 2 - Insert Round Leg into Round Support and tighten. The relevant parts are RoundLeg and RoundSupport at their connection. Mark complete only if the RoundLeg is inserted into the RoundSupport exactly as in TARGET: fully seated to the correct depth, upright/straight, and with no visible gap at the interface (tightened-looking). Do not require seeing rotation; judge only the final seated/flush state. Return false if the leg is not in the support, is only partially inserted, tilted/skewed, offset, or if the interface is occluded/unclear."
+    },
+    "3": {
+      "enabled": true,
+      "prompt": "Step 3 - Brace Round Table Top against the front and left corner obstacles. The relevant part is the RoundTableTop (the large circular disk). Mark complete only if the RoundTableTop is resting on the table and positioned into the FRONT-LEFT corner workspace like TARGET, with its outer rim aligned against BOTH the front obstacle and the left obstacle. It should be stable (not hovering/held), and its visible orientation (e.g., central hole/boss position and any markings) should match TARGET. Return false if it is not fully seated on the table, not actually contacting one of the two obstacles, visibly offset from the corner, or rotated/tilted compared to TARGET."
+    },
+    "4": {
+      "enabled": true,
+      "prompt": "Step 4 - Insert Round Support into Round Table Top and tighten to finish. The relevant parts are RoundSupport (with the RoundLeg attached) and RoundTableTop at their connection. Mark complete only if the RoundSupport is inserted into the RoundTableTop’s central socket/hole exactly as in TARGET: fully seated/flush, centered, upright, and with no visible gap indicating partial insertion. Do not require seeing rotation; judge only the final tightened-looking state. The final assembled configuration (RoundTableTop + RoundSupport + RoundLeg) should match TARGET. Return false if the support is not fully inserted, is tilted/skewed, offset from the central hole, or if the interface is occluded/ambiguous."
+    }
+  }
+}
