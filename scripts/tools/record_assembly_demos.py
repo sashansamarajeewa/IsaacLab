@@ -374,6 +374,7 @@ def main():
     demo_step_time_sec: dict[int, float] = {}
     demo_step_reset_count: dict[int, int] = {}
     demo_step_first_reset_reason: dict[int, str] = {}
+    demo_step_completion_mode: dict[int, str] = {}
 
     current_step_idx: int = 0
     step_start_time: float = 0.0
@@ -527,10 +528,14 @@ def main():
 
             manual_advanced = False
 
+            step_idx_before = int(highlighter.step_index)
+            advance_source_this_frame: str | None = None
+
             # -------------------- Manual NEXT (works in both modes) --------------------
             if manual_next_step_requested:
                 manual_next_step_requested = False
                 manual_advanced = True
+                advance_source_this_frame = "next_button"
 
                 idx = int(highlighter.step_index)  # current step we are force-completing
                 if 0 <= idx < total_real:
@@ -582,6 +587,7 @@ def main():
                                     step_text=step_text,
                                     current_rgb_uint8_hwc=rgb,
                                 ):
+                                    advance_source_this_frame = "llm"
                                     # completion hook for LLM completions
                                     try:
                                         guide.on_step_completed(env, idx)
@@ -594,6 +600,12 @@ def main():
                 else:
                     # Normal mode ONLY
                     guide.maybe_auto_advance(highlighter, env)
+
+            step_idx_after = int(highlighter.step_index)
+            if step_idx_after > step_idx_before:
+                if advance_source_this_frame is None:
+                    advance_source_this_frame = "auto"
+                demo_step_completion_mode[step_idx_before] = advance_source_this_frame
 
             # -------------------- Step transition logging --------------------
             new_step_idx = int(highlighter.step_index)
@@ -681,7 +693,11 @@ def main():
                             step_name = str(guide.SEQUENCE[s_idx])
 
                         failed = bool(demo_step_failed.get(s_idx, False))
-                        outcome = "fail" if failed else "success"
+                        if failed:
+                            outcome = "failed"
+                        else:
+                            mode = demo_step_completion_mode.get(s_idx, "success")
+                            outcome = "next_button" if mode == "next_button" else "success"
 
                         t = demo_step_time_sec.get(s_idx, float("nan"))
                         resets = int(demo_step_reset_count.get(s_idx, 0))
@@ -719,6 +735,7 @@ def main():
                         demo_step_time_sec.clear()
                         demo_step_reset_count.clear()
                         demo_step_first_reset_reason.clear()
+                        demo_step_completion_mode.clear()
 
                         # Reset per-demo timers/state
                         current_step_idx = int(highlighter.step_index)
