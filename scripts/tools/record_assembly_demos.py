@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from collections.abc import Callable
 from pathlib import Path
 from isaaclab.app import AppLauncher
-from llm_step_config import build_llm_checker_for_run
+from scripts.environments.teleoperation.llm_step_config import build_llm_checker_for_run
 
 # -------------------------- CLI --------------------------
 parser = argparse.ArgumentParser(

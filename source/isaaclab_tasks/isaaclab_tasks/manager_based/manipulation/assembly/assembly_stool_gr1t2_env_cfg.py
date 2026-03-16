@@ -153,8 +153,8 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
 
     head_camera = CameraCfg(
         prim_path="/World/envs/env_.*/Robot/GR1T2_fourier_hand_6dof/head_yaw_link/HeadCamera",
-        height=720,
-        width=1280,
+        height=480,
+        width=640,
         data_types=["rgb", "distance_to_image_plane"],
         spawn=sim_utils.PinholeCameraCfg(focal_length=6.0),
         offset=CameraCfg.OffsetCfg(

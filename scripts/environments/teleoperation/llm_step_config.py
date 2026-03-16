@@ -5,7 +5,7 @@ import json
 import numpy as np
 from PIL import Image
 
-from llm_step_checker import LLMStepChecker
+from scripts.environments.teleoperation.llm_step_checker import LLMStepChecker
 
 
 def build_llm_checker_for_run(
