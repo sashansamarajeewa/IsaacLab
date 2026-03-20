@@ -1,0 +1,10 @@
+./isaaclab.sh -p scripts/environments/teleoperation/teleop_assembly.py     --task Isaac-Assembly-Drawer-GR1T2-Abs-v0     --teleop_device handtracking     --enable_pinocchio --guide drawer --device cpu --headless
+
+
+./isaaclab.sh -p scripts/tools/record_assembly_demos.py --task Isaac-Assembly-Rtable-GR1T2-Abs-v0 --teleop_device handtracking --participant_id P02 --enable_pinocchio --enable_cameras --num_demos 1 --guide rtable --device cpu
+
+
+./isaaclab.sh -p scripts/tools/record_assembly_demos.py --task Isaac-Assembly-Desk-GR1T2-Abs-v0 --teleop_device handtracking --participant_id P02 --enable_pinocchio --enable_cameras --num_demos 1 --guide desk --device cpu
+
+
+./isaaclab.sh -p scripts/tools/record_assembly_demos.py --task Isaac-Assembly-Lamp-GR1T2-Abs-v0 --teleop_device handtracking --participant_id P02 --enable_pinocchio --enable_cameras --num_demos 1 --guide lamp --device cpu

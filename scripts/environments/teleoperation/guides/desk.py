@@ -289,13 +289,13 @@ class DeskGuide(BaseGuide):
     def get_all_instructions(self) -> list[str]:
         total = len(self.SEQUENCE)
         base_steps = [
-            f"Step 1/{total}: Pick up Desk Top",
+            f"Step 1/{total}: SKIP-Pick up Desk Top",
             f"Step 2/{total}: Brace Desk Top against the front and right corner obstacles",
             f"Step 3/{total}: Insert Front Right Leg and screw clockwise until tight",
-            f"Step 4/{total}: Insert Front Left Leg and screw clockwise until tight",
+            f"Step 4/{total}: SKIP-Insert Front Left Leg and screw clockwise until tight",
             f"Step 5/{total}: Rotate Desk Top by 180°",
-            f"Step 6/{total}: Insert Back Right Leg and screw clockwise until tight",
-            f"Step 7/{total}: Insert Back Left Leg and screw clockwise until tight",
+            f"Step 6/{total}: SKIP-Insert Back Right Leg and screw clockwise until tight",
+            f"Step 7/{total}: SKIP-Insert Back Left Leg and screw clockwise until tight",
         ]
         base_steps.append("Assembly complete!")
         return base_steps

@@ -225,11 +225,11 @@ class StoolGuide(BaseGuide):
     def get_all_instructions(self) -> list[str]:
         total = len(self.SEQUENCE)
         base_steps = [
-            f"Step 1/{total}: Pick up Seat",
+            f"Step 1/{total}: SKIP-Pick up Seat",
             f"Step 2/{total}: Move Seat to the target position",
             f"Step 3/{total}: Insert First Leg and screw clockwise until tight",
-            f"Step 4/{total}: Insert Second Leg and screw clockwise until tight",
-            f"Step 5/{total}: Insert Third Leg and screw clockwise until tight",
+            f"Step 4/{total}: SKIP-Insert Second Leg and screw clockwise until tight",
+            f"Step 5/{total}: SKIP-Insert Third Leg and screw clockwise until tight",
         ]
         base_steps.append("Assembly complete!")
         return base_steps
