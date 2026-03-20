@@ -49,10 +49,10 @@ class ChairGuide(BaseGuide):
         1: ["Seat"],
         2: ["Seat", "FrontRightLeg"],
         3: ["Seat", "FrontRightLeg", "FrontLeftLeg"],
-        4: ["Seat"],
-        5: ["Seat", "Back"],
-        6: ["Seat", "Back", "RightNut"],
-        7: ["Seat", "Back", "RightNut", "LeftNut"],
+        4: ["Seat", "FrontRightLeg", "FrontLeftLeg"],
+        5: ["Seat", "FrontRightLeg", "FrontLeftLeg", "Back"],
+        6: ["Seat", "FrontRightLeg", "FrontLeftLeg", "Back", "RightNut"],
+        7: ["Seat", "FrontRightLeg", "FrontLeftLeg", "Back", "RightNut", "LeftNut"],
     }
 
     tol_z_dbox_t = 1.08  # distance between seat and table origin along Z
@@ -79,32 +79,46 @@ class ChairGuide(BaseGuide):
         Gf.Vec3d(0.5016393661499023, -0.4989506006240845, -0.4981728792190552),
     )
     tgt_chair_seat_pos_rot = Gf.Vec3d(
-        0.07046207040548325, 0.465789258480072, 1.0645519495010376
+        0.06693419069051743, 0.4598131775856018, 1.0646365880966187
     )
     tgt_chair_seat_quat_rot = Gf.Quatd(
-        -0.006338185630738735,
-        Gf.Vec3d(9.778887033462524e-09, 4.336851304742595e-07, -0.9999798536300659),
+        -0.011706930585205555,
+        Gf.Vec3d(0.00017946516163647175, 0.00010747313353931531, -0.9999314546585083),
+    )
+    tgt_front_right_leg_pos_rot = Gf.Vec3d(
+        0.13236378133296967, 0.369273841381073, 1.0265432596206665
+    )
+    tgt_front_right_leg_quat_rot = Gf.Quatd(
+        0.008277300745248795,
+        Gf.Vec3d(-0.7160747051239014, 0.008312846533954144, 0.6979252099990845),
+    )
+    tgt_front_left_leg_pos_rot = Gf.Vec3d(
+        -0.0024638744071125984, 0.3724214434623718, 1.0264832973480225
+    )
+    tgt_front_left_leg_quat_rot = Gf.Quatd(
+        0.008160511963069439,
+        Gf.Vec3d(-0.7239612936973572, 0.00832752138376236, 0.6897421479225159),
     )
     tgt_chair_back_pos = Gf.Vec3d(
-        0.07128557562828064, 0.531682550907135, 1.1625932455062866
+        0.06832481920719147, 0.5259986519813538, 1.1630704402923584
     )
     tgt_chair_back_quat = Gf.Quatd(
-        0.020880568772554398,
-        Gf.Vec3d(0.999761700630188, -0.006392395589500666, -0.00013119234063196927),
+        -0.015152636915445328,
+        Gf.Vec3d(-0.9998193979263306, 0.0114845996722579, -3.826577085419558e-06),
     )
     tgt_right_nut_pos = Gf.Vec3d(
-        0.1403961032629013, 0.46569886803627014, 1.2270514965057373
+        0.13664162158966064, 0.4590485692024231, 1.2272306680679321
     )
     tgt_right_nut_quat = Gf.Quatd(
-        -0.007001154124736786,
-        Gf.Vec3d(0.0069968560710549355, -0.7070678472518921, 0.7070766091346741),
+        -0.03958119824528694,
+        Gf.Vec3d(0.04283810406923294, -0.7051147818565369, 0.7066904306411743),
     )
     tgt_left_nut_pos = Gf.Vec3d(
-        0.0004940967774018645, 0.467220664024353, 1.227117657661438
+        -0.003298945492133498, 0.4623400866985321, 1.2271881103515625
     )
     tgt_left_nut_quat = Gf.Quatd(
-        -0.006920339073985815,
-        Gf.Vec3d(0.009087394922971725, -0.7052192091941833, 0.7088974714279175),
+        -0.03747441619634628,
+        Gf.Vec3d(0.041586339473724365, -0.7052389979362488, 0.7067561745643616),
     )
 
     def __init__(self):
@@ -366,6 +380,14 @@ class ChairGuide(BaseGuide):
                 self.tgt_chair_seat_pos_rot,
                 self.tgt_chair_seat_quat_rot,
             )
+            self._target_poses["FrontRightLeg"] = (
+                self.tgt_front_right_leg_pos_rot,
+                self.tgt_front_right_leg_quat_rot,
+            )
+            self._target_poses["FrontLeftLeg"] = (
+                self.tgt_front_left_leg_pos_rot,
+                self.tgt_front_left_leg_quat_rot,
+            )
             if (
                 self._stage
                 and self._asset_roots.get("Seat")
@@ -377,6 +399,30 @@ class ChairGuide(BaseGuide):
                     self._ghost_paths_by_name["Seat"],
                     self.tgt_chair_seat_pos_rot,
                     self.tgt_chair_seat_quat_rot,
+                )
+            if (
+                self._stage
+                and self._asset_roots.get("FrontRightLeg")
+                and self._ghost_paths_by_name.get("FrontRightLeg")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["FrontRightLeg"],
+                    self._ghost_paths_by_name["FrontRightLeg"],
+                    self.tgt_front_right_leg_pos_rot,
+                    self.tgt_front_right_leg_quat_rot,
+                )
+            if (
+                self._stage
+                and self._asset_roots.get("FrontLeftLeg")
+                and self._ghost_paths_by_name.get("FrontLeftLeg")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["FrontLeftLeg"],
+                    self._ghost_paths_by_name["FrontLeftLeg"],
+                    self.tgt_front_left_leg_pos_rot,
+                    self.tgt_front_left_leg_pos_rot,
                 )
 
         return result
@@ -458,3 +504,55 @@ class ChairGuide(BaseGuide):
             issues.append(("LeftNut", "Left Nut is not aligned (Step 8)"))
 
         return issues
+    
+    def on_step_completed(self, env, step_index: int) -> None:
+
+        # Step 4 complete
+        if step_index == 3:
+            self._target_poses["Seat"] = (self.tgt_chair_seat_pos_rot, self.tgt_chair_seat_quat_rot)
+            self._target_poses["FrontRightLeg"] = (self.tgt_front_right_leg_pos_rot, self.tgt_front_right_leg_quat_rot)
+            self._target_poses["FrontLeftLeg"] = (self.tgt_front_left_leg_pos_rot, self.tgt_front_left_leg_quat_rot)
+
+            # Update ghost preview for seat
+            if (
+                self._stage
+                and self._asset_roots.get("Seat")
+                and self._ghost_paths_by_name.get("Seat")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["Seat"],
+                    self._ghost_paths_by_name["Seat"],
+                    self.tgt_chair_seat_pos_rot,
+                    self.tgt_chair_seat_quat_rot,
+                )
+            
+            # Update ghost previews for legs
+            if (
+                self._stage
+                and self._asset_roots.get("FrontRightLeg")
+                and self._ghost_paths_by_name.get("FrontRightLeg")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["FrontRightLeg"],
+                    self._ghost_paths_by_name["FrontRightLeg"],
+                    self.tgt_front_right_leg_pos_rot,
+                    self.tgt_front_right_leg_quat_rot,
+                )
+
+            if (
+                self._stage
+                and self._asset_roots.get("FrontLeftLeg")
+                and self._ghost_paths_by_name.get("FrontLeftLeg")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["FrontLeftLeg"],
+                    self._ghost_paths_by_name["FrontLeftLeg"],
+                    self.tgt_front_left_leg_pos_rot,
+                    self.tgt_front_left_leg_quat_rot,
+                )
+
+            self.snap_parts_to_targets(env, ["Seat", "FrontRightLeg", "FrontLeftLeg"])
+            return
