@@ -400,30 +400,6 @@ class ChairGuide(BaseGuide):
                     self.tgt_chair_seat_pos_rot,
                     self.tgt_chair_seat_quat_rot,
                 )
-            if (
-                self._stage
-                and self._asset_roots.get("FrontRightLeg")
-                and self._ghost_paths_by_name.get("FrontRightLeg")
-            ):
-                update_ghost_preview_pose(
-                    self._stage,
-                    self._asset_roots["FrontRightLeg"],
-                    self._ghost_paths_by_name["FrontRightLeg"],
-                    self.tgt_front_right_leg_pos_rot,
-                    self.tgt_front_right_leg_quat_rot,
-                )
-            if (
-                self._stage
-                and self._asset_roots.get("FrontLeftLeg")
-                and self._ghost_paths_by_name.get("FrontLeftLeg")
-            ):
-                update_ghost_preview_pose(
-                    self._stage,
-                    self._asset_roots["FrontLeftLeg"],
-                    self._ghost_paths_by_name["FrontLeftLeg"],
-                    self.tgt_front_left_leg_pos_rot,
-                    self.tgt_front_left_leg_pos_rot,
-                )
 
         return result
         # return True
@@ -507,8 +483,8 @@ class ChairGuide(BaseGuide):
     
     def on_step_completed(self, env, step_index: int) -> None:
 
-        # Step 4 complete
-        if step_index == 3:
+        # Step 5 complete
+        if step_index == 4:
             self._target_poses["Seat"] = (self.tgt_chair_seat_pos_rot, self.tgt_chair_seat_quat_rot)
             self._target_poses["FrontRightLeg"] = (self.tgt_front_right_leg_pos_rot, self.tgt_front_right_leg_quat_rot)
             self._target_poses["FrontLeftLeg"] = (self.tgt_front_left_leg_pos_rot, self.tgt_front_left_leg_quat_rot)
@@ -525,33 +501,6 @@ class ChairGuide(BaseGuide):
                     self._ghost_paths_by_name["Seat"],
                     self.tgt_chair_seat_pos_rot,
                     self.tgt_chair_seat_quat_rot,
-                )
-            
-            # Update ghost previews for legs
-            if (
-                self._stage
-                and self._asset_roots.get("FrontRightLeg")
-                and self._ghost_paths_by_name.get("FrontRightLeg")
-            ):
-                update_ghost_preview_pose(
-                    self._stage,
-                    self._asset_roots["FrontRightLeg"],
-                    self._ghost_paths_by_name["FrontRightLeg"],
-                    self.tgt_front_right_leg_pos_rot,
-                    self.tgt_front_right_leg_quat_rot,
-                )
-
-            if (
-                self._stage
-                and self._asset_roots.get("FrontLeftLeg")
-                and self._ghost_paths_by_name.get("FrontLeftLeg")
-            ):
-                update_ghost_preview_pose(
-                    self._stage,
-                    self._asset_roots["FrontLeftLeg"],
-                    self._ghost_paths_by_name["FrontLeftLeg"],
-                    self.tgt_front_left_leg_pos_rot,
-                    self.tgt_front_left_leg_quat_rot,
                 )
 
             self.snap_parts_to_targets(env, ["Seat", "FrontRightLeg", "FrontLeftLeg"])
