@@ -1,0 +1,41 @@
+{
+  "model": "gpt-5.4",
+  "period_s": 1.0,
+  "consecutive_required": 1,
+  "max_image_side": 512,
+  "base_prompt": "You are judging progress in a chair assembly task by comparing a CURRENT robot-camera frame against a TARGET reference image for one specific step. A step is complete only when the task-relevant part(s) are in the same final spatial relationship as in TARGET. Focus on object/assembly state, not on matching the robot hands exactly. Ignore small differences in camera viewpoint, lighting, hand pose, and minor pixel-level variation. Judge mainly: (1) which part is being evaluated (Seat, FrontRightLeg, FrontLeftLeg, Back, RightNut, LeftNut), (2) whether the Seat is detached from the table when relevant, (3) whether the Seat is braced/aligned with the specified corner obstacles when relevant, (4) whether legs are inserted at the correct sockets and fully seated/tightened-looking (flush contact, no visible gap, upright/straight), (5) for rotation, whether the Seat orientation has rotated ~90° and matches TARGET (seat features and already-installed parts rotate accordingly), (6) whether the Back is inserted into the Seat slot and fully seated (aligned, no visible gap), and (7) whether each nut is inserted in the correct location and fully seated/tightened-looking (flush contact, no visible gap). Do NOT try to infer 'clockwise' from motion; judge only the final tightened-looking state using visual cues (fully seated/flush, correct depth, stable). If the relevant part, insertion interface, or key gaps are partly hidden/blurred/ambiguous, return step_complete=false with failure_mode='occluded' or 'unknown'. Use failure_mode='position' when the part is visible but not yet in the correct place or not fully seated. Use failure_mode='orientation' when the placement is close but the part is rotated/flipped/tilted relative to TARGET. Use failure_mode='none' only when step_complete=true. The reason must be brief and mention decisive visual evidence.",
+  "steps": {
+    "1": {
+      "enabled": true,
+      "prompt": "Step 1 - Pick up Seat. The relevant part is the Seat. Mark complete only if the Seat is clearly lifted above the tabletop and is not touching or resting on the table or any obstacles. It should be visibly suspended in the air, held by the robot, similar to TARGET. Do not require an exact hand pose match. Return false if any edge of the Seat appears supported by the table, if contact is uncertain, or if it is still essentially sitting on the table."
+    },
+    "2": {
+      "enabled": true,
+      "prompt": "Step 2 - Brace Seat against the front and right corner obstacles. The relevant part is the Seat. Mark complete only if the Seat is resting on the table and pushed into the FRONT-RIGHT corner workspace like TARGET, with its outer edges aligned against BOTH the front obstacle and the right obstacle. The Seat should be stable (not hovering/held), and its orientation (visible sockets/holes/features) should match TARGET. Return false if it is not fully seated on the table, not actually contacting one of the two obstacles, visibly offset from the corner, or rotated/tilted compared to TARGET."
+    },
+    "3": {
+      "enabled": true,
+      "prompt": "Step 3 - Insert Front Right Leg and tighten. The relevant part is the FrontRightLeg and its connection to the Seat at the FRONT-RIGHT socket (as defined by TARGET). Mark complete only if the FrontRightLeg is inserted into the correct socket exactly as in TARGET: fully seated, upright/straight, and with no visible gap between the leg and Seat at the interface (tightened-looking). Do not require seeing rotation; judge only the final seated/flush state. Return false if the leg is not in the correct socket, is only partially inserted, tilted/skewed, reversed, or if the insertion interface is occluded/unclear."
+    },
+    "4": {
+      "enabled": true,
+      "prompt": "Step 4 - Insert Front Left Leg and tighten. The relevant part is the FrontLeftLeg and its connection to the Seat at the FRONT-LEFT socket (as defined by TARGET). Mark complete only if the FrontLeftLeg is inserted into the correct socket exactly as in TARGET: fully seated, upright/straight, and with no visible gap at the interface (tightened-looking). Do not require seeing rotation; judge only the final seated/flush state. Return false if the leg is in the wrong socket, partially inserted, tilted/skewed, reversed, or if the key interface/gap is occluded or ambiguous."
+    },
+    "5": {
+      "enabled": true,
+      "prompt": "Step 5 - Rotate Seat by 90°. The relevant part is the Seat (including any already-installed front legs). Mark complete only if the Seat has been rotated approximately 90 degrees (quarter-turn) around the vertical axis relative to the obstacles/camera compared to the pre-rotation state, and the resulting pose matches TARGET. Visual cues: the seat’s distinctive holes/sockets and the positions of the already-installed legs should appear rotated to the new orientation exactly as in TARGET. The Seat should be resting on the table (not floating) in the placement shown in TARGET. Return false if rotation is incomplete/wrong direction, if the pose still resembles the pre-rotation layout, or if the orientation is ambiguous due to occlusion."
+    },
+    "6": {
+      "enabled": true,
+      "prompt": "Step 6 - Insert Back into Seat. The relevant part is the Back and its connection to the Seat. Mark complete only if the Back is inserted into the Seat’s back slot/receivers exactly as in TARGET: aligned, centered, and fully seated with no visible gap indicating partial insertion. The Back should be upright (not leaning) and in the correct orientation (not flipped). Return false if the Back is not inserted, only partially inserted, tilted/skewed, reversed, or if the seating interface is occluded/unclear."
+    },
+    "7": {
+      "enabled": true,
+      "prompt": "Step 7 - Insert Right Nut and tighten. The relevant part is the RightNut and its insertion location on the chair assembly (as defined by TARGET after Step 6). Mark complete only if the RightNut is inserted into the correct right-side position and is fully seated/tightened-looking (flush contact, no visible gap, correct depth) exactly as in TARGET. Do not require seeing rotation; judge only the final seated/flush state. Return false if the nut is missing, in the wrong side/location, not fully seated, or if the interface is occluded/ambiguous."
+    },
+    "8": {
+      "enabled": true,
+      "prompt": "Step 8 - Insert Left Nut and tighten. The relevant part is the LeftNut and its insertion location on the chair assembly (as defined by TARGET after Step 7). Mark complete only if the LeftNut is inserted into the correct left-side position and is fully seated/tightened-looking (flush contact, no visible gap, correct depth) exactly as in TARGET. The final assembled configuration should match TARGET. Do not require seeing rotation; judge only the final seated/flush state. Return false if the nut is missing, in the wrong side/location, not fully seated, or if the interface is occluded/ambiguous."
+    }
+  }
+}
