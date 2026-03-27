@@ -34,8 +34,6 @@ class CabinetGuide(BaseGuide):
         3: ["CabinetBody", "CabinetTop"],
     }
 
-    tol_z_dbox_t = 1.082  # distance between drawer box and table origin along Z
-
     tgt_ldoor_pos = Gf.Vec3d(-0.020940018817782402, 0.4008996784687042, 1.1067736148834229)
     tgt_ldoor_quat = Gf.Quatd(
         -0.00958466250449419,
