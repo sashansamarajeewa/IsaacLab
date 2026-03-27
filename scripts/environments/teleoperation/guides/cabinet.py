@@ -30,8 +30,8 @@ class CabinetGuide(BaseGuide):
     SNAP_PLAN = {
         0: ["CabinetBody", "CabinetDoorLeft"],
         1: ["CabinetBody", "CabinetDoorLeft", "CabinetDoorRight"],
-        2: ["CabinetBody"],
-        3: ["CabinetBody", "CabinetTop"],
+        2: ["CabinetBody", "CabinetDoorLeft", "CabinetDoorRight"],
+        3: ["CabinetBody", "CabinetDoorLeft", "CabinetDoorRight", "CabinetTop"],
     }
 
     tgt_ldoor_pos = Gf.Vec3d(-0.020940018817782402, 0.4008996784687042, 1.1067736148834229)
@@ -49,15 +49,25 @@ class CabinetGuide(BaseGuide):
         0.7071068,
         Gf.Vec3d(0, 0.7071068, 0),
     )
-    tgt_body_pos = Gf.Vec3d(-0.060622476041316986, 0.43995583057403564, 1.1391513347625732)
+    tgt_body_pos = Gf.Vec3d(-0.07455084472894669, 0.43206366896629333, 1.1391513347625732)
     tgt_body_quat = Gf.Quatd(
-        0.49841177463531494,
-        Gf.Vec3d(-0.49841201305389404, 0.5015832185745239, -0.5015831589698792),
+        0.49866804480552673,
+        Gf.Vec3d(-0.49866822361946106, 0.5013284683227539, -0.5013283491134644),
     )
-    tgt_top_pos = Gf.Vec3d(-0.06051408872008324, 0.4396895170211792, 1.2943917512893677)
+    tgt_ldoor_pos_rot = Gf.Vec3d(-0.022970162332057953, 0.48839521408081055, 1.212223768234253)
+    tgt_ldoor_quat_rot = Gf.Quatd(
+        -0.0028556538745760918,
+        Gf.Vec3d(0.0017095773946493864, -0.7052011489868164, 0.708999514579773),
+    )
+    tgt_rdoor_pos_rot = Gf.Vec3d(-0.12662413716316223, 0.4957791268825531, 1.212080955505371)
+    tgt_rdoor_quat_rot = Gf.Quatd(
+        -0.04190424457192421,
+        Gf.Vec3d(0.0444624125957489, -0.6982754468917847, 0.7132171392440796),
+    )
+    tgt_top_pos = Gf.Vec3d(-0.07441174983978271, 0.43180203437805176, 1.294395923614502)
     tgt_top_quat = Gf.Quatd(
-        0.4824027419090271,
-        Gf.Vec3d(-0.7160485982894897, 0.43871527910232544, 0.24918077886104584),
+        0.4777563214302063,
+        Gf.Vec3d(-0.7237769961357117, 0.4260793924331665, 0.2575893998146057),
     )
 
     def __init__(self):
@@ -261,6 +271,14 @@ class CabinetGuide(BaseGuide):
                     self.tgt_body_pos,
                     self.tgt_body_quat,
                 )
+            self._target_poses["CabinetDoorLeft"] = (
+                self.tgt_ldoor_pos_rot,
+                self.tgt_ldoor_quat_rot,
+            )
+            self._target_poses["CabinetDoorRight"] = (
+                self.tgt_rdoor_pos_rot,
+                self.tgt_rdoor_quat_rot,
+            )
                 
         return result
 
@@ -305,7 +323,28 @@ class CabinetGuide(BaseGuide):
             issues.append(("CabinetTop", "Cabinet Top is not aligned (Step 4)"))
 
         return issues
-    
+
     def on_step_completed(self, env, step_index: int) -> None:
+
+        # Step 3 complete
         if step_index == 2:
-            self.snap_parts_to_targets(env, ["CabinetBody"])
+            self._target_poses["CabinetBody"] = (self.tgt_body_pos, self.tgt_body_quat)
+            self._target_poses["CabinetDoorLeft"] = (self.tgt_ldoor_pos_rot, self.tgt_ldoor_quat_rot)
+            self._target_poses["CabinetDoorRight"] = (self.tgt_rdoor_pos_rot, self.tgt_rdoor_quat_rot)
+
+            # Update ghost preview for CabinetBody
+            if (
+                self._stage
+                and self._asset_roots.get("CabinetBody")
+                and self._ghost_paths_by_name.get("CabinetBody")
+            ):
+                update_ghost_preview_pose(
+                    self._stage,
+                    self._asset_roots["CabinetBody"],
+                    self._ghost_paths_by_name["CabinetBody"],
+                    self.tgt_body_pos,
+                    self.tgt_body_quat,
+                )
+
+            self.snap_parts_to_targets(env, ["CabinetBody", "CabinetDoorLeft", "CabinetDoorRight"])
+            return
