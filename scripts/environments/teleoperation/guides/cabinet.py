@@ -326,8 +326,8 @@ class CabinetGuide(BaseGuide):
 
     def on_step_completed(self, env, step_index: int) -> None:
 
-        # Step 3 complete
-        if step_index == 2:
+        # Step 2 complete
+        if step_index == 1:
             self._target_poses["CabinetBody"] = (self.tgt_body_pos, self.tgt_body_quat)
             self._target_poses["CabinetDoorLeft"] = (self.tgt_ldoor_pos_rot, self.tgt_ldoor_quat_rot)
             self._target_poses["CabinetDoorRight"] = (self.tgt_rdoor_pos_rot, self.tgt_rdoor_quat_rot)
@@ -346,5 +346,5 @@ class CabinetGuide(BaseGuide):
                     self.tgt_body_quat,
                 )
 
-            self.snap_parts_to_targets(env, ["CabinetBody", "CabinetDoorLeft", "CabinetDoorRight"])
+            #self.snap_parts_to_targets(env, ["CabinetBody", "CabinetDoorLeft", "CabinetDoorRight"])
             return

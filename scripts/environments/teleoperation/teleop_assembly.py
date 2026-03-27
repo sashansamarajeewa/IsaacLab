@@ -417,12 +417,12 @@ def main() -> None:
                             idx = highlighter.step_index
                             if 0 <= idx < total_real:
                                 cam = env.scene["head_camera"]
-                                rgb = cam.data.output["rgb"][0].cpu().numpy()  # HWC
+                                rgb = cam.data.output["rgb"][0].cpu().numpy()
 
                                 step_key = str(idx + 1)
                                 step_text = guide.get_all_instructions()[idx]
 
-                                if llm_checker.update(  # type: ignore[union-attr]
+                                if llm_checker.update(
                                     step_key=step_key,
                                     step_text=step_text,
                                     current_rgb_uint8_hwc=rgb,
@@ -434,7 +434,7 @@ def main() -> None:
                                         omni.log.warn(f"on_step_completed failed idx={idx}: {e}")
 
                                     highlighter.advance()
-                                    llm_checker.reset_for_new_step()  # type: ignore[union-attr]
+                                    llm_checker.reset_for_new_step()
                                     auto_advance_block_frames = AUTO_ADVANCE_COOLDOWN_FRAMES
                     else:
                         # Normal mode ONLY
