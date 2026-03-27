@@ -1,0 +1,25 @@
+{
+  "model": "gpt-5.4",
+  "period_s": 1.0,
+  "consecutive_required": 1,
+  "max_image_side": 512,
+  "base_prompt": "You are judging progress in a cabinet assembly task by comparing a CURRENT robot-camera frame against a TARGET reference image for one specific step. A step is complete only when the task-relevant part(s) are in the same final spatial relationship as in TARGET. Focus on object/assembly state, not on matching the robot hands exactly. Ignore small differences in camera viewpoint, lighting, hand pose, and minor pixel-level variation. Judge mainly: (1) which part is being evaluated (CabinetBody, CabinetDoorLeft, CabinetDoorRight, CabinetTop), (2) whether each door is inserted into the correct side of the CabinetBody and fully seated/aligned (flush contact, correct depth, no visible gap), (3) for rotation, whether the CabinetBody orientation has rotated ~90° and matches TARGET (notably the threaded post/threads should face upward and be clearly visible), and (4) whether the CabinetTop is inserted onto the CabinetBody and fully seated/tightened-looking (flush contact, no visible gap, correct alignment). Do NOT try to infer 'clockwise' from motion; judge only the final tightened-looking state using visual cues (fully seated/flush, correct depth, stable). If the relevant part, hinge/slot interface, threads, or key gaps are partly hidden/blurred/ambiguous, return step_complete=false with failure_mode='occluded' or 'unknown'. Use failure_mode='position' when the part is visible but not yet in the correct place or not fully seated. Use failure_mode='orientation' when the placement is close but the part is rotated/flipped/tilted relative to TARGET. Use failure_mode='none' only when step_complete=true. The reason must be brief and mention decisive visual evidence.",
+  "steps": {
+    "1": {
+      "enabled": true,
+      "prompt": "Step 1 - Pick and insert Cabinet Door Left into Cabinet Body. The relevant parts are CabinetDoorLeft and CabinetBody. Mark complete only if the LEFT door is inserted into the CabinetBody exactly as in TARGET: placed in the correct opening/side, aligned straight, and fully seated with no visible gap or partial insertion. The door should not be floating or still in the gripper. Return false if the door is missing, inserted on the wrong side, misaligned/tilted, only partially inserted, or if the door-body interface is occluded/unclear."
+    },
+    "2": {
+      "enabled": true,
+      "prompt": "Step 2 - Pick and insert Cabinet Door Right into Cabinet Body. The relevant parts are CabinetDoorRight and CabinetBody. Mark complete only if the RIGHT door is inserted into the CabinetBody exactly as in TARGET: placed in the correct opening/side, aligned straight, and fully seated with no visible gap or partial insertion. The door should not be floating or still in the gripper. Return false if the door is missing, inserted on the wrong side, misaligned/tilted, only partially inserted, or if the door-body interface is occluded/unclear."
+    },
+    "3": {
+      "enabled": true,
+      "prompt": "Step 3 - Rotate Cabinet Body by 90° to face threads up. The relevant part is the CabinetBody. Mark complete only if the CabinetBody has been rotated approximately 90 degrees so that the threaded post/threads are facing upward (clearly visible from above) and the overall pose matches TARGET. Visual cue: the thread/post should be on the top-facing surface in the same location/orientation as TARGET. Return false if the threads are not facing up, rotation is incomplete/wrong direction, or if the thread/post visibility is occluded/ambiguous."
+    },
+    "4": {
+      "enabled": true,
+      "prompt": "Step 4 - Insert Cabinet Top and tighten to finish. The relevant parts are CabinetTop and CabinetBody at their connection. Mark complete only if the CabinetTop is placed onto the CabinetBody exactly as in TARGET: aligned correctly, fully seated/flush with no visible gap, and tightened-looking (stable, correct depth). Do not require seeing rotation; judge only the final seated/flush state. Return false if the top is missing, offset, tilted, not fully seated, or if the key seating interface/threads are occluded or ambiguous."
+    }
+  }
+}
